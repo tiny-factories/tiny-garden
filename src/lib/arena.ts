@@ -122,12 +122,23 @@ export class ArenaClient {
   }
 
   async getUserChannels(userId: number): Promise<ArenaChannel[]> {
-    const data = await this.fetch<{ data: ArenaChannel[] }>(`/users/${userId}/contents`, {
-      per: "100",
-      type: "Channel",
-      sort: "updated_at_desc",
-    });
-    return data.data;
+    const channels: ArenaChannel[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const data = await this.fetch<{ data: ArenaChannel[]; meta: { has_more_pages: boolean } }>(`/users/${userId}/contents`, {
+        per: "100",
+        page: String(page),
+        type: "Channel",
+        sort: "updated_at_desc",
+      });
+      channels.push(...(data.data || []));
+      hasMore = data.meta?.has_more_pages ?? false;
+      page++;
+    }
+
+    return channels;
   }
 
   async getUserGroups(userId: number): Promise<{ id: number; slug: string; name?: string }[]> {
@@ -143,13 +154,23 @@ export class ArenaClient {
 
   async getGroupChannels(groupId: number): Promise<ArenaChannel[]> {
     try {
-      // Groups are users in Are.na — fetch their channels via user contents
-      const data = await this.fetch<{ data: ArenaChannel[] }>(`/users/${groupId}/contents`, {
-        per: "100",
-        type: "Channel",
-        sort: "updated_at_desc",
-      });
-      return data.data || [];
+      const channels: ArenaChannel[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const data = await this.fetch<{ data: ArenaChannel[]; meta: { has_more_pages: boolean } }>(`/users/${groupId}/contents`, {
+          per: "100",
+          page: String(page),
+          type: "Channel",
+          sort: "updated_at_desc",
+        });
+        channels.push(...(data.data || []));
+        hasMore = data.meta?.has_more_pages ?? false;
+        page++;
+      }
+
+      return channels;
     } catch {
       return [];
     }
