@@ -1,9 +1,117 @@
 import Handlebars from "handlebars";
 import fs from "fs/promises";
 import path from "path";
+import crypto from "crypto";
 import { put } from "@vercel/blob";
 import { ArenaClient, ArenaBlock } from "./arena";
 import { prisma } from "./db";
+
+// Map of original URL → blob URL for rewriting
+type AssetMap = Map<string, string>;
+
+function hashUrl(url: string): string {
+  return crypto.createHash("sha256").update(url).digest("hex").slice(0, 16);
+}
+
+function getExtension(url: string, contentType?: string): string {
+  // Try from URL path
+  const urlPath = new URL(url).pathname;
+  const ext = path.extname(urlPath).toLowerCase();
+  if (ext && ext.length <= 5) return ext;
+
+  // Fallback to content-type
+  const typeMap: Record<string, string> = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "image/svg+xml": ".svg",
+    "application/pdf": ".pdf",
+  };
+  return (contentType && typeMap[contentType]) || ".bin";
+}
+
+async function downloadAndUploadAsset(
+  originalUrl: string,
+  blobPath: string,
+  blobToken: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(originalUrl);
+    if (!res.ok) return null;
+
+    const contentType = res.headers.get("content-type") || "application/octet-stream";
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    const ext = getExtension(originalUrl, contentType);
+    const hash = hashUrl(originalUrl);
+    const assetPath = `${blobPath}/${hash}${ext}`;
+
+    const blob = await put(assetPath, buffer, {
+      access: "private",
+      contentType,
+      addRandomSuffix: false,
+      token: blobToken,
+    });
+
+    return blob.url;
+  } catch (error) {
+    console.error(`Failed to download asset: ${originalUrl}`, error);
+    return null;
+  }
+}
+
+async function processAssets(
+  blocks: TemplateBlock[],
+  avatarUrl: string,
+  blobPath: string,
+  blobToken: string
+): Promise<AssetMap> {
+  const assetMap: AssetMap = new Map();
+  const urls: string[] = [];
+
+  // Collect all asset URLs from blocks
+  for (const block of blocks) {
+    if (block.image) {
+      if (block.image.display) urls.push(block.image.display);
+      if (block.image.original && block.image.original !== block.image.display) urls.push(block.image.original);
+    }
+    if (block.link?.thumbnail) urls.push(block.link.thumbnail);
+    if (block.attachment?.url) urls.push(block.attachment.url);
+  }
+
+  // Include avatar
+  if (avatarUrl) urls.push(avatarUrl);
+
+  // Deduplicate
+  const unique = [...new Set(urls.filter(Boolean))];
+
+  // Download and upload in batches of 5 to avoid overwhelming anything
+  for (let i = 0; i < unique.length; i += 5) {
+    const batch = unique.slice(i, i + 5);
+    const results = await Promise.all(
+      batch.map((url) => downloadAndUploadAsset(url, blobPath, blobToken))
+    );
+    batch.forEach((url, idx) => {
+      if (results[idx]) {
+        assetMap.set(url, results[idx]!);
+      }
+    });
+  }
+
+  return assetMap;
+}
+
+function rewriteUrls(html: string, assetMap: AssetMap, appUrl: string): string {
+  let result = html;
+  for (const [original, blobUrl] of assetMap) {
+    // Use asset proxy route so URLs never expire
+    const proxyUrl = `${appUrl}/api/asset?url=${encodeURIComponent(blobUrl)}`;
+    const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    result = result.replace(new RegExp(escaped, "g"), proxyUrl);
+  }
+  return result;
+}
 
 export interface SiteData {
   channel: {
@@ -266,7 +374,22 @@ export async function buildSite(siteId: string): Promise<string> {
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
 
   if (blobToken) {
-    const blob = await put(`sites/${site.subdomain}/index.html`, html, {
+    // Download all assets and upload to blob storage
+    const blobPath = `users/${site.user.arenaUsername}/sites/${site.subdomain}/assets`;
+    const assetMap = await processAssets(
+      siteData.blocks,
+      siteData.channel.user.avatar_url,
+      blobPath,
+      blobToken
+    );
+
+    // Rewrite all Are.na CDN URLs to our proxied blob URLs
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tiny.garden";
+    if (assetMap.size > 0) {
+      html = rewriteUrls(html, assetMap, appUrl);
+    }
+
+    const blob = await put(`users/${site.user.arenaUsername}/sites/${site.subdomain}/index.html`, html, {
       access: "private",
       contentType: "text/html",
       addRandomSuffix: false,
