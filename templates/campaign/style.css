@@ -1,0 +1,227 @@
+/* ===========================
+   Campaign / Landing Page
+   =========================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+a {
+  color: inherit;
+}
+
+/* ----- Hero ----- */
+
+.sv-campaign-hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #111;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.sv-campaign-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.sv-campaign-hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: #fff;
+  max-width: 720px;
+  padding: 2rem 1.5rem;
+}
+
+.sv-campaign-hero-title {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+
+.sv-campaign-hero-description {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 400;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.sv-campaign-hero-meta {
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+.sv-campaign-hero-meta a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ----- Blocks section ----- */
+
+.sv-campaign-blocks {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+.sv-campaign-block {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.sv-campaign-block:last-child {
+  margin-bottom: 0;
+}
+
+/* Image blocks */
+
+.sv-campaign-block-image {
+  margin: 0 0 1rem;
+}
+
+.sv-campaign-block-image img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+
+.sv-campaign-block-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sv-campaign-block-description {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+/* Text blocks */
+
+.sv-campaign-block-body {
+  font-size: 1rem;
+  line-height: 1.75;
+  text-align: left;
+}
+
+.sv-campaign-block-body a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Link blocks */
+
+.sv-campaign-block-link {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sv-campaign-block-link:hover {
+  border-color: #999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sv-campaign-block-link img {
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+/* Embed blocks */
+
+.sv-campaign-block-embed {
+  position: relative;
+  width: 100%;
+}
+
+.sv-campaign-block-embed iframe {
+  width: 100%;
+  border: none;
+}
+
+/* Attachment blocks */
+
+.sv-campaign-block-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.15s;
+}
+
+.sv-campaign-block-attachment:hover {
+  background: #f5f5f5;
+}
+
+/* ----- Footer ----- */
+
+.sv-campaign-footer {
+  text-align: center;
+  padding: 2rem 1.5rem 3rem;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.sv-campaign-footer a {
+  text-decoration: none;
+}
+
+.sv-campaign-footer a:hover {
+  text-decoration: underline;
+}
+
+.sv-campaign-footer-sep {
+  margin: 0 0.5rem;
+}
+
+/* ----- Responsive ----- */
+
+@media (max-width: 480px) {
+  .sv-campaign-hero-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .sv-campaign-blocks {
+    padding: 2.5rem 1rem;
+  }
+
+  .sv-campaign-block {
+    margin-bottom: 2rem;
+  }
+}

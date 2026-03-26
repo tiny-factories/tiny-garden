@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body>
+
+  <!-- Info overlay panel -->
+  <div class="sv-feed-info" id="info-panel">
+    <div class="sv-feed-info-inner">
+      <h1 class="sv-feed-info-title">{{channel.title}}</h1>
+      {{#if channel.description}}
+        <div class="sv-feed-info-description">{{{channel.description}}}</div>
+      {{/if}}
+      <p class="sv-feed-info-meta">
+        {{channel.length}} blocks &middot;
+        <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Top bar with title and Info toggle -->
+  <header class="sv-feed-header">
+    <span class="sv-feed-title">{{channel.title}}</span>
+    <button class="sv-feed-info-toggle" id="info-toggle" type="button">Info</button>
+  </header>
+
+  <!-- Feed grid -->
+  <main class="sv-feed-grid">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+
+  <script>
+    (function () {
+      var toggle = document.getElementById('info-toggle');
+      var panel = document.getElementById('info-panel');
+      toggle.addEventListener('click', function () {
+        var open = panel.classList.toggle('is-open');
+        toggle.classList.toggle('is-active', open);
+      });
+      // close panel when clicking its backdrop area
+      panel.addEventListener('click', function (e) {
+        if (e.target === panel) {
+          panel.classList.remove('is-open');
+          toggle.classList.remove('is-active');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

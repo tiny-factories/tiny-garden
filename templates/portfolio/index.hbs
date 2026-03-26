@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body>
+  <nav class="portfolio-nav">
+    <a href="/" class="portfolio-nav-title">{{channel.title}}</a>
+    {{#if channel.user.name}}
+      <a href="https://www.are.na/{{channel.user.slug}}" class="portfolio-nav-author">{{channel.user.name}}</a>
+    {{/if}}
+  </nav>
+
+  {{#if channel.description}}
+    <header class="portfolio-hero">
+      <p class="portfolio-hero-desc">{{channel.description}}</p>
+    </header>
+  {{/if}}
+
+  <main class="portfolio-content">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+
+  <footer class="portfolio-footer">
+    <p>Built with <a href="https://tiny.garden">tiny.garden</a></p>
+  </footer>
+</body>
+</html>

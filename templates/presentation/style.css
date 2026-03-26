@@ -1,0 +1,406 @@
+/* ============================================
+   Presentation Template
+   Light background, full-viewport slides,
+   centered content, clean transitions
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #fafafa;
+  color: #1a1a1a;
+}
+
+/* ---- Deck & Slides ---- */
+
+.pres-deck {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.pres-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  padding: 4rem 3rem;
+}
+
+.pres-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pres-slide-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Cover Slide ---- */
+
+.pres-slide--cover {
+  text-align: center;
+  gap: 1.5rem;
+}
+
+.pres-cover-title {
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  max-width: 900px;
+  color: #111;
+}
+
+.pres-cover-description {
+  font-size: clamp(1rem, 2vw, 1.375rem);
+  line-height: 1.6;
+  max-width: 600px;
+  color: #555;
+}
+
+.pres-cover-description p {
+  margin-bottom: 0.5em;
+}
+
+.pres-cover-meta {
+  font-size: 0.875rem;
+  color: #999;
+  margin-top: 1rem;
+}
+
+.pres-cover-meta a {
+  color: #999;
+  text-decoration: none;
+  border-bottom: 1px solid #ddd;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pres-cover-meta a:hover {
+  color: #333;
+  border-color: #333;
+}
+
+/* ---- Image Slides ---- */
+
+.pres-slide--image {
+  padding: 0;
+}
+
+.pres-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.pres-figure img {
+  max-width: 88vw;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.pres-caption {
+  font-size: 0.875rem;
+  color: #888;
+  text-align: center;
+  max-width: 500px;
+}
+
+/* ---- Text Slides ---- */
+
+.pres-slide--text {
+  padding: 2rem;
+}
+
+.pres-text {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.6;
+  text-align: center;
+  max-width: 720px;
+  color: #222;
+}
+
+.pres-text p {
+  margin-bottom: 0.75em;
+}
+
+.pres-text p:last-child {
+  margin-bottom: 0;
+}
+
+.pres-text a {
+  color: #0066cc;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 102, 204, 0.3);
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s;
+}
+
+.pres-text a:hover {
+  text-decoration-color: #0066cc;
+}
+
+.pres-text strong, .pres-text b {
+  font-weight: 600;
+}
+
+.pres-text em, .pres-text i {
+  font-style: italic;
+}
+
+.pres-text blockquote {
+  border-left: 3px solid #ddd;
+  padding-left: 1.25em;
+  color: #666;
+  font-style: italic;
+}
+
+.pres-text ul, .pres-text ol {
+  text-align: left;
+  display: inline-block;
+  padding-left: 1.5em;
+}
+
+.pres-text li {
+  margin-bottom: 0.4em;
+}
+
+.pres-text h1, .pres-text h2, .pres-text h3 {
+  font-weight: 700;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+/* ---- Link Slides ---- */
+
+.pres-slide--link {
+  padding: 2rem;
+}
+
+.pres-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 560px;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pres-link-card:hover {
+  border-color: #bbb;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.pres-link-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.pres-link-info {
+  padding: 1.5rem 2rem;
+  text-align: center;
+  width: 100%;
+}
+
+.pres-link-title {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+
+.pres-link-url {
+  display: block;
+  font-size: 0.8125rem;
+  color: #999;
+  word-break: break-all;
+}
+
+/* ---- Media / Embed Slides ---- */
+
+.pres-slide--media {
+  padding: 2rem;
+}
+
+.pres-embed {
+  width: 80vw;
+  max-width: 900px;
+}
+
+.pres-embed iframe {
+  width: 100%;
+  border: none;
+  border-radius: 4px;
+}
+
+/* ---- Attachment Slides ---- */
+
+.pres-slide--attachment {
+  padding: 2rem;
+}
+
+.pres-attachment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: #555;
+  padding: 2.5rem 3rem;
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.pres-attachment:hover {
+  border-color: #999;
+  color: #222;
+}
+
+.pres-attachment-name {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* ---- Navigation Arrows ---- */
+
+.pres-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background: none;
+  border: none;
+  color: #999;
+  padding: 1rem;
+  cursor: pointer;
+  transition: color 0.15s;
+  outline: none;
+}
+
+.pres-nav:hover {
+  color: #333;
+}
+
+.pres-nav-prev {
+  left: 1rem;
+}
+
+.pres-nav-next {
+  right: 1rem;
+}
+
+/* ---- Slide Counter ---- */
+
+.pres-counter {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.5rem;
+  font-size: 0.75rem;
+  color: #bbb;
+  z-index: 20;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+/* ---- Progress Bar ---- */
+
+.pres-progress {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #eee;
+  z-index: 20;
+}
+
+.pres-progress-bar {
+  height: 100%;
+  background: #333;
+  width: 0;
+  transition: width 0.3s ease;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 768px) {
+  .pres-slide {
+    padding: 3rem 1.5rem;
+  }
+
+  .pres-figure img {
+    max-width: 94vw;
+    max-height: 70vh;
+  }
+
+  .pres-nav {
+    padding: 0.75rem;
+  }
+
+  .pres-nav-prev {
+    left: 0.25rem;
+  }
+
+  .pres-nav-next {
+    right: 0.25rem;
+  }
+
+  .pres-nav svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .pres-link-card {
+    border-radius: 8px;
+  }
+
+  .pres-link-info {
+    padding: 1rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pres-slide {
+    padding: 2.5rem 1rem;
+  }
+
+  .pres-text {
+    font-size: 1.125rem;
+  }
+
+  .pres-nav {
+    display: none;
+  }
+}

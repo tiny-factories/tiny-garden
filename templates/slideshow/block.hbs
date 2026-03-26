@@ -1,0 +1,38 @@
+{{#if (eq type "image")}}
+  <div class="sv-slide-content sv-slide-content--image">
+    <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+    {{#if title}}<div class="sv-slide-caption">{{title}}</div>{{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <div class="sv-slide-content sv-slide-content--text">
+    <div class="sv-slide-text">{{{content}}}</div>
+  </div>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <div class="sv-slide-content sv-slide-content--link">
+    {{#if image.display}}
+      <img src="{{image.display}}" alt="" loading="lazy">
+    {{/if}}
+    <div class="sv-slide-caption">
+      <a href="{{link.url}}" target="_blank" rel="noopener">{{link.title}}</a>
+    </div>
+  </div>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <div class="sv-slide-content sv-slide-content--media">
+    <div class="sv-slide-embed">{{{embed.html}}}</div>
+  </div>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <div class="sv-slide-content sv-slide-content--attachment">
+    <a href="{{attachment.url}}" class="sv-slide-attachment" download>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>{{attachment.file_name}}</span>
+    </a>
+  </div>
+{{/if}}

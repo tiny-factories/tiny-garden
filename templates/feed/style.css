@@ -1,0 +1,281 @@
+/* === Reset === */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.4;
+  color: #222;
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================================
+   Info overlay panel  (.sv-feed-info)
+   ========================================================= */
+.sv-feed-info {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.sv-feed-info.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sv-feed-info-inner {
+  max-width: 480px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.sv-feed-info-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.sv-feed-info-description {
+  font-size: 0.9375rem;
+  color: #555;
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+.sv-feed-info-description a {
+  color: inherit;
+}
+
+.sv-feed-info-meta {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.sv-feed-info-meta a {
+  color: #999;
+  text-decoration: none;
+}
+
+.sv-feed-info-meta a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   Header bar
+   ========================================================= */
+.sv-feed-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.sv-feed-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sv-feed-info-toggle {
+  appearance: none;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 0.6875rem;
+  font-family: inherit;
+  padding: 0.25rem 0.75rem;
+  border-radius: 3px;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.sv-feed-info-toggle:hover {
+  background: #f5f5f5;
+}
+
+.sv-feed-info-toggle.is-active {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
+/* =========================================================
+   Feed grid
+   ========================================================= */
+.sv-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+@media (min-width: 540px) {
+  .sv-feed-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 860px) {
+  .sv-feed-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .sv-feed-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* =========================================================
+   Feed item
+   ========================================================= */
+.sv-feed-item {
+  position: relative;
+  background: #f5f5f5;
+  aspect-ratio: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sv-feed-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Caption on hover */
+.sv-feed-item-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem 0.625rem 0.5rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  color: #fff;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.sv-feed-item:hover .sv-feed-item-caption {
+  opacity: 1;
+}
+
+/* --- Text blocks --- */
+.sv-feed-item--text {
+  padding: 0.875rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.sv-feed-item-text {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.sv-feed-item-text a {
+  color: inherit;
+}
+
+/* --- Link blocks --- */
+.sv-feed-item--link {
+  flex-direction: column;
+}
+
+.sv-feed-item-link {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sv-feed-item-link .sv-feed-item-img {
+  flex: 1;
+  min-height: 0;
+}
+
+.sv-feed-item-link-label {
+  display: block;
+  padding: 0.4rem 0.625rem;
+  background: #fff;
+}
+
+.sv-feed-item-link-title {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Media / embed blocks --- */
+.sv-feed-item--media {
+  aspect-ratio: auto;
+}
+
+.sv-feed-item-embed {
+  width: 100%;
+}
+
+.sv-feed-item-embed iframe {
+  width: 100%;
+  display: block;
+  border: none;
+}
+
+/* --- Attachment blocks --- */
+.sv-feed-item--attachment {
+  padding: 1rem;
+}
+
+.sv-feed-item-attachment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #888;
+  font-size: 0.75rem;
+  text-align: center;
+  word-break: break-all;
+  width: 100%;
+  height: 100%;
+}
+
+.sv-feed-item-attachment::before {
+  content: "\1F4CE";
+  font-size: 1.5rem;
+}
+
+.sv-feed-item-attachment-name {
+  display: block;
+}

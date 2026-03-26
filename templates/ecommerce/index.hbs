@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body>
+  <header class="shop-header">
+    <a href="/" class="shop-logo">{{channel.title}}</a>
+    {{#if channel.user.name}}
+      <a href="https://www.are.na/{{channel.user.slug}}" class="shop-author">{{channel.user.name}}</a>
+    {{/if}}
+  </header>
+
+  <main class="shop-layout">
+    <aside class="shop-info">
+      <h1 class="shop-title">{{channel.title}}</h1>
+
+      {{#if channel.description}}
+        <div class="shop-channel-desc">{{channel.description}}</div>
+      {{/if}}
+
+      {{#each blocks}}
+        {{#if (eq type "text")}}
+          {{#if @first}}
+            <div class="shop-description">{{{content}}}</div>
+          {{/if}}
+        {{/if}}
+      {{/each}}
+
+      <div class="shop-actions">
+        {{#each blocks}}
+          {{#if (eq type "link")}}
+            <a href="{{link.url}}" class="shop-buy-btn" target="_blank" rel="noopener">
+              {{#if link.title}}{{link.title}}{{else}}Buy Now{{/if}}
+            </a>
+            {{#if link.description}}
+              <span class="shop-link-desc">{{link.description}}</span>
+            {{/if}}
+          {{/if}}
+        {{/each}}
+      </div>
+
+      {{#each blocks}}
+        {{#if (eq type "text")}}
+          {{#unless @first}}
+            <div class="shop-detail-text">{{{content}}}</div>
+          {{/unless}}
+        {{/if}}
+      {{/each}}
+
+      {{#each blocks}}
+        {{#if (eq type "attachment")}}
+          <a href="{{attachment.url}}" class="shop-attachment" download>
+            {{attachment.file_name}}
+          </a>
+        {{/if}}
+      {{/each}}
+    </aside>
+
+    <section class="shop-gallery">
+      <div class="shop-gallery-viewport">
+        {{#each blocks}}
+          {{#if (eq type "image")}}
+            <div class="shop-gallery-slide" data-index="{{@index}}">
+              <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+            </div>
+          {{/if}}
+        {{/each}}
+      </div>
+
+      <div class="shop-gallery-nav">
+        <button class="shop-gallery-arrow shop-gallery-prev" aria-label="Previous image">&larr;</button>
+        <div class="shop-gallery-dots"></div>
+        <button class="shop-gallery-arrow shop-gallery-next" aria-label="Next image">&rarr;</button>
+      </div>
+
+      <div class="shop-gallery-full">
+        {{#each blocks}}
+          {{#if (eq type "image")}}
+            <figure class="shop-full-image">
+              <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+              {{#if title}}
+                <figcaption>{{title}}</figcaption>
+              {{/if}}
+            </figure>
+          {{/if}}
+        {{/each}}
+      </div>
+
+      {{#each blocks}}
+        {{#if (eq type "media")}}
+          <div class="shop-embed">{{{embed.html}}}</div>
+        {{/if}}
+      {{/each}}
+    </section>
+  </main>
+
+  <footer class="shop-footer">
+    <p>Built with <a href="https://tiny.garden">tiny.garden</a></p>
+  </footer>
+
+  <script>
+    (function() {
+      var viewport = document.querySelector('.shop-gallery-viewport');
+      var slides = viewport ? viewport.querySelectorAll('.shop-gallery-slide') : [];
+      var dotsContainer = document.querySelector('.shop-gallery-dots');
+      var prevBtn = document.querySelector('.shop-gallery-prev');
+      var nextBtn = document.querySelector('.shop-gallery-next');
+      var nav = document.querySelector('.shop-gallery-nav');
+
+      if (slides.length < 2) {
+        if (nav) nav.style.display = 'none';
+        return;
+      }
+
+      var current = 0;
+
+      // Build dots
+      for (var i = 0; i < slides.length; i++) {
+        var dot = document.createElement('button');
+        dot.className = 'shop-gallery-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Image ' + (i + 1));
+        dot.dataset.slide = i;
+        dotsContainer.appendChild(dot);
+      }
+
+      var dots = dotsContainer.querySelectorAll('.shop-gallery-dot');
+
+      function goTo(index) {
+        if (index < 0) index = slides.length - 1;
+        if (index >= slides.length) index = 0;
+        current = index;
+        for (var j = 0; j < slides.length; j++) {
+          slides[j].classList.toggle('active', j === current);
+          dots[j].classList.toggle('active', j === current);
+        }
+      }
+
+      prevBtn.addEventListener('click', function() { goTo(current - 1); });
+      nextBtn.addEventListener('click', function() { goTo(current + 1); });
+      dotsContainer.addEventListener('click', function(e) {
+        if (e.target.dataset.slide !== undefined) {
+          goTo(parseInt(e.target.dataset.slide, 10));
+        }
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') goTo(current - 1);
+        if (e.key === 'ArrowRight') goTo(current + 1);
+      });
+
+      goTo(0);
+    })();
+  </script>
+</body>
+</html>

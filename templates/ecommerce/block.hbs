@@ -1,0 +1,45 @@
+{{!--
+  Block partial for ecommerce/shop template.
+  Blocks are rendered inline within index.hbs by type:
+  - image  → gallery slide + full-bleed image
+  - text   → product description (first) or detail section
+  - link   → buy / external action button
+  - media  → embedded content
+  - attachment → downloadable file
+--}}
+
+{{#if (eq type "image")}}
+  <figure class="shop-block shop-block--image">
+    <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+    {{#if title}}
+      <figcaption class="shop-block-caption">{{title}}</figcaption>
+    {{/if}}
+  </figure>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <div class="shop-block shop-block--text">
+    {{{content}}}
+  </div>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <a href="{{link.url}}" class="shop-block shop-block--link" target="_blank" rel="noopener">
+    <span class="shop-block-link-label">{{#if link.title}}{{link.title}}{{else}}View Link{{/if}}</span>
+    {{#if link.description}}
+      <span class="shop-block-link-desc">{{link.description}}</span>
+    {{/if}}
+  </a>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <div class="shop-block shop-block--media">
+    {{{embed.html}}}
+  </div>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <a href="{{attachment.url}}" class="shop-block shop-block--attachment" download>
+    {{attachment.file_name}}
+  </a>
+{{/if}}

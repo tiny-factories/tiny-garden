@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body>
+
+  {{!-- Find the first image block and use it as the hero background --}}
+  {{#each blocks}}
+    {{#if (eq type "image")}}
+      {{#if @first_image}}
+      {{else}}
+        {{!-- We handle this via JS below since Handlebars lacks stateful iteration --}}
+      {{/if}}
+    {{/if}}
+  {{/each}}
+
+  <!-- Hero section — first image block becomes the background -->
+  <section class="sv-campaign-hero" id="sv-campaign-hero">
+    <div class="sv-campaign-hero-overlay"></div>
+    <div class="sv-campaign-hero-content">
+      <h1 class="sv-campaign-hero-title">{{channel.title}}</h1>
+      {{#if channel.description}}
+        <p class="sv-campaign-hero-description">{{channel.description}}</p>
+      {{/if}}
+      <p class="sv-campaign-hero-meta">
+        by <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Remaining blocks -->
+  <main class="sv-campaign-blocks">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+
+  <!-- Footer -->
+  <footer class="sv-campaign-footer">
+    <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
+    <span class="sv-campaign-footer-sep">&middot;</span>
+    <a href="https://tiny.garden">Built with tiny.garden</a>
+  </footer>
+
+  <!-- Set first image as hero background -->
+  <script>
+    (function () {
+      var hero = document.getElementById('sv-campaign-hero');
+      if (!hero) return;
+
+      // Find the first image block in the page
+      var firstImg = document.querySelector('.sv-campaign-block.block--image img');
+      if (firstImg) {
+        var src = firstImg.getAttribute('data-original') || firstImg.src;
+        hero.style.backgroundImage = 'url(' + src + ')';
+
+        // Hide the first image block since it is the hero background
+        var firstBlock = firstImg.closest('.sv-campaign-block');
+        if (firstBlock) firstBlock.style.display = 'none';
+      }
+    })();
+  </script>
+</body>
+</html>

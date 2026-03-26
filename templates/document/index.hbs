@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="sv-document">
+
+  <!-- Mobile header -->
+  <header class="sv-document-mobile-header" id="sv-document-mobile-header">
+    <button class="sv-document-menu-btn" id="sv-document-menu-btn" aria-label="Toggle navigation">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <span class="sv-document-mobile-title">{{channel.title}}</span>
+    <button class="sv-document-info-btn" id="sv-document-info-btn-mobile" aria-label="Toggle info">Info</button>
+  </header>
+
+  <!-- Sidebar navigation -->
+  <nav class="sv-document-nav" id="sv-document-nav">
+    <div class="sv-document-nav-header">
+      <a href="/" class="sv-document-nav-logo" aria-label="Home">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="20" height="20" rx="4" fill="currentColor"/>
+        </svg>
+      </a>
+      <span class="sv-document-nav-title">{{channel.title}}</span>
+    </div>
+    <div class="sv-document-nav-toc" id="sv-document-nav-toc">
+      <span class="sv-document-nav-toc-label">Contents</span>
+      <ul class="sv-document-nav-list">
+        {{#each blocks}}
+          {{#if title}}
+            <li><a href="#block-{{@index}}" class="sv-document-nav-link">{{title}}</a></li>
+          {{/if}}
+        {{/each}}
+      </ul>
+    </div>
+    <div class="sv-document-nav-footer">
+      <button class="sv-document-info-btn" id="sv-document-info-btn" aria-label="Toggle info panel">Info</button>
+    </div>
+  </nav>
+
+  <!-- Info overlay -->
+  <aside class="sv-document-info" id="sv-document-info">
+    <div class="sv-document-info-inner">
+      <button class="sv-document-info-close" id="sv-document-info-close" aria-label="Close info panel">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h1 class="sv-document-info-title">{{channel.title}}</h1>
+      {{#if channel.description}}
+        <div class="sv-document-info-description">{{channel.description}}</div>
+      {{/if}}
+      <div class="sv-document-info-meta">
+        <span class="sv-document-info-label">Author</span>
+        <a href="https://www.are.na/{{channel.user.slug}}" class="sv-document-info-author">{{channel.user.name}}</a>
+      </div>
+      <div class="sv-document-info-meta">
+        <span class="sv-document-info-label">Blocks</span>
+        <span>{{channel.length}}</span>
+      </div>
+      <div class="sv-document-info-footer">
+        <a href="https://www.are.na/{{channel.user.slug}}">View on Are.na</a>
+        <span class="sv-document-info-sep">&middot;</span>
+        <a href="https://tiny.garden">Built with tiny.garden</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="sv-document-main">
+    <div class="sv-document-content">
+      {{#each blocks}}
+        {{> block}}
+      {{/each}}
+    </div>
+    <footer class="sv-document-footer">
+      <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
+      <span class="sv-document-footer-sep">&middot;</span>
+      <a href="https://tiny.garden">Built with tiny.garden</a>
+    </footer>
+  </main>
+
+  <!-- Overlay backdrop for mobile -->
+  <div class="sv-document-overlay" id="sv-document-overlay"></div>
+
+  <script>
+    (function () {
+      var nav = document.getElementById('sv-document-nav');
+      var overlay = document.getElementById('sv-document-overlay');
+      var menuBtn = document.getElementById('sv-document-menu-btn');
+      var infoPanel = document.getElementById('sv-document-info');
+      var infoBtn = document.getElementById('sv-document-info-btn');
+      var infoBtnMobile = document.getElementById('sv-document-info-btn-mobile');
+      var infoClose = document.getElementById('sv-document-info-close');
+
+      function closeAll() {
+        nav.classList.remove('is-open');
+        infoPanel.classList.remove('is-open');
+        overlay.classList.remove('is-visible');
+        document.body.classList.remove('no-scroll');
+      }
+
+      // Mobile nav toggle
+      if (menuBtn) {
+        menuBtn.addEventListener('click', function () {
+          var opening = !nav.classList.contains('is-open');
+          closeAll();
+          if (opening) {
+            nav.classList.add('is-open');
+            overlay.classList.add('is-visible');
+            document.body.classList.add('no-scroll');
+          }
+        });
+      }
+
+      // Info panel toggle
+      function toggleInfo() {
+        var opening = !infoPanel.classList.contains('is-open');
+        closeAll();
+        if (opening) {
+          infoPanel.classList.add('is-open');
+          overlay.classList.add('is-visible');
+          document.body.classList.add('no-scroll');
+        }
+      }
+
+      if (infoBtn) infoBtn.addEventListener('click', toggleInfo);
+      if (infoBtnMobile) infoBtnMobile.addEventListener('click', toggleInfo);
+      if (infoClose) infoClose.addEventListener('click', closeAll);
+      if (overlay) overlay.addEventListener('click', closeAll);
+
+      // Close mobile nav when clicking a TOC link
+      var tocLinks = document.querySelectorAll('.sv-document-nav-link');
+      for (var i = 0; i < tocLinks.length; i++) {
+        tocLinks[i].addEventListener('click', function () {
+          if (window.innerWidth < 960) closeAll();
+        });
+      }
+
+      // Highlight active TOC entry on scroll
+      var sections = document.querySelectorAll('.sv-document-article');
+      function onScroll() {
+        var scrollY = window.scrollY + 100;
+        var active = null;
+        for (var i = 0; i < sections.length; i++) {
+          if (sections[i].offsetTop <= scrollY) active = sections[i].id;
+        }
+        for (var j = 0; j < tocLinks.length; j++) {
+          var href = tocLinks[j].getAttribute('href');
+          if (href === '#' + active) {
+            tocLinks[j].classList.add('is-active');
+          } else {
+            tocLinks[j].classList.remove('is-active');
+          }
+        }
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

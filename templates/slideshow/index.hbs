@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body>
+
+  <!-- Gallery View -->
+  <div class="sv-slideshow-gallery" id="gallery">
+    <div class="sv-slideshow-slides" id="slides">
+      {{#each blocks}}
+        <div class="sv-slide" data-index="{{@index}}">
+          {{> block}}
+        </div>
+      {{/each}}
+    </div>
+
+    <button class="sv-slideshow-prev" id="prev" aria-label="Previous slide">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button class="sv-slideshow-next" id="next" aria-label="Next slide">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+
+    <div class="sv-slideshow-indicator" id="indicator">
+      <span id="current-num">1</span> / <span id="total-num">1</span>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="sv-slideshow-grid" id="grid">
+    <div class="sv-slideshow-grid-stamp">
+      <h1 class="sv-slideshow-grid-title">{{channel.title}}</h1>
+      {{#if channel.description}}
+        <div class="sv-slideshow-grid-description">{{{channel.description}}}</div>
+      {{/if}}
+      <div class="sv-slideshow-grid-meta">
+        <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </div>
+    </div>
+
+    {{#each blocks}}
+      <div class="sv-slideshow-grid-item" data-goto="{{@index}}">
+        {{#if (eq type "image")}}
+          <img src="{{image.square}}" alt="{{title}}" loading="lazy">
+          {{#if title}}<span class="sv-grid-item-title">{{title}}</span>{{/if}}
+        {{/if}}
+        {{#if (eq type "text")}}
+          <div class="sv-grid-item-text">{{{content}}}</div>
+        {{/if}}
+        {{#if (eq type "link")}}
+          <div class="sv-grid-item-link">
+            {{#if image.square}}
+              <img src="{{image.square}}" alt="" loading="lazy">
+            {{/if}}
+            <span class="sv-grid-item-title">{{link.title}}</span>
+          </div>
+        {{/if}}
+        {{#if (eq type "media")}}
+          <div class="sv-grid-item-media">
+            <span class="sv-grid-item-title">{{title}}</span>
+          </div>
+        {{/if}}
+        {{#if (eq type "attachment")}}
+          <div class="sv-grid-item-attachment">
+            <span class="sv-grid-item-title">{{attachment.file_name}}</span>
+          </div>
+        {{/if}}
+      </div>
+    {{/each}}
+  </div>
+
+  <!-- Toggle Control -->
+  <div class="sv-slideshow-controls">
+    <button class="sv-slideshow-toggle" id="toggle" aria-label="Toggle view">
+      <svg class="icon-grid" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <rect x="0" y="0" width="5" height="5"/><rect x="6.5" y="0" width="5" height="5"/><rect x="13" y="0" width="5" height="5"/>
+        <rect x="0" y="6.5" width="5" height="5"/><rect x="6.5" y="6.5" width="5" height="5"/><rect x="13" y="6.5" width="5" height="5"/>
+        <rect x="0" y="13" width="5" height="5"/><rect x="6.5" y="13" width="5" height="5"/><rect x="13" y="13" width="5" height="5"/>
+      </svg>
+      <svg class="icon-slides" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="1" width="16" height="16" rx="1"/>
+        <line x1="6" y1="1" x2="6" y2="17"/>
+        <line x1="12" y1="1" x2="12" y2="17"/>
+      </svg>
+    </button>
+  </div>
+
+  <script>
+    (function () {
+      var slides = document.querySelectorAll('.sv-slide');
+      var gallery = document.getElementById('gallery');
+      var grid = document.getElementById('grid');
+      var toggle = document.getElementById('toggle');
+      var prevBtn = document.getElementById('prev');
+      var nextBtn = document.getElementById('next');
+      var currentNum = document.getElementById('current-num');
+      var totalNum = document.getElementById('total-num');
+      var total = slides.length;
+      var current = 0;
+      var isGrid = false;
+
+      totalNum.textContent = total;
+
+      function goTo(index) {
+        if (total === 0) return;
+        if (index < 0) index = total - 1;
+        if (index >= total) index = 0;
+        for (var i = 0; i < slides.length; i++) {
+          slides[i].classList.remove('active');
+        }
+        slides[index].classList.add('active');
+        current = index;
+        currentNum.textContent = current + 1;
+      }
+
+      function showGallery() {
+        isGrid = false;
+        gallery.classList.add('active');
+        grid.classList.remove('active');
+        document.body.classList.remove('view-grid');
+        document.body.classList.add('view-gallery');
+      }
+
+      function showGrid() {
+        isGrid = true;
+        gallery.classList.remove('active');
+        grid.classList.add('active');
+        document.body.classList.add('view-grid');
+        document.body.classList.remove('view-gallery');
+      }
+
+      function toggleView() {
+        if (isGrid) {
+          showGallery();
+        } else {
+          showGrid();
+        }
+      }
+
+      // Navigation
+      prevBtn.addEventListener('click', function () { goTo(current - 1); });
+      nextBtn.addEventListener('click', function () { goTo(current + 1); });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function (e) {
+        if (isGrid && e.key === 'Escape') {
+          showGallery();
+          return;
+        }
+        switch (e.key) {
+          case 'ArrowLeft':
+            if (!isGrid) goTo(current - 1);
+            break;
+          case 'ArrowRight':
+            if (!isGrid) goTo(current + 1);
+            break;
+          case 'g':
+            toggleView();
+            break;
+          case 'Escape':
+            break;
+        }
+      });
+
+      // Toggle button
+      toggle.addEventListener('click', toggleView);
+
+      // Grid thumbnails click to open slide in gallery
+      var thumbs = grid.querySelectorAll('[data-goto]');
+      for (var i = 0; i < thumbs.length; i++) {
+        thumbs[i].addEventListener('click', (function (idx) {
+          return function () {
+            goTo(idx);
+            showGallery();
+          };
+        })(i));
+      }
+
+      // Touch swipe support
+      var touchStartX = 0;
+      var touchEndX = 0;
+      gallery.addEventListener('touchstart', function (e) {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      gallery.addEventListener('touchend', function (e) {
+        touchEndX = e.changedTouches[0].screenX;
+        var diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) goTo(current + 1);
+          else goTo(current - 1);
+        }
+      }, { passive: true });
+
+      // Initialize
+      if (total > 0) goTo(0);
+      showGallery();
+    })();
+  </script>
+</body>
+</html>

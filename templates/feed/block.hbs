@@ -1,0 +1,34 @@
+<div class="sv-feed-item sv-feed-item--{{type}}">
+  {{#if (eq type "image")}}
+    <img class="sv-feed-item-img" src="{{image.display}}" alt="{{title}}" loading="lazy">
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    <div class="sv-feed-item-text">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a href="{{link.url}}" class="sv-feed-item-link" target="_blank" rel="noopener">
+      {{#if link.thumbnail}}
+        <img class="sv-feed-item-img" src="{{link.thumbnail}}" alt="" loading="lazy">
+      {{/if}}
+      <span class="sv-feed-item-link-label">
+        <span class="sv-feed-item-link-title">{{link.title}}</span>
+      </span>
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    <div class="sv-feed-item-embed">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <a href="{{attachment.url}}" class="sv-feed-item-attachment" download>
+      <span class="sv-feed-item-attachment-name">{{attachment.file_name}}</span>
+    </a>
+  {{/if}}
+
+  {{#if title}}
+    <span class="sv-feed-item-caption">{{title}}</span>
+  {{/if}}
+</div>

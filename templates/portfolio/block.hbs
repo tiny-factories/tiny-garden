@@ -1,0 +1,38 @@
+<section class="portfolio-block portfolio-block--{{type}}">
+  {{#if (eq type "image")}}
+    <figure class="portfolio-figure">
+      <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+      {{#if title}}
+        <figcaption class="portfolio-caption">{{title}}</figcaption>
+      {{/if}}
+    </figure>
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    <div class="portfolio-text">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a href="{{link.url}}" class="portfolio-link" target="_blank" rel="noopener">
+      {{#if link.thumbnail}}
+        <img src="{{link.thumbnail}}" alt="" loading="lazy" class="portfolio-link-thumb">
+      {{/if}}
+      <div class="portfolio-link-info">
+        <span class="portfolio-link-title">{{link.title}}</span>
+        {{#if link.description}}
+          <span class="portfolio-link-desc">{{link.description}}</span>
+        {{/if}}
+      </div>
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    <div class="portfolio-embed">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <a href="{{attachment.url}}" class="portfolio-attachment" download>
+      {{attachment.file_name}}
+    </a>
+  {{/if}}
+</section>

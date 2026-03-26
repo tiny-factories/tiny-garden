@@ -1,0 +1,43 @@
+{{#if (eq type "image")}}
+  <div class="pres-slide-inner pres-slide--image">
+    <figure class="pres-figure">
+      <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+      {{#if title}}<figcaption class="pres-caption">{{title}}</figcaption>{{/if}}
+    </figure>
+  </div>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <div class="pres-slide-inner pres-slide--text">
+    <div class="pres-text">{{{content}}}</div>
+  </div>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <div class="pres-slide-inner pres-slide--link">
+    <a href="{{link.url}}" target="_blank" rel="noopener" class="pres-link-card">
+      {{#if image.display}}
+        <img src="{{image.display}}" alt="" class="pres-link-image" loading="lazy">
+      {{/if}}
+      <div class="pres-link-info">
+        <span class="pres-link-title">{{link.title}}</span>
+        <span class="pres-link-url">{{link.url}}</span>
+      </div>
+    </a>
+  </div>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <div class="pres-slide-inner pres-slide--media">
+    <div class="pres-embed">{{{embed.html}}}</div>
+  </div>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <div class="pres-slide-inner pres-slide--attachment">
+    <a href="{{attachment.url}}" class="pres-attachment" download>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="pres-attachment-name">{{attachment.file_name}}</span>
+    </a>
+  </div>
+{{/if}}

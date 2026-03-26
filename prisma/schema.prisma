@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  arenaId       Int      @unique
+  arenaUsername  String
+  arenaToken    String
+  avatarUrl     String?
+  stripeCustomerId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sites         Site[]
+  subscription  Subscription?
+}
+
+model Site {
+  id            String   @id @default(cuid())
+  subdomain     String   @unique
+  channelSlug   String
+  channelTitle  String
+  template      String   @default("blog")
+  customCss     String?
+  published     Boolean  @default(false)
+  lastBuiltAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  plan              String   @default("free") // "free" | "pro"
+  stripeSubscriptionId String?
+  status            String   @default("active") // "active" | "canceled" | "past_due"
+  currentPeriodEnd  DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+}

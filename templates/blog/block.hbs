@@ -1,0 +1,63 @@
+<article class="sv-blog-article block--{{type}}">
+
+  {{#if (eq type "image")}}
+    <figure class="sv-blog-article-image">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+    </figure>
+    {{#if title}}
+      <h2 class="sv-blog-article-title">{{title}}</h2>
+    {{/if}}
+    {{#if description}}
+      <p class="sv-blog-article-lead">{{description}}</p>
+    {{/if}}
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}
+      <h2 class="sv-blog-article-title">{{title}}</h2>
+    {{/if}}
+    <div class="sv-blog-article-body">{{{content}}}</div>
+    {{#if description}}
+      <p class="sv-blog-article-lead">{{description}}</p>
+    {{/if}}
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a href="{{link.url}}" class="sv-blog-article-link" target="_blank" rel="noopener">
+      {{#if link.thumbnail}}
+        <figure class="sv-blog-article-image">
+          <img src="{{link.thumbnail}}" alt="" loading="lazy">
+        </figure>
+      {{/if}}
+      <h2 class="sv-blog-article-title">{{link.title}}</h2>
+      {{#if link.description}}
+        <p class="sv-blog-article-lead">{{link.description}}</p>
+      {{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}
+      <h2 class="sv-blog-article-title">{{title}}</h2>
+    {{/if}}
+    <div class="sv-blog-article-embed">{{{embed.html}}}</div>
+    {{#if description}}
+      <p class="sv-blog-article-lead">{{description}}</p>
+    {{/if}}
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <a href="{{attachment.url}}" class="sv-blog-article-attachment" download>
+      <span class="sv-blog-article-attachment-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="sv-blog-article-title">{{attachment.file_name}}</span>
+    </a>
+    {{#if description}}
+      <p class="sv-blog-article-lead">{{description}}</p>
+    {{/if}}
+  {{/if}}
+
+</article>

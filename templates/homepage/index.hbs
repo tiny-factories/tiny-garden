@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body>
+
+  <!-- Hero: full-viewport with background image (first image block) or gradient fallback -->
+  <section class="sv-homepage" id="sv-homepage">
+    <div class="sv-homepage-overlay"></div>
+    <div class="sv-homepage-inner">
+      <div class="sv-homepage-text">
+        <h1 class="sv-homepage-title">{{channel.title}}</h1>
+        {{#if channel.description}}
+          <p class="sv-homepage-description">{{channel.description}}</p>
+        {{/if}}
+
+        <!-- Link blocks rendered as a clean link list -->
+        <nav class="sv-homepage-links">
+          {{#each blocks}}
+            {{#if (eq type "link")}}
+              <a href="{{link.url}}" class="sv-homepage-link" target="_blank" rel="noopener">
+                {{#if link.title}}{{link.title}}{{else}}{{link.url}}{{/if}}
+              </a>
+            {{/if}}
+          {{/each}}
+        </nav>
+      </div>
+
+      <p class="sv-homepage-meta">
+        by <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Below-the-fold: non-link, non-hero-image blocks -->
+  {{#each blocks}}
+    {{#if (eq type "link")}}
+    {{else}}
+      {{> block}}
+    {{/if}}
+  {{/each}}
+
+  <!-- Footer -->
+  <footer class="sv-homepage-footer">
+    <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
+    <span class="sv-homepage-footer-sep">&middot;</span>
+    <a href="https://tiny.garden">Built with tiny.garden</a>
+  </footer>
+
+  <!-- Set first image block as hero background, hide it from the below-fold section -->
+  <script>
+    (function () {
+      var hero = document.getElementById('sv-homepage');
+      if (!hero) return;
+
+      var firstImg = document.querySelector('.sv-homepage-block.block--image img');
+      if (firstImg) {
+        var src = firstImg.getAttribute('data-original') || firstImg.src;
+        hero.style.backgroundImage = 'url(' + src + ')';
+        hero.classList.add('has-bg');
+
+        // Hide the first image block from below-fold content
+        var block = firstImg.closest('.sv-homepage-block');
+        if (block) block.style.display = 'none';
+      }
+    })();
+  </script>
+</body>
+</html>

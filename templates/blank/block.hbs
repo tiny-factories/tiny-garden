@@ -1,0 +1,21 @@
+<div class="block-item block-item-{{@index}} block-item--{{type}}">
+  {{#if (eq type "image")}}
+    <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{{content}}}
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a href="{{link.url}}" target="_blank" rel="noopener">{{link.title}}</a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{{embed.html}}}
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <a href="{{attachment.url}}" download>{{attachment.file_name}}</a>
+  {{/if}}
+</div>
