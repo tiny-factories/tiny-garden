@@ -34,13 +34,22 @@ function timeAgo(dateStr: string): string {
   return `${months}mo ago`;
 }
 
+interface GroupData {
+  id: number;
+  slug: string;
+  name: string;
+  channels: Channel[];
+}
+
 export default function NewSitePage() {
   const router = useRouter();
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const [ownChannels, setOwnChannels] = useState<Channel[]>([]);
+  const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   const [templates, setTemplates] = useState<TemplateMeta[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
@@ -63,14 +72,33 @@ export default function NewSitePage() {
         return r.json();
       })
       .then((data) => {
-        const sorted = (data || []).sort(
+        const own = (data.own || []).sort(
           (a: Channel, b: Channel) =>
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         );
-        setChannels(sorted);
+        setOwnChannels(own);
+        setGroups(data.groups || []);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const channels = useMemo(() => {
+    if (filter === "own") return ownChannels;
+    const group = groups.find((g) => g.slug === filter);
+    if (group) return group.channels;
+    // "all" — deduplicated merge
+    const all = [...ownChannels, ...groups.flatMap((g) => g.channels)];
+    const seen = new Set<number>();
+    return all
+      .filter((ch) => {
+        if (seen.has(ch.id)) return false;
+        seen.add(ch.id);
+        return true;
+      })
+      .sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+  }, [ownChannels, groups, filter]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return channels;
@@ -133,14 +161,31 @@ export default function NewSitePage() {
           </Link>
         </div>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search channels..."
-          autoFocus
-          className="w-full px-3 py-2 border border-neutral-200 rounded text-sm mb-4 outline-none focus:border-neutral-400 transition-colors"
-        />
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search channels..."
+            autoFocus
+            className="flex-1 px-3 py-2 border border-neutral-200 rounded text-sm outline-none focus:border-neutral-400 transition-colors"
+          />
+          {groups.length > 0 && (
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="px-2 py-2 border border-neutral-200 rounded text-sm text-neutral-600"
+            >
+              <option value="all">All</option>
+              <option value="own">My channels</option>
+              {groups.map((g) => (
+                <option key={g.slug} value={g.slug}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
 
         {loading ? (
           <p className="text-sm text-neutral-400 py-8 text-center">

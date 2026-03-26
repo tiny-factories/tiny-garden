@@ -8,10 +8,25 @@ export async function GET() {
 
   try {
     const client = new ArenaClient(session.arenaToken);
-    const channels = await client.getAllUserChannels(session.arenaUserId);
-    return NextResponse.json(channels);
+
+    // Fetch own channels
+    const ownChannels = await client.getUserChannels(session.arenaUserId);
+
+    // Fetch groups and their channels
+    const groups = await client.getUserGroups(session.arenaUserId);
+    const groupData = await Promise.all(
+      groups.map(async (g) => {
+        const channels = await client.getGroupChannels(g.slug);
+        return { id: g.id, slug: g.slug, name: g.name || g.slug, channels };
+      })
+    );
+
+    return NextResponse.json({
+      own: ownChannels,
+      groups: groupData,
+    });
   } catch (error) {
     console.error("Failed to fetch channels:", error);
-    return NextResponse.json([], { status: 200 });
+    return NextResponse.json({ own: [], groups: [] }, { status: 200 });
   }
 }
