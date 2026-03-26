@@ -410,10 +410,10 @@ export default async function Home() {
             <p className="text-2xl font-medium mt-2">$0</p>
             <p className="text-xs text-neutral-400 mt-1">forever</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>1 site</li>
-              <li>Basic templates</li>
+              <li>3 sites</li>
+              <li>All templates</li>
               <li>Custom subdomain</li>
-              <li>Manual rebuilds</li>
+              <li>Manual rebuild</li>
             </ul>
           </div>
           <div className="border border-neutral-900 rounded p-5">
@@ -421,27 +421,25 @@ export default async function Home() {
             <p className="text-2xl font-medium mt-2">
               $8<span className="text-sm text-neutral-400 font-normal">/mo</span>
             </p>
-            <p className="text-xs text-neutral-400 mt-1">or $72/yr</p>
+            <p className="text-xs text-neutral-400 mt-1">cancel anytime</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>5 sites</li>
+              <li>10 sites</li>
               <li>All templates</li>
-              <li>Custom CSS</li>
-              <li>Custom domain</li>
-              <li>Auto-sync rebuilds</li>
+              <li>Custom subdomain</li>
+              <li>Daily auto-rebuild</li>
             </ul>
           </div>
           <div className="border border-neutral-200 rounded p-5">
             <p className="text-sm font-medium">Studio</p>
             <p className="text-2xl font-medium mt-2">
-              $20<span className="text-sm text-neutral-400 font-normal">/mo</span>
+              $25<span className="text-sm text-neutral-400 font-normal">/mo</span>
             </p>
-            <p className="text-xs text-neutral-400 mt-1">or $180/yr</p>
+            <p className="text-xs text-neutral-400 mt-1">cancel anytime</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>Unlimited sites</li>
-              <li>All templates + early access</li>
-              <li>Custom CSS</li>
-              <li>Custom domain</li>
-              <li>Auto-sync + webhooks</li>
+              <li>50 sites</li>
+              <li>All templates</li>
+              <li>Custom subdomain</li>
+              <li>Daily auto-rebuild</li>
             </ul>
           </div>
         </div>

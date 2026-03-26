@@ -113,7 +113,7 @@ export default function SitesPage() {
           <h1 className="text-lg font-medium">Your sites</h1>
           {account && (
             <p className="text-xs text-neutral-400 mt-1">
-              {sites.length} / {account.isAdmin || account.isFriend || account.plan === "pro" ? "∞" : "1"}
+              {sites.length} / {account.isAdmin || account.isFriend ? "∞" : account.plan === "studio" ? "50" : account.plan === "pro" ? "10" : "3"}
             </p>
           )}
         </div>

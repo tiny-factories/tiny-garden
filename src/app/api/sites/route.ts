@@ -24,16 +24,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Check site limit for free plan
+  // Check site limit based on plan
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.userId },
     include: { subscription: true, sites: true },
   });
 
-  const isFree = !user.subscription || user.subscription.plan === "free";
-  if (isFree && !user.isAdmin && !user.isFriend && user.sites.length >= 1) {
+  const plan = user.subscription?.plan || "free";
+  const limits: Record<string, number> = { free: 3, pro: 10, studio: 50 };
+  const limit = limits[plan] ?? 3;
+
+  if (!user.isAdmin && !user.isFriend && user.sites.length >= limit) {
     return NextResponse.json(
-      { error: "Free plan allows 1 site. Upgrade to Pro for unlimited sites." },
+      { error: `Your ${plan} plan allows ${limit} sites. Upgrade for more.` },
       { status: 403 }
     );
   }

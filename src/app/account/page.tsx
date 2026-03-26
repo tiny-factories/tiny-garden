@@ -114,7 +114,7 @@ export default function AccountPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">
-              {account.plan === "pro" ? "Pro" : "Free"} plan
+              {{ free: "Free", pro: "Pro", studio: "Studio" }[account.plan] || "Free"} plan
               {account.isAdmin && (
                 <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
                   Admin
@@ -127,9 +127,7 @@ export default function AccountPage() {
               )}
             </p>
             <p className="text-xs text-neutral-400 mt-0.5">
-              {account.plan === "pro"
-                ? "Unlimited sites"
-                : "1 site included"}
+              {{ free: "3 sites, manual rebuild", pro: "10 sites, daily auto-rebuild", studio: "50 sites, daily auto-rebuild" }[account.plan] || "3 sites"}
             </p>
           </div>
           {account.plan === "free" && (

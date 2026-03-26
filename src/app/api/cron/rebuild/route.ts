@@ -10,9 +10,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Only auto-rebuild for Pro and Studio plans (free = manual only)
   const sites = await prisma.site.findMany({
-    where: { published: true },
-    include: { user: true },
+    where: {
+      published: true,
+      user: {
+        OR: [
+          { isAdmin: true },
+          { isFriend: true },
+          { subscription: { plan: { in: ["pro", "studio"] } } },
+        ],
+      },
+    },
+    include: { user: { include: { subscription: true } } },
   });
 
   let rebuilt = 0;
