@@ -421,24 +421,28 @@ export default async function Home() {
             <p className="text-2xl font-medium mt-2">
               $8<span className="text-sm text-neutral-400 font-normal">/mo</span>
             </p>
-            <p className="text-xs text-neutral-400 mt-1">cancel anytime</p>
+            <p className="text-xs text-neutral-400 mt-1">$72/yr (save 25%)</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
               <li>10 sites</li>
               <li>All templates</li>
-              <li>Custom subdomain</li>
+              <li>Custom themes (colors &amp; fonts)</li>
               <li>Daily auto-rebuild</li>
             </ul>
           </div>
-          <div className="border border-neutral-200 rounded p-5">
+          <div className="border border-neutral-200 rounded p-5 relative">
+            <span className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-400 rounded">
+              Coming soon
+            </span>
             <p className="text-sm font-medium">Studio</p>
             <p className="text-2xl font-medium mt-2">
               $25<span className="text-sm text-neutral-400 font-normal">/mo</span>
             </p>
-            <p className="text-xs text-neutral-400 mt-1">cancel anytime</p>
+            <p className="text-xs text-neutral-400 mt-1">$225/yr (save 25%)</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
               <li>50 sites</li>
               <li>All templates</li>
-              <li>Custom subdomain</li>
+              <li>Custom themes (colors &amp; fonts)</li>
+              <li>Custom domains</li>
               <li>Daily auto-rebuild</li>
             </ul>
           </div>

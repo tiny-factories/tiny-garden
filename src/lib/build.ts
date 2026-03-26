@@ -216,6 +216,36 @@ export async function buildSite(siteId: string): Promise<string> {
     Handlebars.registerPartial("block", blockPartialSource);
   }
 
+  // Build theme override CSS from saved colors/fonts
+  let themeOverrideCss = "";
+  if (site.themeColors) {
+    try {
+      const c = JSON.parse(site.themeColors);
+      themeOverrideCss += `:root { --color-bg: ${c.background}; --color-text: ${c.text}; --color-accent: ${c.accent}; --color-border: ${c.border}; }\n`;
+      themeOverrideCss += `body { background-color: ${c.background}; color: ${c.text}; }\n`;
+      themeOverrideCss += `a { color: ${c.accent}; }\n`;
+    } catch {}
+  }
+  if (site.themeFonts) {
+    try {
+      const f = JSON.parse(site.themeFonts);
+      const fontMap: Record<string, string> = {
+        system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        inter: '"Inter", sans-serif',
+        georgia: '"Georgia", serif',
+        menlo: '"Menlo", "Consolas", monospace',
+        palatino: '"Palatino Linotype", "Palatino", serif',
+        helvetica: '"Helvetica Neue", "Helvetica", sans-serif',
+      };
+      if (f.heading && f.heading !== "system") {
+        themeOverrideCss += `h1, h2, h3, h4, h5, h6 { font-family: ${fontMap[f.heading] || fontMap.system}; }\n`;
+      }
+      if (f.body && f.body !== "system") {
+        themeOverrideCss += `body { font-family: ${fontMap[f.body] || fontMap.system}; }\n`;
+      }
+    } catch {}
+  }
+
   const template = Handlebars.compile(templateSource);
   let html = template({ ...siteData, styles: styleContent });
 
@@ -225,6 +255,11 @@ export async function buildSite(siteId: string): Promise<string> {
       /<link[^>]*rel=["']stylesheet["'][^>]*href=["']style\.css["'][^>]*\/?>/i,
       `<style>${styleContent}</style>`
     );
+  }
+
+  // Inject theme overrides before </head>
+  if (themeOverrideCss) {
+    html = html.replace("</head>", `<style>${themeOverrideCss}</style>\n</head>`);
   }
 
   // Upload to Vercel Blob if token available, otherwise write to filesystem

@@ -30,6 +30,8 @@ model Site {
   channelTitle  String
   template      String   @default("blog")
   customCss     String?
+  themeColors   String?  // JSON: { background, text, accent, border }
+  themeFonts    String?  // JSON: { heading, body }
   published     Boolean  @default(false)
   featured      Boolean  @default(false)
   blobUrl       String?

@@ -202,6 +202,12 @@ export default function SitesPage() {
                 </div>
 
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-50">
+                  <Link
+                    href={`/sites/${site.id}`}
+                    className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                  >
+                    Settings
+                  </Link>
                   <button
                     onClick={() => handleDelete(site.id)}
                     className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors ml-auto"
