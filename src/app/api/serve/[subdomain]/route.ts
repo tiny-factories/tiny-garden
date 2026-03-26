@@ -1,22 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { prisma } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ subdomain: string }> }
 ) {
   const { subdomain } = await params;
+
+  // Check if site exists and has a blob URL (production)
+  const site = await prisma.site.findUnique({
+    where: { subdomain },
+    select: { blobUrl: true, published: true },
+  });
+
+  if (site?.blobUrl) {
+    // Fetch from Vercel Blob
+    const res = await fetch(site.blobUrl);
+    if (!res.ok) return new NextResponse("Not found", { status: 404 });
+
+    const html = await res.text();
+    return new NextResponse(html, {
+      headers: {
+        "Content-Type": "text/html",
+        "Cache-Control": "public, max-age=300",
+      },
+    });
+  }
+
+  // Fallback: serve from local filesystem (dev)
   const generatedDir = path.join(process.cwd(), "generated", subdomain);
 
-  // Determine which file to serve
   let filePath = req.nextUrl.pathname.replace(`/api/serve/${subdomain}`, "");
   if (!filePath || filePath === "/") filePath = "/index.html";
 
-
   const fullPath = path.join(generatedDir, filePath);
 
-  // Prevent path traversal
   if (!fullPath.startsWith(generatedDir)) {
     return new NextResponse("Forbidden", { status: 403 });
   }

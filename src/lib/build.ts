@@ -1,6 +1,7 @@
 import Handlebars from "handlebars";
 import fs from "fs/promises";
 import path from "path";
+import { put } from "@vercel/blob";
 import { ArenaClient, ArenaBlock } from "./arena";
 import { prisma } from "./db";
 
@@ -226,19 +227,32 @@ export async function buildSite(siteId: string): Promise<string> {
     );
   }
 
-  // Write to generated directory
-  const outputDir = path.join(process.cwd(), "generated", site.subdomain);
-  await fs.mkdir(outputDir, { recursive: true });
-  await fs.writeFile(path.join(outputDir, "index.html"), html);
-  if (styleContent) {
-    await fs.writeFile(path.join(outputDir, "style.css"), styleContent);
+  // Upload to Vercel Blob (production) or write to filesystem (dev)
+  const isVercel = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (isVercel) {
+    const blob = await put(`sites/${site.subdomain}/index.html`, html, {
+      access: "public",
+      contentType: "text/html",
+      addRandomSuffix: false,
+    });
+
+    await prisma.site.update({
+      where: { id: siteId },
+      data: { lastBuiltAt: new Date(), published: true, blobUrl: blob.url },
+    });
+
+    return blob.url;
+  } else {
+    const outputDir = path.join(process.cwd(), "generated", site.subdomain);
+    await fs.mkdir(outputDir, { recursive: true });
+    await fs.writeFile(path.join(outputDir, "index.html"), html);
+
+    await prisma.site.update({
+      where: { id: siteId },
+      data: { lastBuiltAt: new Date(), published: true },
+    });
+
+    return outputDir;
   }
-
-  // Update site record
-  await prisma.site.update({
-    where: { id: siteId },
-    data: { lastBuiltAt: new Date(), published: true },
-  });
-
-  return outputDir;
 }

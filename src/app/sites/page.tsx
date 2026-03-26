@@ -40,15 +40,26 @@ function Toggle({
   );
 }
 
+interface AccountInfo {
+  plan: string;
+  isAdmin: boolean;
+}
+
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
+  const [account, setAccount] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetch("/api/sites")
-      .then((r) => r.json())
-      .then(setSites)
+    Promise.all([
+      fetch("/api/sites").then((r) => r.json()),
+      fetch("/api/account").then((r) => r.json()),
+    ])
+      .then(([sitesData, accountData]) => {
+        setSites(sitesData);
+        setAccount(accountData);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -97,7 +108,14 @@ export default function SitesPage() {
   return (
     <main className="min-h-screen max-w-2xl mx-auto px-4 py-16">
       <div className="flex items-center justify-between mb-12">
-        <h1 className="text-lg font-medium">Your sites</h1>
+        <div>
+          <h1 className="text-lg font-medium">Your sites</h1>
+          {account && (
+            <p className="text-xs text-neutral-400 mt-1">
+              {sites.length} / {account.isAdmin ? "∞" : account.plan === "pro" ? "∞" : "1"}
+            </p>
+          )}
+        </div>
         <Link
           href="/site/new"
           className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
