@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/lib/track";
 
 interface Account {
   id: string;
@@ -28,6 +29,7 @@ export default function AccountPage() {
   }, []);
 
   async function handleUpgrade() {
+    track("upgrade-started");
     setUpgrading(true);
     const res = await fetch("/api/billing/checkout", { method: "POST" });
     if (res.ok) {
@@ -38,6 +40,7 @@ export default function AccountPage() {
   }
 
   async function handleLogout() {
+    track("logged-out");
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
   }
@@ -48,6 +51,7 @@ export default function AccountPage() {
     );
     if (confirmed !== "delete") return;
 
+    track("account-deleted");
     setDeleting(true);
     const res = await fetch("/api/account/delete", { method: "POST" });
     if (res.ok) {
@@ -79,6 +83,7 @@ export default function AccountPage() {
       <section className="mb-8 p-4 border border-neutral-100 rounded">
         <div className="flex items-center gap-3 mb-4">
           {account.avatarUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={account.avatarUrl}
               alt=""

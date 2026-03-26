@@ -166,13 +166,6 @@ export async function buildSite(siteId: string): Promise<string> {
   const client = new ArenaClient(site.user.arenaToken);
   const channel = await client.getChannel(site.channelSlug);
   const blocks = await client.getAllChannelBlocks(site.channelSlug);
-  console.log(`Fetched ${blocks.length} blocks`);
-  // Log image structure from first image block
-  const imgBlock = blocks.find((b: Record<string, unknown>) => (b.type || b.class) === "Image");
-  if (imgBlock) {
-    console.log("Image block .image:", JSON.stringify(imgBlock.image));
-    console.log("Image block .source:", JSON.stringify(imgBlock.source));
-  }
 
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";

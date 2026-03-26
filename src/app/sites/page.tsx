@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { track } from "@/lib/track";
 
 interface Site {
   id: string;
@@ -63,8 +64,10 @@ export default function SitesPage() {
       const updated = await fetch("/api/sites").then((r) => r.json());
       setSites(updated);
       setBuilding((b) => ({ ...b, [site.id]: false }));
+      track("site-unpublished", { subdomain: site.subdomain, template: site.template });
     } else {
       // Build and publish
+      track("site-published", { subdomain: site.subdomain, template: site.template });
       await handleBuild(site.id);
     }
   }
@@ -81,8 +84,10 @@ export default function SitesPage() {
 
   async function handleDelete(siteId: string) {
     if (!confirm("Delete this site?")) return;
+    const site = sites.find((s) => s.id === siteId);
     const res = await fetch(`/api/sites/${siteId}`, { method: "DELETE" });
     if (res.ok) {
+      track("site-deleted", { subdomain: site?.subdomain || "", template: site?.template || "" });
       setSites(sites.filter((s) => s.id !== siteId));
     }
   }

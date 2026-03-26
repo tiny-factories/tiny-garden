@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { track } from "@/lib/track";
 
 interface Channel {
   id: number;
@@ -83,6 +84,7 @@ export default function NewSitePage() {
 
   function handleChannelSelect(channel: Channel) {
     setSelectedChannel(channel);
+    track("channel-selected", { channel: channel.slug, blocks: channel.length });
     if (!subdomain) {
       setSubdomain(channel.slug);
     }
@@ -106,10 +108,12 @@ export default function NewSitePage() {
 
     if (res.ok) {
       const site = await res.json();
+      track("site-created", { template: selectedTemplate, channel: selectedChannel.slug, subdomain });
       await fetch(`/api/sites/${site.id}/build`, { method: "POST" });
       router.push("/sites");
     } else {
       const data = await res.json();
+      track("site-create-error", { error: data.error || "unknown" });
       setError(data.error || "Failed to create site");
       setCreating(false);
     }
