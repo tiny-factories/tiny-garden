@@ -51,6 +51,7 @@ async function downloadAndUploadAsset(
       access: "private",
       contentType,
       addRandomSuffix: false,
+      allowOverwrite: true,
       token: blobToken,
     });
 
@@ -393,6 +394,7 @@ export async function buildSite(siteId: string): Promise<string> {
       access: "private",
       contentType: "text/html",
       addRandomSuffix: false,
+      allowOverwrite: true,
       token: blobToken,
     });
 
