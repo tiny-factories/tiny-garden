@@ -9,6 +9,7 @@ interface Account {
   arenaUsername: string;
   avatarUrl: string | null;
   isAdmin: boolean;
+  isFriend: boolean;
   plan: string;
   subscriptionStatus: string;
   siteCount: number;
@@ -117,6 +118,11 @@ export default function AccountPage() {
               {account.isAdmin && (
                 <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
                   Admin
+                </span>
+              )}
+              {account.isFriend && !account.isAdmin && (
+                <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
+                  Friend
                 </span>
               )}
             </p>
