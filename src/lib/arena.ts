@@ -202,18 +202,17 @@ export class ArenaClient {
     }
   }
 
-  async getGroupChannels(groupId: number): Promise<ArenaChannel[]> {
+  async getGroupChannels(groupSlug: string): Promise<ArenaChannel[]> {
     try {
       const channels: ArenaChannel[] = [];
       let page = 1;
       let hasMore = true;
 
       while (hasMore) {
-        const data = await this.fetch<{ data: ArenaChannel[]; meta: { has_more_pages: boolean } }>(`/users/${groupId}/contents`, {
+        const data = await this.fetch<{ data: ArenaChannel[]; meta: { has_more_pages: boolean } }>(`/groups/${groupSlug}/contents`, {
           per: "100",
           page: String(page),
           type: "Channel",
-          sort: "updated_at_desc",
         });
         channels.push(...(data.data || []));
         hasMore = data.meta?.has_more_pages ?? false;
@@ -221,7 +220,8 @@ export class ArenaClient {
       }
 
       return channels;
-    } catch {
+    } catch (e) {
+      console.error(`Failed to fetch group channels for ${groupSlug}:`, e);
       return [];
     }
   }
@@ -260,7 +260,7 @@ export class ArenaClient {
     // Get channels from groups/teams
     const groups = await this.getUserGroups(userId);
     const groupChannelArrays = await Promise.all(
-      groups.map((g) => this.getGroupChannels(g.id))
+      groups.map((g) => this.getGroupChannels(g.slug))
     );
 
     // Get channels user follows/collaborates on

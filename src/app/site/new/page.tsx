@@ -10,7 +10,10 @@ interface Channel {
   title: string;
   slug: string;
   length: number;
+  counts?: { contents: number };
   updated_at: string;
+  visibility?: string; // "public" | "closed" | "private"
+  owner?: { name?: string; type?: string; slug?: string };
 }
 
 interface TemplateMeta {
@@ -203,13 +206,30 @@ export default function NewSitePage() {
               <button
                 key={ch.id}
                 onClick={() => handleChannelSelect(ch)}
-                className="w-full text-left px-3 py-3 border-b border-neutral-100 hover:bg-neutral-50 transition-colors flex items-baseline justify-between gap-4"
+                className="w-full text-left px-3 py-3 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
               >
-                <span className="text-sm font-medium truncate">
-                  {ch.title}
-                </span>
-                <span className="text-xs text-neutral-400 shrink-0">
-                  {ch.length} blocks &middot; {timeAgo(ch.updated_at)}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium truncate">
+                    {ch.title}
+                  </span>
+                  {ch.visibility === "closed" && (
+                    <span className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-400 rounded shrink-0">
+                      Closed
+                    </span>
+                  )}
+                  {ch.visibility === "private" && (
+                    <span className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-400 rounded shrink-0">
+                      Private
+                    </span>
+                  )}
+                  {ch.owner?.type === "Group" && (
+                    <span className="text-[10px] px-1 py-0.5 bg-blue-50 text-blue-400 rounded shrink-0">
+                      {ch.owner.name}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-neutral-400">
+                  {ch.counts?.contents || ch.length || 0} blocks &middot; {timeAgo(ch.updated_at)}
                 </span>
               </button>
             ))}

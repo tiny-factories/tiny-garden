@@ -19,7 +19,7 @@ export async function GET() {
 
     const groupData = await Promise.all(
       groups.map(async (g) => {
-        const channels = await client.getGroupChannels(g.id);
+        const channels = await client.getGroupChannels(g.slug);
         console.log(`Group "${g.name || g.slug}" (id: ${g.id}): ${channels.length} channels`);
         return { id: g.id, slug: g.slug, name: g.name || g.slug, channels };
       })
