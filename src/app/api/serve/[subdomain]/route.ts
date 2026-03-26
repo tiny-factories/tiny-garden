@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { head } from "@vercel/blob";
 import { prisma } from "@/lib/db";
 
 export async function GET(
@@ -16,8 +17,11 @@ export async function GET(
   });
 
   if (site?.blobUrl) {
-    // Fetch from Vercel Blob
-    const res = await fetch(site.blobUrl);
+    // Fetch from Vercel Blob (private store requires auth header)
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    const res = await fetch(site.blobUrl, {
+      headers: blobToken ? { Authorization: `Bearer ${blobToken}` } : {},
+    });
     if (!res.ok) return new NextResponse("Not found", { status: 404 });
 
     const html = await res.text();

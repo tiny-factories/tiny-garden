@@ -232,7 +232,7 @@ export async function buildSite(siteId: string): Promise<string> {
 
   if (blobToken) {
     const blob = await put(`sites/${site.subdomain}/index.html`, html, {
-      access: "public",
+      access: "private",
       contentType: "text/html",
       addRandomSuffix: false,
       token: blobToken,
