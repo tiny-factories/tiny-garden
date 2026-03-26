@@ -44,6 +44,7 @@ interface GroupData {
 export default function NewSitePage() {
   const router = useRouter();
   const [ownChannels, setOwnChannels] = useState<Channel[]>([]);
+  const [followingChannels, setFollowingChannels] = useState<Channel[]>([]);
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -78,16 +79,18 @@ export default function NewSitePage() {
         );
         setOwnChannels(own);
         setGroups(data.groups || []);
+        setFollowingChannels(data.following || []);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const channels = useMemo(() => {
     if (filter === "own") return ownChannels;
+    if (filter === "following") return followingChannels;
     const group = groups.find((g) => g.slug === filter);
     if (group) return group.channels;
     // "all" — deduplicated merge
-    const all = [...ownChannels, ...groups.flatMap((g) => g.channels)];
+    const all = [...ownChannels, ...groups.flatMap((g) => g.channels), ...followingChannels];
     const seen = new Set<number>();
     return all
       .filter((ch) => {
@@ -98,7 +101,7 @@ export default function NewSitePage() {
       .sort(
         (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
-  }, [ownChannels, groups, filter]);
+  }, [ownChannels, followingChannels, groups, filter]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return channels;
@@ -162,21 +165,20 @@ export default function NewSitePage() {
         </div>
 
         <div className="flex items-center border border-neutral-200 rounded mb-4 focus-within:border-neutral-400 transition-colors">
-          {groups.length > 0 && (
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-2 py-2 text-sm text-neutral-600 bg-neutral-50 border-r border-neutral-200 rounded-l outline-none"
-            >
-              <option value="all">All</option>
-              <option value="own">Mine</option>
-              {groups.map((g) => (
-                <option key={g.slug} value={g.slug}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          )}
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="px-2 py-2 text-sm text-neutral-600 bg-neutral-50 border-r border-neutral-200 rounded-l outline-none"
+          >
+            <option value="all">All</option>
+            <option value="own">Mine</option>
+            <option value="following">Following</option>
+            {groups.map((g) => (
+              <option key={g.slug} value={g.slug}>
+                {g.name}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             value={search}

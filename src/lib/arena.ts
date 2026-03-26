@@ -226,6 +226,33 @@ export class ArenaClient {
     }
   }
 
+  async getFollowingChannels(userId: number): Promise<ArenaChannel[]> {
+    try {
+      const channels: ArenaChannel[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const data = await this.fetch<{ data: Array<ArenaChannel & { type?: string; base_type?: string }>; meta: { has_more_pages: boolean } }>(`/users/${userId}/following`, {
+          per: "100",
+          page: String(page),
+          type: "Channel",
+        });
+        // Filter to channels only (following can include users too)
+        const ch = (data.data || []).filter(
+          (item) => item.base_type === "Channel" || item.type === "Channel"
+        );
+        channels.push(...ch);
+        hasMore = data.meta?.has_more_pages ?? false;
+        page++;
+      }
+
+      return channels;
+    } catch {
+      return [];
+    }
+  }
+
   async getAllUserChannels(userId: number): Promise<ArenaChannel[]> {
     // Get user's own channels
     const ownChannels = await this.getUserChannels(userId);
@@ -236,8 +263,11 @@ export class ArenaClient {
       groups.map((g) => this.getGroupChannels(g.id))
     );
 
+    // Get channels user follows/collaborates on
+    const followingChannels = await this.getFollowingChannels(userId);
+
     // Merge and deduplicate by id
-    const allChannels = [...ownChannels, ...groupChannelArrays.flat()];
+    const allChannels = [...ownChannels, ...groupChannelArrays.flat(), ...followingChannels];
     const seen = new Set<number>();
     return allChannels.filter((ch) => {
       if (seen.has(ch.id)) return false;
