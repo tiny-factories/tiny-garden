@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 
 interface FeaturedSite {
   id: string;
@@ -10,12 +11,18 @@ interface FeaturedSite {
 
 async function getFeaturedSites(): Promise<FeaturedSite[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/admin/feature`, {
-      next: { revalidate: 60 },
+    const sites = await prisma.site.findMany({
+      where: { featured: true, published: true },
+      include: { user: { select: { arenaUsername: true } } },
+      orderBy: { createdAt: "desc" },
     });
-    if (!res.ok) return [];
-    return res.json();
+    return sites.map((s) => ({
+      id: s.id,
+      subdomain: s.subdomain,
+      channelTitle: s.channelTitle,
+      template: s.template,
+      arenaUsername: s.user.arenaUsername,
+    }));
   } catch {
     return [];
   }
