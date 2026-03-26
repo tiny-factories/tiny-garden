@@ -2,9 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function Nav() {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/account")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.isAdmin) setIsAdmin(true);
+      })
+      .catch(() => {});
+  }, []);
 
   // Don't show nav on public pages
   if (pathname === "/" || pathname === "/login") return null;
@@ -42,10 +53,12 @@ export function Nav() {
         >
           Account
         </Link>
-        {pathname.startsWith("/admin") && (
+        {isAdmin && (
           <Link
             href="/admin"
-            className="text-sm text-neutral-900"
+            className={`text-sm transition-colors ${
+              pathname.startsWith("/admin") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+            }`}
           >
             Admin
           </Link>
