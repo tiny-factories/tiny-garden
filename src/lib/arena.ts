@@ -129,4 +129,47 @@ export class ArenaClient {
     });
     return data.data;
   }
+
+  async getUserGroups(userId: number): Promise<{ id: number; slug: string; name?: string }[]> {
+    try {
+      const data = await this.fetch<{ data: { id: number; slug: string; name?: string }[] }>(`/users/${userId}/groups`, {
+        per: "100",
+      });
+      return data.data || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async getGroupChannels(groupSlug: string): Promise<ArenaChannel[]> {
+    try {
+      const data = await this.fetch<{ data: ArenaChannel[] }>(`/groups/${groupSlug}/channels`, {
+        per: "100",
+        sort: "updated_at_desc",
+      });
+      return data.data || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async getAllUserChannels(userId: number): Promise<ArenaChannel[]> {
+    // Get user's own channels
+    const ownChannels = await this.getUserChannels(userId);
+
+    // Get channels from groups/teams
+    const groups = await this.getUserGroups(userId);
+    const groupChannelArrays = await Promise.all(
+      groups.map((g) => this.getGroupChannels(g.slug))
+    );
+
+    // Merge and deduplicate by id
+    const allChannels = [...ownChannels, ...groupChannelArrays.flat()];
+    const seen = new Set<number>();
+    return allChannels.filter((ch) => {
+      if (seen.has(ch.id)) return false;
+      seen.add(ch.id);
+      return true;
+    });
+  }
 }

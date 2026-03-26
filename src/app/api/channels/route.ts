@@ -8,7 +8,7 @@ export async function GET() {
 
   try {
     const client = new ArenaClient(session.arenaToken);
-    const channels = await client.getUserChannels(session.arenaUserId);
+    const channels = await client.getAllUserChannels(session.arenaUserId);
     return NextResponse.json(channels);
   } catch (error) {
     console.error("Failed to fetch channels:", error);
