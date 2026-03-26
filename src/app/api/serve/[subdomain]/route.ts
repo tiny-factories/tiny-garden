@@ -10,11 +10,15 @@ export async function GET(
 ) {
   const { subdomain } = await params;
 
-  // Check if site exists and has a blob URL (production)
+  // Check if site exists and is published
   const site = await prisma.site.findUnique({
     where: { subdomain },
     select: { blobUrl: true, published: true },
   });
+
+  if (!site?.published) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
   if (site?.blobUrl) {
     // Fetch from Vercel Blob (private store requires auth header)
