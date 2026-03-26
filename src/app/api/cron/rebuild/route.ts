@@ -42,6 +42,9 @@ export async function GET(req: NextRequest) {
       }
 
       await buildSite(site.id);
+
+      // Pause between site rebuilds to respect rate limits
+      await new Promise((r) => setTimeout(r, 1000));
       rebuilt++;
     } catch (error) {
       console.error(`Cron rebuild failed for ${site.subdomain}:`, error);

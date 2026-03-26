@@ -62,21 +62,58 @@ export interface ArenaBlock {
   updated_at: string;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class ArenaClient {
   private token: string;
+  private lastRequestAt = 0;
+  private minInterval = 300; // ms between requests
 
   constructor(token: string) {
     this.token = token;
   }
 
   private async fetch<T>(path: string, params?: Record<string, string>): Promise<T> {
+    // Enforce minimum interval between requests
+    const now = Date.now();
+    const elapsed = now - this.lastRequestAt;
+    if (elapsed < this.minInterval) {
+      await sleep(this.minInterval - elapsed);
+    }
+    this.lastRequestAt = Date.now();
+
     const url = new URL(`${ARENA_API}${path}`);
     if (params) {
       Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     }
+
     const res = await fetch(url.toString(), {
       headers: { Authorization: `Bearer ${this.token}` },
     });
+
+    // Handle rate limiting — wait and retry once
+    if (res.status === 429) {
+      const resetHeader = res.headers.get("X-RateLimit-Reset");
+      const resetAt = resetHeader ? parseInt(resetHeader, 10) * 1000 : Date.now() + 60000;
+      const waitMs = Math.min(Math.max(resetAt - Date.now(), 1000), 60000);
+      console.warn(`Are.na rate limited on ${path}, waiting ${waitMs}ms`);
+      await sleep(waitMs);
+
+      // Retry once
+      this.lastRequestAt = Date.now();
+      const retryRes = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${this.token}` },
+      });
+      if (!retryRes.ok) {
+        const body = await retryRes.text();
+        console.error(`Are.na API error after retry: ${retryRes.status} ${url.toString()}`, body);
+        throw new Error(`Are.na API error: ${retryRes.status} ${retryRes.statusText}`);
+      }
+      return retryRes.json() as Promise<T>;
+    }
+
     if (!res.ok) {
       const body = await res.text();
       console.error(`Are.na API error: ${res.status} ${url.toString()}`, body);
