@@ -163,14 +163,14 @@ export default function SitesPage() {
               {/* Preview iframe — shown when published */}
               {site.published && (
                 <a
-                  href={`/api/serve/${site.subdomain}`}
+                  href={`https://${site.subdomain}.${siteDomain}`}
                   target="_blank"
                   rel="noopener"
                   className="block relative bg-neutral-50 group cursor-pointer"
                 >
                   <div className="aspect-[16/9] overflow-hidden">
                     <iframe
-                      src={`/api/serve/${site.subdomain}`}
+                      src={`https://${site.subdomain}.${siteDomain}`}
                       className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
                       tabIndex={-1}
                       title={`Preview of ${site.channelTitle}`}
