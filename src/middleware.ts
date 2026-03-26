@@ -15,7 +15,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Protect dashboard routes
-  const isProtected = req.nextUrl.pathname.startsWith("/sites") || req.nextUrl.pathname.startsWith("/site") || req.nextUrl.pathname.startsWith("/account");
+  const isProtected = req.nextUrl.pathname.startsWith("/sites") || req.nextUrl.pathname.startsWith("/site") || req.nextUrl.pathname.startsWith("/account") || req.nextUrl.pathname.startsWith("/admin");
   const hasSession = req.cookies.has("session");
 
   if (isProtected && !hasSession) {

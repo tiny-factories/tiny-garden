@@ -1,5 +1,26 @@
 import Link from "next/link";
 
+interface FeaturedSite {
+  id: string;
+  subdomain: string;
+  channelTitle: string;
+  template: string;
+  arenaUsername: string;
+}
+
+async function getFeaturedSites(): Promise<FeaturedSite[]> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/admin/feature`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 function TemplatePreview({
   name,
   slug,
@@ -42,7 +63,8 @@ function FeatureItem({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const featuredSites = await getFeaturedSites();
   return (
     <main className="min-h-screen">
       {/* Nav */}
@@ -424,43 +446,71 @@ export default function Home() {
           Featured sites
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            {
-              title: "Field Notes",
-              desc: "Research and observations",
-              subdomain: "field-notes",
-            },
-            {
-              title: "Visual References",
-              desc: "Collected imagery and inspiration",
-              subdomain: "visual-refs",
-            },
-            {
-              title: "Reading List",
-              desc: "Articles, essays, and books",
-              subdomain: "reading-list",
-            },
-            {
-              title: "Studio Archive",
-              desc: "Work in progress and documentation",
-              subdomain: "studio-archive",
-            },
-          ].map((site) => (
-            <div
-              key={site.subdomain}
-              className="border border-neutral-200 rounded overflow-hidden group"
-            >
-              <div className="bg-neutral-50 aspect-[16/10] flex items-center justify-center">
-                <span className="text-xs text-neutral-300">
-                  {site.subdomain}.tiny.garden
-                </span>
-              </div>
-              <div className="p-3">
-                <p className="text-sm font-medium">{site.title}</p>
-                <p className="text-xs text-neutral-400 mt-0.5">{site.desc}</p>
-              </div>
-            </div>
-          ))}
+          {featuredSites.length > 0
+            ? featuredSites.map((site) => (
+                <a
+                  key={site.id}
+                  href={`/api/serve/${site.subdomain}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="border border-neutral-200 rounded overflow-hidden group hover:border-neutral-400 transition-colors block"
+                >
+                  <div className="bg-neutral-50 aspect-[16/10] overflow-hidden">
+                    <iframe
+                      src={`/api/serve/${site.subdomain}`}
+                      className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
+                      tabIndex={-1}
+                      title={`Preview of ${site.channelTitle}`}
+                    />
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-medium">{site.channelTitle}</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">
+                      {site.subdomain}.tiny.garden &middot; by{" "}
+                      {site.arenaUsername}
+                    </p>
+                  </div>
+                </a>
+              ))
+            : [
+                {
+                  title: "Field Notes",
+                  desc: "Research and observations",
+                  subdomain: "field-notes",
+                },
+                {
+                  title: "Visual References",
+                  desc: "Collected imagery and inspiration",
+                  subdomain: "visual-refs",
+                },
+                {
+                  title: "Reading List",
+                  desc: "Articles, essays, and books",
+                  subdomain: "reading-list",
+                },
+                {
+                  title: "Studio Archive",
+                  desc: "Work in progress and documentation",
+                  subdomain: "studio-archive",
+                },
+              ].map((site) => (
+                <div
+                  key={site.subdomain}
+                  className="border border-neutral-200 rounded overflow-hidden group"
+                >
+                  <div className="bg-neutral-50 aspect-[16/10] flex items-center justify-center">
+                    <span className="text-xs text-neutral-300">
+                      {site.subdomain}.tiny.garden
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-medium">{site.title}</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">
+                      {site.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
         </div>
       </section>
 

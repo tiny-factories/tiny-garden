@@ -30,6 +30,7 @@ model Site {
   template      String   @default("blog")
   customCss     String?
   published     Boolean  @default(false)
+  featured      Boolean  @default(false)
   blobUrl       String?
   lastBuiltAt   DateTime?
   createdAt     DateTime @default(now())

@@ -42,6 +42,14 @@ export function Nav() {
         >
           Account
         </Link>
+        {pathname.startsWith("/admin") && (
+          <Link
+            href="/admin"
+            className="text-sm text-neutral-900"
+          >
+            Admin
+          </Link>
+        )}
       </div>
     </nav>
   );

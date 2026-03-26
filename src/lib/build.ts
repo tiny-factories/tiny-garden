@@ -227,14 +227,15 @@ export async function buildSite(siteId: string): Promise<string> {
     );
   }
 
-  // Upload to Vercel Blob (production) or write to filesystem (dev)
-  const isVercel = !!process.env.BLOB_READ_WRITE_TOKEN;
+  // Upload to Vercel Blob if token available, otherwise write to filesystem
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
 
-  if (isVercel) {
+  if (blobToken) {
     const blob = await put(`sites/${site.subdomain}/index.html`, html, {
       access: "public",
       contentType: "text/html",
       addRandomSuffix: false,
+      token: blobToken,
     });
 
     await prisma.site.update({
@@ -244,7 +245,9 @@ export async function buildSite(siteId: string): Promise<string> {
 
     return blob.url;
   } else {
-    const outputDir = path.join(process.cwd(), "generated", site.subdomain);
+    // Use /tmp on Vercel (read-only fs), or generated/ locally
+    const base = process.env.VERCEL ? "/tmp" : path.join(process.cwd(), "generated");
+    const outputDir = path.join(base, site.subdomain);
     await fs.mkdir(outputDir, { recursive: true });
     await fs.writeFile(path.join(outputDir, "index.html"), html);
 

@@ -3,29 +3,7 @@ import Link from "next/link";
 export default function About() {
   return (
     <main className="min-h-screen">
-      {/* Nav */}
-      <nav className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-between">
-        <Link href="/" className="text-sm font-medium">
-          tiny.garden
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/about"
-            className="text-sm text-neutral-900 transition-colors"
-          >
-            About
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors"
-          >
-            Log in
-          </Link>
-        </div>
-      </nav>
-
-      {/* Content */}
-      <section className="max-w-3xl mx-auto px-4 pt-24 pb-16">
+      <section className="max-w-3xl mx-auto px-4 pt-16 pb-16">
         <h1 className="text-2xl font-medium tracking-tight">About</h1>
 
         <p className="text-sm text-neutral-500 mt-6 max-w-lg leading-relaxed">
