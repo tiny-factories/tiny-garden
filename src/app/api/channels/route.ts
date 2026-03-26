@@ -1,41 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { ArenaClient } from "@/lib/arena";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const source = req.nextUrl.searchParams.get("source") || "own";
 
   try {
     const client = new ArenaClient(session.arenaToken);
 
-    // Fetch own channels
-    const ownChannels = await client.getUserChannels(session.arenaUserId);
-    console.log(`Own channels: ${ownChannels.length}`);
+    if (source === "own") {
+      const channels = await client.getUserChannels(session.arenaUserId);
+      return NextResponse.json(channels);
+    }
 
-    // Fetch groups and their channels
-    const groups = await client.getUserGroups(session.arenaUserId);
-    console.log(`Groups found: ${groups.length}`, groups.map(g => ({ id: g.id, slug: g.slug, name: g.name })));
+    if (source === "groups") {
+      const groups = await client.getUserGroups(session.arenaUserId);
+      const groupData = await Promise.all(
+        groups.map(async (g) => {
+          const channels = await client.getGroupChannels(g.slug);
+          return { id: g.id, slug: g.slug, name: g.name || g.slug, channels };
+        })
+      );
+      return NextResponse.json(groupData);
+    }
 
-    const groupData = await Promise.all(
-      groups.map(async (g) => {
-        const channels = await client.getGroupChannels(g.slug);
-        console.log(`Group "${g.name || g.slug}" (id: ${g.id}): ${channels.length} channels`);
-        return { id: g.id, slug: g.slug, name: g.name || g.slug, channels };
-      })
-    );
+    if (source === "following") {
+      const channels = await client.getFollowingChannels(session.arenaUserId);
+      return NextResponse.json(channels);
+    }
 
-    // Fetch channels user follows/collaborates on
-    const following = await client.getFollowingChannels(session.arenaUserId);
-    console.log(`Following channels: ${following.length}`);
-
-    return NextResponse.json({
-      own: ownChannels,
-      groups: groupData,
-      following,
-    });
+    return NextResponse.json([]);
   } catch (error) {
-    console.error("Failed to fetch channels:", error);
-    return NextResponse.json({ own: [], groups: [] }, { status: 200 });
+    console.error(`Failed to fetch channels (${source}):`, error);
+    return NextResponse.json([], { status: 200 });
   }
 }

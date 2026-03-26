@@ -44,12 +44,26 @@ interface GroupData {
   channels: Channel[];
 }
 
+function ChannelSkeleton() {
+  return (
+    <div className="px-3 py-3 border-b border-neutral-100 animate-pulse">
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="h-3.5 w-40 bg-neutral-100 rounded" />
+        <div className="h-3 w-12 bg-neutral-50 rounded" />
+      </div>
+      <div className="h-3 w-28 bg-neutral-50 rounded" />
+    </div>
+  );
+}
+
 export default function NewSitePage() {
   const router = useRouter();
   const [ownChannels, setOwnChannels] = useState<Channel[]>([]);
   const [followingChannels, setFollowingChannels] = useState<Channel[]>([]);
   const [groups, setGroups] = useState<GroupData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingOwn, setLoadingOwn] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState(true);
+  const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -60,6 +74,9 @@ export default function NewSitePage() {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [subdomain, setSubdomain] = useState("");
 
+  const loading = loadingOwn && ownChannels.length === 0;
+  const stillLoading = loadingOwn || loadingGroups || loadingFollowing;
+
   useEffect(() => {
     fetch("/api/templates")
       .then((r) => r.json())
@@ -69,22 +86,30 @@ export default function NewSitePage() {
       });
   }, []);
 
+  // Load own channels first (fastest, most relevant)
   useEffect(() => {
-    fetch("/api/channels")
-      .then((r) => {
-        if (!r.ok) throw new Error(`${r.status}`);
-        return r.json();
-      })
+    fetch("/api/channels?source=own")
+      .then((r) => r.ok ? r.json() : [])
       .then((data) => {
-        const own = (data.own || []).sort(
+        const sorted = (data || []).sort(
           (a: Channel, b: Channel) =>
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         );
-        setOwnChannels(own);
-        setGroups(data.groups || []);
-        setFollowingChannels(data.following || []);
+        setOwnChannels(sorted);
       })
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingOwn(false));
+
+    // Load groups in parallel
+    fetch("/api/channels?source=groups")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setGroups(data || []))
+      .finally(() => setLoadingGroups(false));
+
+    // Load following in parallel
+    fetch("/api/channels?source=following")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setFollowingChannels(data || []))
+      .finally(() => setLoadingFollowing(false));
   }, []);
 
   const channels = useMemo(() => {
@@ -193,10 +218,12 @@ export default function NewSitePage() {
         </div>
 
         {loading ? (
-          <p className="text-sm text-neutral-400 py-8 text-center">
-            Loading channels...
-          </p>
-        ) : filtered.length === 0 ? (
+          <div className="-mx-4 px-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <ChannelSkeleton key={i} />
+            ))}
+          </div>
+        ) : filtered.length === 0 && !stillLoading ? (
           <p className="text-sm text-neutral-400 py-8 text-center">
             {search ? "No channels match your search." : "No channels found."}
           </p>
@@ -233,6 +260,13 @@ export default function NewSitePage() {
                 </span>
               </button>
             ))}
+            {stillLoading && (
+              <div className="py-3 text-center">
+                <span className="text-xs text-neutral-400 animate-pulse">
+                  Loading more channels...
+                </span>
+              </div>
+            )}
           </div>
         )}
       </main>
