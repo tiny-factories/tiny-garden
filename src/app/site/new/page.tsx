@@ -161,23 +161,15 @@ export default function NewSitePage() {
           </Link>
         </div>
 
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search channels..."
-            autoFocus
-            className="flex-1 px-3 py-2 border border-neutral-200 rounded text-sm outline-none focus:border-neutral-400 transition-colors"
-          />
+        <div className="flex items-center border border-neutral-200 rounded mb-4 focus-within:border-neutral-400 transition-colors">
           {groups.length > 0 && (
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-2 py-2 border border-neutral-200 rounded text-sm text-neutral-600"
+              className="px-2 py-2 text-sm text-neutral-600 bg-neutral-50 border-r border-neutral-200 rounded-l outline-none"
             >
               <option value="all">All</option>
-              <option value="own">My channels</option>
+              <option value="own">Mine</option>
               {groups.map((g) => (
                 <option key={g.slug} value={g.slug}>
                   {g.name}
@@ -185,6 +177,14 @@ export default function NewSitePage() {
               ))}
             </select>
           )}
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search channels..."
+            autoFocus
+            className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
+          />
         </div>
 
         {loading ? (

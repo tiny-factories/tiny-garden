@@ -141,10 +141,12 @@ export class ArenaClient {
     }
   }
 
-  async getGroupChannels(groupSlug: string): Promise<ArenaChannel[]> {
+  async getGroupChannels(groupId: number): Promise<ArenaChannel[]> {
     try {
-      const data = await this.fetch<{ data: ArenaChannel[] }>(`/groups/${groupSlug}/channels`, {
+      // Groups are users in Are.na — fetch their channels via user contents
+      const data = await this.fetch<{ data: ArenaChannel[] }>(`/users/${groupId}/contents`, {
         per: "100",
+        type: "Channel",
         sort: "updated_at_desc",
       });
       return data.data || [];
@@ -160,7 +162,7 @@ export class ArenaClient {
     // Get channels from groups/teams
     const groups = await this.getUserGroups(userId);
     const groupChannelArrays = await Promise.all(
-      groups.map((g) => this.getGroupChannels(g.slug))
+      groups.map((g) => this.getGroupChannels(g.id))
     );
 
     // Merge and deduplicate by id

@@ -16,7 +16,7 @@ export async function GET() {
     const groups = await client.getUserGroups(session.arenaUserId);
     const groupData = await Promise.all(
       groups.map(async (g) => {
-        const channels = await client.getGroupChannels(g.slug);
+        const channels = await client.getGroupChannels(g.id);
         return { id: g.id, slug: g.slug, name: g.name || g.slug, channels };
       })
     );
