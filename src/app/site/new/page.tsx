@@ -45,6 +45,8 @@ export default function NewSitePage() {
   const router = useRouter();
   const [ownChannels, setOwnChannels] = useState<Channel[]>([]);
   const [groups, setGroups] = useState<GroupData[]>([]);
+  const [searchResults, setSearchResults] = useState<Channel[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
@@ -82,6 +84,22 @@ export default function NewSitePage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Debounced search against Are.na API
+  useEffect(() => {
+    if (search.length < 2) {
+      setSearchResults(null);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/channels/search?q=${encodeURIComponent(search)}`)
+        .then((r) => r.json())
+        .then((data) => setSearchResults(data))
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
+
   const channels = useMemo(() => {
     if (filter === "own") return ownChannels;
     const group = groups.find((g) => g.slug === filter);
@@ -101,7 +119,10 @@ export default function NewSitePage() {
   }, [ownChannels, groups, filter]);
 
   const filtered = useMemo(() => {
+    // If we have search results from Are.na API, show those
+    if (searchResults !== null) return searchResults;
     if (!search.trim()) return channels;
+    // Local filter as fallback while API search is loading
     const q = search.toLowerCase();
     return channels.filter(
       (ch) =>
@@ -181,11 +202,22 @@ export default function NewSitePage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search channels..."
+            placeholder="Search channels on Are.na..."
             autoFocus
             className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
           />
+          {searching && (
+            <span className="px-2 text-xs text-neutral-400 animate-pulse">
+              Searching...
+            </span>
+          )}
         </div>
+
+        {searchResults !== null && (
+          <p className="text-xs text-neutral-400 mb-2">
+            {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} from Are.na
+          </p>
+        )}
 
         {loading ? (
           <p className="text-sm text-neutral-400 py-8 text-center">

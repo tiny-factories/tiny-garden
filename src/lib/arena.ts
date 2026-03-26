@@ -121,6 +121,19 @@ export class ArenaClient {
     return this.fetch("/me");
   }
 
+  async searchChannels(query: string): Promise<ArenaChannel[]> {
+    try {
+      const data = await this.fetch<{ data: ArenaChannel[] }>("/search", {
+        q: query,
+        type: "Channel",
+        per: "20",
+      });
+      return data.data || [];
+    } catch {
+      return [];
+    }
+  }
+
   async getUserChannels(userId: number): Promise<ArenaChannel[]> {
     const channels: ArenaChannel[] = [];
     let page = 1;
