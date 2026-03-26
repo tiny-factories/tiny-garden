@@ -27,6 +27,14 @@ export function Nav() {
           Sites
         </Link>
         <Link
+          href="/about"
+          className={`text-sm transition-colors ${
+            pathname === "/about" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+          }`}
+        >
+          About
+        </Link>
+        <Link
           href="/account"
           className={`text-sm transition-colors ${
             pathname === "/account" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"

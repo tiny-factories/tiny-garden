@@ -13,6 +13,7 @@ model User {
   arenaUsername  String
   arenaToken    String
   avatarUrl     String?
+  isAdmin       Boolean  @default(false)
   stripeCustomerId String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

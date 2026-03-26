@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   });
 
   const isFree = !user.subscription || user.subscription.plan === "free";
-  if (isFree && user.sites.length >= 1) {
+  if (isFree && !user.isAdmin && user.sites.length >= 1) {
     return NextResponse.json(
       { error: "Free plan allows 1 site. Upgrade to Pro for unlimited sites." },
       { status: 403 }

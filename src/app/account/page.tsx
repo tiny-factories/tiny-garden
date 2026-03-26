@@ -8,6 +8,7 @@ interface Account {
   id: string;
   arenaUsername: string;
   avatarUrl: string | null;
+  isAdmin: boolean;
   plan: string;
   subscriptionStatus: string;
   siteCount: number;
@@ -113,6 +114,11 @@ export default function AccountPage() {
           <div>
             <p className="text-sm font-medium">
               {account.plan === "pro" ? "Pro" : "Free"} plan
+              {account.isAdmin && (
+                <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
+                  Admin
+                </span>
+              )}
             </p>
             <p className="text-xs text-neutral-400 mt-0.5">
               {account.plan === "pro"

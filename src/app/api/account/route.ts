@@ -15,6 +15,7 @@ export async function GET() {
     id: user.id,
     arenaUsername: user.arenaUsername,
     avatarUrl: user.avatarUrl,
+    isAdmin: user.isAdmin,
     plan: user.subscription?.plan || "free",
     subscriptionStatus: user.subscription?.status || "active",
     siteCount: user.sites.length,
