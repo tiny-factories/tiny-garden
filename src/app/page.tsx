@@ -9,6 +9,19 @@ interface FeaturedSite {
   arenaUsername: string;
 }
 
+const BETA_SPOTS = 33;
+
+async function getBetaSpotsRemaining(): Promise<number> {
+  try {
+    const friendCount = await prisma.user.count({
+      where: { OR: [{ isFriend: true }, { isAdmin: true }] },
+    });
+    return Math.max(BETA_SPOTS - friendCount, 0);
+  } catch {
+    return BETA_SPOTS;
+  }
+}
+
 async function getFeaturedSites(): Promise<FeaturedSite[]> {
   try {
     const sites = await prisma.site.findMany({
@@ -72,6 +85,7 @@ function FeatureItem({ title, desc }: { title: string; desc: string }) {
 
 export default async function Home() {
   const featuredSites = await getFeaturedSites();
+  const spotsRemaining = await getBetaSpotsRemaining();
   return (
     <main className="min-h-screen">
       {/* Nav */}
@@ -402,49 +416,101 @@ export default async function Home() {
         className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100"
       >
         <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-8">
-          Pricing
+          Early access
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="border border-neutral-200 rounded p-5">
-            <p className="text-sm font-medium">Free</p>
+
+        {/* Beta offer */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+          <div className="border border-neutral-900 rounded p-6">
+            <p className="text-sm font-medium">Free Beta</p>
             <p className="text-2xl font-medium mt-2">$0</p>
-            <p className="text-xs text-neutral-400 mt-1">forever</p>
+            <p className="text-xs text-neutral-400 mt-1">free forever for early testers</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>3 sites</li>
+              <li>Unlimited sites</li>
               <li>All templates</li>
-              <li>Custom subdomain</li>
-              <li>Manual rebuild</li>
-            </ul>
-          </div>
-          <div className="border border-neutral-900 rounded p-5">
-            <p className="text-sm font-medium">Pro</p>
-            <p className="text-2xl font-medium mt-2">
-              $8<span className="text-sm text-neutral-400 font-normal">/mo</span>
-            </p>
-            <p className="text-xs text-neutral-400 mt-1">$72/yr (save 25%)</p>
-            <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>10 sites</li>
-              <li>All templates</li>
-              <li>Custom themes (colors &amp; fonts)</li>
+              <li>Custom themes</li>
               <li>Daily auto-rebuild</li>
             </ul>
+            <div className="mt-5 pt-4 border-t border-neutral-100">
+              <p className="text-sm font-medium">
+                {spotsRemaining > 0
+                  ? `${spotsRemaining} of 33 spots remaining`
+                  : "All spots claimed"}
+              </p>
+              {spotsRemaining > 0 && (
+                <div className="mt-2 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-neutral-900 rounded-full transition-all"
+                    style={{ width: `${((33 - spotsRemaining) / 33) * 100}%` }}
+                  />
+                </div>
+              )}
+            </div>
+            <Link
+              href="/login"
+              className="inline-block mt-4 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
+            >
+              {spotsRemaining > 0 ? "Claim your spot" : "Join waitlist"}
+            </Link>
           </div>
-          <div className="border border-neutral-200 rounded p-5 relative">
-            <span className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-400 rounded">
-              Coming soon
-            </span>
-            <p className="text-sm font-medium">Studio</p>
-            <p className="text-2xl font-medium mt-2">
-              $25<span className="text-sm text-neutral-400 font-normal">/mo</span>
-            </p>
-            <p className="text-xs text-neutral-400 mt-1">$225/yr (save 25%)</p>
+          <div className="border border-neutral-200 rounded p-6">
+            <p className="text-sm font-medium">Supporter</p>
+            <p className="text-2xl font-medium mt-2">$300</p>
+            <p className="text-xs text-neutral-400 mt-1">one-time, lifetime access</p>
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>50 sites</li>
-              <li>All templates</li>
-              <li>Custom themes (colors &amp; fonts)</li>
-              <li>Custom domains</li>
-              <li>Daily auto-rebuild</li>
+              <li>Everything in the beta, forever</li>
+              <li>Unlimited sites</li>
+              <li>All future features</li>
+              <li>Support the project directly</li>
             </ul>
+            <p className="mt-5 pt-4 border-t border-neutral-100 text-xs text-neutral-400">
+              For people who want to see tiny.garden thrive. Your contribution keeps the lights on and development moving.
+            </p>
+            <Link
+              href="/login"
+              className="inline-block mt-4 px-4 py-2 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+            >
+              Become a supporter
+            </Link>
+          </div>
+        </div>
+
+        {/* Future pricing */}
+        <div className="pt-8 border-t border-neutral-100">
+          <h3 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-4">
+            Future pricing
+          </h3>
+          <p className="text-xs text-neutral-400 mb-6">
+            After beta, tiny.garden will move to these plans. Beta users and supporters keep their access.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="border border-neutral-100 rounded p-4">
+              <p className="text-xs font-medium">Free</p>
+              <p className="text-sm font-medium mt-1">$0</p>
+              <ul className="mt-2 space-y-1 text-[11px] text-neutral-400">
+                <li>3 sites</li>
+                <li>All templates</li>
+                <li>Manual rebuild</li>
+              </ul>
+            </div>
+            <div className="border border-neutral-100 rounded p-4">
+              <p className="text-xs font-medium">Pro</p>
+              <p className="text-sm font-medium mt-1">$8/mo</p>
+              <ul className="mt-2 space-y-1 text-[11px] text-neutral-400">
+                <li>10 sites</li>
+                <li>Custom themes</li>
+                <li>Daily auto-rebuild</li>
+              </ul>
+            </div>
+            <div className="border border-neutral-100 rounded p-4">
+              <p className="text-xs font-medium">Studio</p>
+              <p className="text-sm font-medium mt-1">$25/mo</p>
+              <ul className="mt-2 space-y-1 text-[11px] text-neutral-400">
+                <li>50 sites</li>
+                <li>Custom domains</li>
+                <li>Daily auto-rebuild</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>

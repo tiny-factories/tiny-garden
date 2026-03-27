@@ -50,6 +50,20 @@ export async function GET(req: NextRequest) {
 
   const arenaUser = await userRes.json();
 
+  // Check if this is a new user and if beta spots are available
+  const existingUser = await prisma.user.findUnique({
+    where: { arenaId: arenaUser.id },
+  });
+
+  let grantFriend = false;
+  if (!existingUser) {
+    const BETA_SPOTS = 33;
+    const friendCount = await prisma.user.count({
+      where: { OR: [{ isFriend: true }, { isAdmin: true }] },
+    });
+    grantFriend = friendCount < BETA_SPOTS;
+  }
+
   // Upsert user
   const user = await prisma.user.upsert({
     where: { arenaId: arenaUser.id },
@@ -63,6 +77,7 @@ export async function GET(req: NextRequest) {
       arenaUsername: arenaUser.slug,
       arenaToken: access_token,
       avatarUrl: arenaUser.avatar_image?.display || null,
+      isFriend: grantFriend,
       subscription: {
         create: { plan: "free" },
       },
