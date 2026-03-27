@@ -33,8 +33,8 @@ export interface ArenaBlock {
   type?: string; // v3 uses "type" instead of "class"
   title: string;
   description: string | null;
-  content: string | null;
-  content_html: string | null;
+  content: string | Record<string, unknown> | null;
+  content_html: string | Record<string, unknown> | null;
   image: {
     original: { url: string };
     large: { url: string };

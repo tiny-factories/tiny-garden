@@ -229,9 +229,15 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
   }
 
   if (block.content_html) {
-    normalized.content = block.content_html;
+    normalized.content = typeof block.content_html === "string"
+      ? block.content_html
+      : String(block.content_html);
   } else if (block.content) {
-    normalized.content = block.content;
+    normalized.content = typeof block.content === "string"
+      ? block.content
+      : (block.content as Record<string, unknown>).html as string
+        || (block.content as Record<string, unknown>).text as string
+        || JSON.stringify(block.content);
   }
 
   if (block.source) {
