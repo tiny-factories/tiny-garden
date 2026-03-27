@@ -230,6 +230,8 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
 
   if (block.content_html) {
     normalized.content = block.content_html;
+  } else if (block.content) {
+    normalized.content = block.content;
   }
 
   if (block.source) {
