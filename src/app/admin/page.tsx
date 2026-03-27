@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Stats {
   totalUsers: number;
@@ -89,7 +90,15 @@ export default function AdminPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-lg font-medium mb-8">Admin</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-lg font-medium">Admin</h1>
+        <Link
+          href="/admin/sites"
+          className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+        >
+          All sites
+        </Link>
+      </div>
 
       {/* Stats cards */}
       <section className="grid grid-cols-3 gap-4 mb-8">
