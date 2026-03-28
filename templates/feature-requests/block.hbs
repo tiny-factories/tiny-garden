@@ -1,0 +1,78 @@
+<a class="sv-fr-card block--{{type}}" href="https://www.are.na/block/{{id}}" target="_blank" rel="noopener">
+
+  <div class="sv-fr-card-votes">
+    <span class="sv-fr-card-votes-count">+{{comment_count}}</span>
+    <span class="sv-fr-card-votes-label">votes</span>
+  </div>
+
+  <div class="sv-fr-card-body">
+    {{#if (eq type "image")}}
+      <div class="sv-fr-card-content">
+        <div class="sv-fr-card-text">
+          {{#if title}}
+            <h2 class="sv-fr-card-title">{{title}}</h2>
+          {{/if}}
+          {{#if description}}
+            <p class="sv-fr-card-description">{{description}}</p>
+          {{/if}}
+        </div>
+        <figure class="sv-fr-card-thumb">
+          <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+        </figure>
+      </div>
+    {{/if}}
+
+    {{#if (eq type "text")}}
+      {{#if title}}
+        <h2 class="sv-fr-card-title">{{title}}</h2>
+      {{/if}}
+      {{#if content}}
+        <div class="sv-fr-card-description">{{{content}}}</div>
+      {{else}}
+        {{#if description}}
+          <p class="sv-fr-card-description">{{description}}</p>
+        {{/if}}
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq type "link")}}
+      {{#if title}}
+        <h2 class="sv-fr-card-title">{{title}}</h2>
+      {{else}}
+        {{#if link.title}}
+          <h2 class="sv-fr-card-title">{{link.title}}</h2>
+        {{/if}}
+      {{/if}}
+      {{#if description}}
+        <p class="sv-fr-card-description">{{description}}</p>
+      {{else}}
+        {{#if link.description}}
+          <p class="sv-fr-card-description">{{link.description}}</p>
+        {{/if}}
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq type "media")}}
+      {{#if title}}
+        <h2 class="sv-fr-card-title">{{title}}</h2>
+      {{/if}}
+      {{#if description}}
+        <p class="sv-fr-card-description">{{description}}</p>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq type "attachment")}}
+      {{#if title}}
+        <h2 class="sv-fr-card-title">{{title}}</h2>
+      {{else}}
+        {{#if attachment.file_name}}
+          <h2 class="sv-fr-card-title">{{attachment.file_name}}</h2>
+        {{/if}}
+      {{/if}}
+      {{#if description}}
+        <p class="sv-fr-card-description">{{description}}</p>
+      {{/if}}
+    {{/if}}
+  </div>
+
+</a>

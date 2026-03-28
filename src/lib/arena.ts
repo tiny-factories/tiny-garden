@@ -58,6 +58,7 @@ export interface ArenaBlock {
     content_type: string;
   } | null;
   position: number;
+  comment_count: number;
   created_at: string;
   updated_at: string;
 }

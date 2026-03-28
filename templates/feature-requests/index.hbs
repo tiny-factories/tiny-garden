@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="sv-body-fr">
+
+  <!-- Sticky nav bar — hidden by default, fades in on scroll -->
+  <nav class="sv-fr-nav" id="sv-fr-nav">
+    <div class="sv-fr-nav-inner">
+      <a href="/" class="sv-fr-nav-logo" aria-label="Home">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="20" height="20" rx="4" fill="currentColor"/>
+        </svg>
+      </a>
+      <span class="sv-fr-nav-title">{{channel.title}}</span>
+      <div class="sv-fr-nav-links">
+        <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero intro -->
+  <header class="sv-fr-intro" id="sv-fr-intro">
+    <div class="sv-fr-intro-inner">
+      <h1 class="sv-fr-intro-title">{{channel.title}}</h1>
+      {{#if channel.description}}
+        <p class="sv-fr-intro-description">{{channel.description}}</p>
+      {{/if}}
+      <p class="sv-fr-intro-hint">Comment on Are.na to vote for a feature</p>
+      <p class="sv-fr-intro-meta">
+        {{channel.length}} requests &middot; by <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </p>
+    </div>
+  </header>
+
+  <!-- Feature request cards -->
+  <main class="sv-fr-cards">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+
+  <!-- Footer -->
+  <footer class="sv-fr-footer">
+    <div class="sv-fr-footer-items">
+      <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
+      <span class="sv-fr-footer-sep">&middot;</span>
+      <a href="https://tiny.garden">Built with tiny.garden</a>
+    </div>
+  </footer>
+
+  <!-- Scroll behaviour: show/hide sticky nav -->
+  <script>
+    (function () {
+      var nav = document.getElementById('sv-fr-nav');
+      var intro = document.getElementById('sv-fr-intro');
+      if (!nav || !intro) return;
+
+      function onScroll() {
+        var introBottom = intro.getBoundingClientRect().bottom;
+        if (introBottom <= 0) {
+          nav.classList.add('is-visible');
+        } else {
+          nav.classList.remove('is-visible');
+        }
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

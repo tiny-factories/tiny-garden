@@ -172,6 +172,8 @@ export interface TemplateBlock {
     content_type: string;
   };
   source_url: string | null;
+  comment_count: number;
+  arena_url: string;
 }
 
 function normalizeBlock(block: ArenaBlock): TemplateBlock {
@@ -203,6 +205,8 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
     updated_at: block.updated_at,
     position: block.position,
     source_url: null,
+    comment_count: block.comment_count || 0,
+    arena_url: `https://www.are.na/block/${block.id}`,
   };
 
   if (block.image) {
@@ -274,6 +278,12 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
 }
 
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
+Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+Handlebars.registerHelper("formatDate", (dateStr: string) => {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch { return dateStr; }
+});
 
 export async function buildSite(siteId: string): Promise<string> {
   const site = await prisma.site.findUniqueOrThrow({

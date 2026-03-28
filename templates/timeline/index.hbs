@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="sv-body-timeline">
+
+  <!-- Header -->
+  <header class="sv-tl-header">
+    <div class="sv-tl-header-inner">
+      <h1 class="sv-tl-header-title">{{channel.title}}</h1>
+      {{#if channel.description}}
+        <p class="sv-tl-header-description">{{channel.description}}</p>
+      {{/if}}
+      <p class="sv-tl-header-meta">
+        by <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      </p>
+    </div>
+  </header>
+
+  <!-- Timeline -->
+  <main class="sv-tl-timeline">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+
+  <!-- Footer -->
+  <footer class="sv-tl-footer">
+    <div class="sv-tl-footer-items">
+      <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
+      <span class="sv-tl-footer-sep">&middot;</span>
+      <a href="https://tiny.garden">Built with tiny.garden</a>
+    </div>
+  </footer>
+
+</body>
+</html>
