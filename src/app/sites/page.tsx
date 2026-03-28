@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { track } from "@/lib/track";
+import { PlanTierBadge } from "@/components/PlanTierBadge";
 
 interface Site {
   id: string;
@@ -110,7 +111,10 @@ export default function SitesPage() {
     <main className="min-h-screen max-w-2xl mx-auto px-4 py-16">
       <div className="flex items-center justify-between mb-12">
         <div>
-          <h1 className="text-lg font-medium">Your sites</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg font-medium">Your sites</h1>
+            {account && <PlanTierBadge plan={account.plan} />}
+          </div>
           {account && (
             <p className="text-xs text-neutral-400 mt-1">
               {sites.length} / {account.isAdmin || account.isFriend ? "∞" : account.plan === "studio" ? "50" : account.plan === "pro" ? "∞" : "3"}
