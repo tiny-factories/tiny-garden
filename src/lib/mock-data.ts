@@ -39,6 +39,8 @@ export const MOCK_SITE_DATA: SiteData = {
         display: "https://picsum.photos/seed/arena1/800/533",
       },
       source_url: null,
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 2,
@@ -51,6 +53,8 @@ export const MOCK_SITE_DATA: SiteData = {
       content:
         "<p>The most interesting design work happens at the boundaries between disciplines. When we stop treating design as a service profession and start treating it as a way of thinking, new possibilities emerge.</p><p>See also: <a href='#'>Christopher Alexander</a>, <em>A Pattern Language</em></p>",
       source_url: null,
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 3,
@@ -67,6 +71,8 @@ export const MOCK_SITE_DATA: SiteData = {
         display: "https://picsum.photos/seed/arena2/800/600",
       },
       source_url: null,
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 4,
@@ -86,6 +92,8 @@ export const MOCK_SITE_DATA: SiteData = {
         provider: "example.com",
       },
       source_url: "https://example.com/web-as-city",
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 5,
@@ -102,6 +110,8 @@ export const MOCK_SITE_DATA: SiteData = {
         display: "https://picsum.photos/seed/arena4/600/800",
       },
       source_url: null,
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 6,
@@ -114,6 +124,8 @@ export const MOCK_SITE_DATA: SiteData = {
       content:
         "<h2>On Interfaces</h2><p>An interface is not a surface. It is a <em>relationship</em> between two systems, mediated by a shared boundary. The best interfaces disappear — they become the activity itself.</p>",
       source_url: null,
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 7,
@@ -130,6 +142,8 @@ export const MOCK_SITE_DATA: SiteData = {
         display: "https://picsum.photos/seed/arena5/800/467",
       },
       source_url: null,
+      comment_count: 0,
+      arena_url: "",
     },
     {
       id: 8,
@@ -146,6 +160,8 @@ export const MOCK_SITE_DATA: SiteData = {
         content_type: "application/pdf",
       },
       source_url: "#",
+      comment_count: 0,
+      arena_url: "",
     },
   ],
   site: {

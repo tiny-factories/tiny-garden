@@ -14,6 +14,12 @@ interface Site {
   published: boolean;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface ThemeColors {
   background: string;
   text: string;
@@ -58,6 +64,10 @@ export default function SiteSettingsPage() {
   const router = useRouter();
   const [site, setSite] = useState<Site | null>(null);
   const [account, setAccount] = useState<AccountInfo | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSaved, setTemplateSaved] = useState(false);
   const [colors, setColors] = useState<ThemeColors>(DEFAULT_COLORS);
   const [fonts, setFonts] = useState<ThemeFonts>(DEFAULT_FONTS);
   const [loading, setLoading] = useState(true);
@@ -71,13 +81,18 @@ export default function SiteSettingsPage() {
       fetch(`/api/sites`).then((r) => r.json()),
       fetch(`/api/sites/${id}/theme`).then((r) => r.json()),
       fetch("/api/account").then((r) => r.json()),
+      fetch("/api/templates").then((r) => r.json()),
     ])
-      .then(([sites, theme, acc]) => {
+      .then(([sites, theme, acc, tmpls]) => {
         const s = (sites as Site[]).find((s: Site) => s.id === id);
-        if (s) setSite(s);
+        if (s) {
+          setSite(s);
+          setSelectedTemplate(s.template);
+        }
         if (theme.colors) setColors(theme.colors);
         if (theme.fonts) setFonts(theme.fonts);
         setAccount(acc);
+        setTemplates(tmpls as Template[]);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -96,6 +111,24 @@ export default function SiteSettingsPage() {
       setTimeout(() => setSaved(false), 2000);
     }
     setSaving(false);
+  }
+
+  async function handleTemplateChange() {
+    if (!site || selectedTemplate === site.template) return;
+    setSavingTemplate(true);
+    setTemplateSaved(false);
+    const res = await fetch(`/api/sites/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ template: selectedTemplate }),
+    });
+    if (res.ok) {
+      setSite({ ...site, template: selectedTemplate });
+      track("template-changed", { subdomain: site.subdomain, template: selectedTemplate });
+      setTemplateSaved(true);
+      setTimeout(() => setTemplateSaved(false), 2000);
+    }
+    setSavingTemplate(false);
   }
 
   async function handleReset() {
@@ -133,6 +166,47 @@ export default function SiteSettingsPage() {
           <p className="text-xs text-neutral-400">{site.subdomain}.tiny.garden &middot; {site.template}</p>
         </div>
       </div>
+
+      {/* Template Picker */}
+      <section className="mb-8">
+        <h2 className="text-sm font-medium mb-4">Template</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+          {templates.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setSelectedTemplate(t.id)}
+              className={`text-left p-3 border rounded text-sm transition-colors ${
+                selectedTemplate === t.id
+                  ? "border-neutral-900 bg-neutral-50"
+                  : "border-neutral-100 hover:border-neutral-300"
+              }`}
+            >
+              <p className="font-medium">{t.name}</p>
+              <p className="text-xs text-neutral-400 mt-1">{t.description}</p>
+            </button>
+          ))}
+        </div>
+        {selectedTemplate !== site.template && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleTemplateChange}
+              disabled={savingTemplate}
+              className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
+            >
+              {savingTemplate ? "Saving..." : templateSaved ? "Saved" : "Change template"}
+            </button>
+            <button
+              onClick={() => setSelectedTemplate(site.template)}
+              className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <p className="text-xs text-neutral-400 ml-2">
+              Rebuild your site to apply the new template.
+            </p>
+          </div>
+        )}
+      </section>
 
       {/* Theme Editor */}
       <section className="mb-8">

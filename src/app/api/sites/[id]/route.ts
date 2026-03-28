@@ -35,9 +35,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const data: Record<string, unknown> = {};
+  if (typeof body.published === "boolean") data.published = body.published;
+  if (typeof body.template === "string" && body.template) data.template = body.template;
+
   const updated = await prisma.site.update({
     where: { id },
-    data: { published: body.published },
+    data,
   });
 
   return NextResponse.json(updated);
