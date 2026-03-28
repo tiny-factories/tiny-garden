@@ -365,6 +365,48 @@ export default async function Home() {
               </div>
             </div>
           </TemplatePreview>
+
+          {/* Feature Requests preview */}
+          <TemplatePreview
+            name="Feature Requests"
+            slug="feature-requests"
+            description="Voteable cards via Are.na comments"
+          >
+            <div className="scale-[0.6] origin-top-left w-[166%]">
+              <div className="space-y-2">
+                {["+3", "+1", "+0"].map((v, i) => (
+                  <div key={i} className="flex gap-2 items-center bg-white rounded border border-neutral-100 p-2">
+                    <div className="bg-neutral-100 rounded px-1.5 py-1 text-[8px] font-medium text-neutral-500 shrink-0">{v}</div>
+                    <div className="flex-1 space-y-1">
+                      <div className="bg-neutral-200 rounded h-2 w-3/4" />
+                      <div className="bg-neutral-100 rounded h-1.5 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TemplatePreview>
+
+          {/* Timeline preview */}
+          <TemplatePreview
+            name="Timeline"
+            slug="timeline"
+            description="Vertical timeline with dated entries"
+          >
+            <div className="scale-[0.6] origin-top-left w-[166%]">
+              <div className="font-medium text-sm mb-3">Channel Title</div>
+              <div className="relative pl-4 border-l border-neutral-200 space-y-3">
+                {["Mar 2026", "Feb 2026", "Jan 2026"].map((date, i) => (
+                  <div key={i} className="relative">
+                    <div className="absolute -left-[21px] top-0.5 w-2 h-2 rounded-full border border-neutral-300 bg-white" />
+                    <div className="text-[8px] text-neutral-400 mb-0.5">{date}</div>
+                    <div className="bg-neutral-200 rounded h-2 w-3/4" />
+                    <div className="bg-neutral-100 rounded h-1.5 w-1/2 mt-1" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TemplatePreview>
         </div>
 
         <div className="mt-6 text-center">
