@@ -79,7 +79,16 @@ export default function AccountPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-lg font-medium mb-8">Account</h1>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <h1 className="text-lg font-medium">Account</h1>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="shrink-0 text-sm text-neutral-500 hover:text-neutral-900 transition-colors"
+        >
+          Log out
+        </button>
+      </div>
 
       {/* Profile */}
       <section className="mb-8 p-4 border border-neutral-100 rounded">
@@ -109,53 +118,60 @@ export default function AccountPage() {
         </a>
       </section>
 
-      {/* Plan */}
-      <section className="mb-8 p-4 border border-neutral-100 rounded">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">
-              {{ free: "Free", pro: "Supporter", studio: "Studio" }[account.plan] || "Free"} plan
-              {account.isAdmin && (
-                <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
-                  Admin
-                </span>
-              )}
-              {account.isFriend && !account.isAdmin && (
-                <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
-                  Friend
-                </span>
-              )}
-            </p>
-            <p className="text-xs text-neutral-400 mt-0.5">
-              {{ free: "3 sites, manual rebuild", pro: "Lifetime access, unlimited sites, daily auto-rebuild", studio: "50 sites, daily auto-rebuild" }[account.plan] || "3 sites"}
-            </p>
+      {/* Subscription */}
+      <section className="mb-8">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-400 mb-3">
+          Subscription
+        </h2>
+        <div className="p-4 border border-neutral-100 rounded">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">
+                {{ free: "Free", pro: "Supporter", studio: "Studio" }[account.plan] || "Free"} plan
+                {account.isAdmin && (
+                  <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
+                    Admin
+                  </span>
+                )}
+                {account.isFriend && !account.isAdmin && (
+                  <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
+                    Friend
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                {{ free: "3 sites, manual rebuild", pro: "Lifetime access, unlimited sites, daily auto-rebuild", studio: "50 sites, daily auto-rebuild" }[account.plan] || "3 sites"}
+              </p>
+            </div>
+            {account.plan === "free" && (
+              <button
+                type="button"
+                onClick={handleUpgrade}
+                disabled={upgrading}
+                className="text-xs px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
+              >
+                {upgrading ? "Loading..." : "Become a supporter"}
+              </button>
+            )}
+            {account.plan === "pro" && (
+              <span className="text-xs text-neutral-400">
+                {account.subscriptionStatus}
+              </span>
+            )}
           </div>
-          {account.plan === "free" && (
-            <button
-              onClick={handleUpgrade}
-              disabled={upgrading}
-              className="text-xs px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
-            >
-              {upgrading ? "Loading..." : "Become a supporter"}
-            </button>
-          )}
-          {account.plan === "pro" && (
-            <span className="text-xs text-neutral-400">
-              {account.subscriptionStatus}
-            </span>
-          )}
         </div>
       </section>
 
-      {/* Actions */}
-      <section className="space-y-3">
+      {/* Danger */}
+      <section className="group/danger space-y-3">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-red-400/90 mb-3 transition-colors group-hover/danger:text-red-500">
+          <span className="group-hover/danger:hidden">Danger</span>
+          <span className="hidden group-hover/danger:inline">
+            Danger, Will Robinson
+          </span>
+        </h2>
         <button
-          onClick={handleLogout}
-          className="block w-full text-left text-sm px-4 py-3 border border-neutral-100 rounded hover:bg-neutral-50 transition-colors"
-        >
-          Log out
-        </button>
-        <button
+          type="button"
           onClick={handleDelete}
           disabled={deleting}
           className="block w-full text-left text-sm px-4 py-3 border border-red-100 rounded text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
