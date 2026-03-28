@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/track";
+
+const DANGER_SUFFIX = ", Will Robinson";
+const TYPE_MS = 72;
+const CARET_MS = 530;
 
 interface Account {
   id: string;
@@ -22,6 +26,10 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [dangerHover, setDangerHover] = useState(false);
+  const [dangerTyped, setDangerTyped] = useState(0);
+  const [caretVisible, setCaretVisible] = useState(true);
+  const typeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetch("/api/account")
@@ -29,6 +37,44 @@ export default function AccountPage() {
       .then(setAccount)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!dangerHover) {
+      if (typeIntervalRef.current) {
+        clearInterval(typeIntervalRef.current);
+        typeIntervalRef.current = null;
+      }
+      setDangerTyped(0);
+      setCaretVisible(true);
+      return;
+    }
+
+    setDangerTyped(0);
+    let i = 0;
+    typeIntervalRef.current = setInterval(() => {
+      i += 1;
+      setDangerTyped(i);
+      if (i >= DANGER_SUFFIX.length) {
+        if (typeIntervalRef.current) {
+          clearInterval(typeIntervalRef.current);
+          typeIntervalRef.current = null;
+        }
+      }
+    }, TYPE_MS);
+
+    return () => {
+      if (typeIntervalRef.current) {
+        clearInterval(typeIntervalRef.current);
+        typeIntervalRef.current = null;
+      }
+    };
+  }, [dangerHover]);
+
+  useEffect(() => {
+    if (!dangerHover) return;
+    const id = setInterval(() => setCaretVisible((v) => !v), CARET_MS);
+    return () => clearInterval(id);
+  }, [dangerHover]);
 
   async function handleUpgrade() {
     track("upgrade-started");
@@ -163,12 +209,29 @@ export default function AccountPage() {
       </section>
 
       {/* Danger */}
-      <section className="group/danger space-y-3">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-red-400/90 mb-3 transition-colors group-hover/danger:text-red-500">
-          <span className="group-hover/danger:hidden">Danger</span>
-          <span className="hidden group-hover/danger:inline">
-            Danger, Will Robinson
-          </span>
+      <section
+        className="space-y-3"
+        onMouseEnter={() => setDangerHover(true)}
+        onMouseLeave={() => setDangerHover(false)}
+      >
+        <h2
+          className={`text-xs font-medium uppercase tracking-wide mb-3 transition-colors ${
+            dangerHover ? "text-red-500" : "text-red-400/90"
+          }`}
+        >
+          <span>Danger</span>
+          {dangerHover && (
+            <>
+              <span>{DANGER_SUFFIX.slice(0, dangerTyped)}</span>
+              <span
+                className="inline-block w-[0.5ch] text-center font-mono translate-y-px"
+                style={{ opacity: caretVisible ? 1 : 0 }}
+                aria-hidden
+              >
+                |
+              </span>
+            </>
+          )}
         </h2>
         <button
           type="button"
