@@ -3,6 +3,19 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import Stripe from "stripe";
 
+/** Stripe requires absolute URLs with a scheme; env is often set as `tiny.garden` by mistake. */
+function appOrigin(): string {
+  const raw = (process.env.NEXT_PUBLIC_APP_URL || "").trim();
+  if (raw) {
+    const base = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    return base.replace(/\/$/, "");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
+  }
+  return "http://localhost:3000";
+}
+
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
 }
@@ -37,12 +50,13 @@ export async function POST() {
     );
   }
 
+  const origin = appOrigin();
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "payment",
     line_items: [{ price: supporterPriceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/sites?upgraded=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/sites`,
+    success_url: `${origin}/sites?upgraded=true`,
+    cancel_url: `${origin}/sites`,
   });
 
   return NextResponse.json({ url: checkoutSession.url });
