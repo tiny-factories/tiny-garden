@@ -24,26 +24,44 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const customerId = session.customer as string;
-
-    const user = await prisma.user.findFirst({
-      where: { stripeCustomerId: customerId },
-    });
-    if (user) {
-      await prisma.subscription.upsert({
-        where: { userId: user.id },
-        update: {
-          plan: "pro",
-          stripeSubscriptionId: session.subscription as string,
-          status: "active",
-        },
-        create: {
-          userId: user.id,
-          plan: "pro",
-          stripeSubscriptionId: session.subscription as string,
-          status: "active",
-        },
+    const customerId = session.customer as string | null;
+    if (customerId) {
+      const user = await prisma.user.findFirst({
+        where: { stripeCustomerId: customerId },
       });
+      if (user) {
+        if (session.mode === "payment") {
+          await prisma.subscription.upsert({
+            where: { userId: user.id },
+            update: {
+              plan: "pro",
+              stripeSubscriptionId: null,
+              status: "active",
+            },
+            create: {
+              userId: user.id,
+              plan: "pro",
+              stripeSubscriptionId: null,
+              status: "active",
+            },
+          });
+        } else if (session.mode === "subscription" && session.subscription) {
+          await prisma.subscription.upsert({
+            where: { userId: user.id },
+            update: {
+              plan: "pro",
+              stripeSubscriptionId: session.subscription as string,
+              status: "active",
+            },
+            create: {
+              userId: user.id,
+              plan: "pro",
+              stripeSubscriptionId: session.subscription as string,
+              status: "active",
+            },
+          });
+        }
+      }
     }
   }
 

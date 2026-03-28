@@ -114,7 +114,7 @@ export default function AccountPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">
-              {{ free: "Free", pro: "Pro", studio: "Studio" }[account.plan] || "Free"} plan
+              {{ free: "Free", pro: "Supporter", studio: "Studio" }[account.plan] || "Free"} plan
               {account.isAdmin && (
                 <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
                   Admin
@@ -127,7 +127,7 @@ export default function AccountPage() {
               )}
             </p>
             <p className="text-xs text-neutral-400 mt-0.5">
-              {{ free: "3 sites, manual rebuild", pro: "10 sites, daily auto-rebuild", studio: "50 sites, daily auto-rebuild" }[account.plan] || "3 sites"}
+              {{ free: "3 sites, manual rebuild", pro: "Lifetime access, unlimited sites, daily auto-rebuild", studio: "50 sites, daily auto-rebuild" }[account.plan] || "3 sites"}
             </p>
           </div>
           {account.plan === "free" && (
@@ -136,7 +136,7 @@ export default function AccountPage() {
               disabled={upgrading}
               className="text-xs px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
             >
-              {upgrading ? "Loading..." : "Upgrade to Pro"}
+              {upgrading ? "Loading..." : "Become a supporter"}
             </button>
           )}
           {account.plan === "pro" && (

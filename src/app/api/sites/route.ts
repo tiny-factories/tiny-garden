@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   });
 
   const plan = user.subscription?.plan || "free";
-  const limits: Record<string, number> = { free: 3, pro: 10, studio: 50 };
+  const limits: Record<string, number> = { free: 3, pro: Infinity, studio: 50 };
   const limit = limits[plan] ?? 3;
 
   if (!user.isAdmin && !user.isFriend && user.sites.length >= limit) {

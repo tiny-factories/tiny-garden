@@ -29,12 +29,18 @@ export async function POST() {
     });
   }
 
+  const supporterPriceId = process.env.STRIPE_SUPPORTER_PRICE_ID;
+  if (!supporterPriceId) {
+    return NextResponse.json(
+      { error: "Billing is not configured (STRIPE_SUPPORTER_PRICE_ID)" },
+      { status: 503 }
+    );
+  }
+
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
-    mode: "subscription",
-    line_items: [
-      { price: process.env.STRIPE_PRO_PRICE_ID!, quantity: 1 },
-    ],
+    mode: "payment",
+    line_items: [{ price: supporterPriceId, quantity: 1 }],
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/sites?upgraded=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/sites`,
   });
