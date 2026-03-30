@@ -288,8 +288,8 @@ export default function SiteSettingsPage() {
     link.href = url;
   }, [fonts.heading, fonts.body]);
 
-  // Build preview URL with theme params
-  const previewUrl = useMemo(() => {
+  // Build preview URL with theme params (debounced to avoid iframe flickering)
+  const rawPreviewUrl = useMemo(() => {
     const template = selectedTemplate || site?.template;
     if (!template) return null;
     const params = new URLSearchParams({ template });
@@ -303,6 +303,12 @@ export default function SiteSettingsPage() {
     }
     return `/api/templates/preview?${params.toString()}`;
   }, [selectedTemplate, site?.template, colors, fonts, canCustomize]);
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const timeout = setTimeout(() => setPreviewUrl(rawPreviewUrl), 300);
+    return () => clearTimeout(timeout);
+  }, [rawPreviewUrl]);
 
   useEffect(() => {
     Promise.all([
@@ -771,6 +777,7 @@ export default function SiteSettingsPage() {
             </div>
             {previewUrl ? (
               <iframe
+                key={previewUrl}
                 src={previewUrl}
                 className="w-full border-0"
                 style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}
