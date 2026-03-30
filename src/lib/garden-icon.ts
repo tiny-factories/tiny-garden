@@ -87,114 +87,90 @@ function generatePlant(seed: number): Grid {
   const leafLight = hsl(greenHue, 50, 50);
   const leafDark = hsl(greenHue, 65, 25);
 
-  // ── Ground leaves (rows 12-15) ──
-  const groundWidth = 3 + Math.floor(rand() * 4); // 3-6
-  const groundCenterX = 7 + Math.floor(rand() * 2); // 7 or 8
-  for (let i = 0; i < groundWidth; i++) {
-    const gx = groundCenterX - Math.floor(groundWidth / 2) + i;
-    set(grid, gx, 14, leafColor);
-    set(grid, gx, 15, leafDark);
-    if (rand() > 0.3) set(grid, gx, 13, leafLight);
-  }
-  // Extra scattered ground pixels
-  for (let i = 0; i < 4; i++) {
-    const gx = groundCenterX - 3 + Math.floor(rand() * 7);
-    const gy = 13 + Math.floor(rand() * 3);
-    if (rand() > 0.4) set(grid, gx, gy, rand() > 0.5 ? leafColor : leafDark);
+  // ── Thin stem ──
+  const stemX = 7 + Math.floor(rand() * 2); // center-ish
+  const stemTop = 3 + Math.floor(rand() * 3); // flower at row 3-5
+  const stemBottom = 13 + Math.floor(rand() * 2); // end at 13-14
+  const stemWobble = rand() > 0.4;
+  let curX = stemX;
+
+  for (let y = stemBottom; y >= stemTop + 1; y--) {
+    if (stemWobble && rand() > 0.7) curX += rand() > 0.5 ? 1 : -1;
+    curX = Math.max(4, Math.min(11, curX)); // keep in bounds
+    set(grid, curX, y, stemColor);
   }
 
-  // ── Stem (column ~7-8, rows from ground up to flower) ──
-  const stemX = groundCenterX;
-  const stemTop = 3 + Math.floor(rand() * 3); // flower starts at row 3-5
-  const stemWobble = rand() > 0.5;
-
-  for (let y = 12; y >= stemTop; y--) {
-    const wx = stemWobble && y % 3 === 0 ? stemX + (rand() > 0.5 ? 1 : -1) : stemX;
-    set(grid, wx, y, stemColor);
-    // Occasional thicker stem
-    if (rand() > 0.7) set(grid, wx + 1, y, stemColor);
-  }
-
-  // ── Side leaves on stem ──
-  const numLeaves = 1 + Math.floor(rand() * 3);
+  // ── 1-2 small leaves off the stem ──
+  const numLeaves = Math.floor(rand() * 2) + 1;
   for (let i = 0; i < numLeaves; i++) {
-    const ly = 8 + Math.floor(rand() * 4); // rows 8-11
+    const ly = stemTop + 3 + Math.floor(rand() * (stemBottom - stemTop - 3));
     const side = rand() > 0.5 ? 1 : -1;
-    const leafLen = 1 + Math.floor(rand() * 2);
-    for (let j = 1; j <= leafLen; j++) {
-      set(grid, stemX + side * j, ly, leafColor);
-      if (rand() > 0.5) set(grid, stemX + side * j, ly - 1, leafLight);
-    }
+    set(grid, curX + side, ly, leafColor);
+    if (rand() > 0.5) set(grid, curX + side, ly - 1, leafLight);
   }
+
+  // ── Tiny ground (just 2-3 pixels at base) ──
+  set(grid, curX, stemBottom + 1, leafDark);
+  set(grid, curX - 1, stemBottom + 1, leafColor);
+  set(grid, curX + 1, stemBottom + 1, leafColor);
 
   // ── Flower head ──
-  const flowerType = Math.floor(rand() * 5);
-  const fx = stemX;
+  const flowerType = Math.floor(rand() * 6);
+  const fx = curX;
   const fy = stemTop;
 
   switch (flowerType) {
-    case 0: // Round bloom (3x3)
+    case 0: { // Round bloom (3x3 with gaps)
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
-          const c = (dx === 0 && dy === 0) ? flowerHighlight :
-                    (rand() > 0.3) ? flowerColor : flowerShadow;
-          set(grid, fx + dx, fy + dy, c);
+          if (rand() > 0.15) {
+            const c = (dx === 0 && dy === 0) ? flowerHighlight :
+                      (rand() > 0.4) ? flowerColor : flowerShadow;
+            set(grid, fx + dx, fy + dy, c);
+          }
         }
       }
-      // Extra petals
-      if (rand() > 0.4) set(grid, fx, fy - 2, flowerColor);
-      if (rand() > 0.4) set(grid, fx - 2, fy, flowerColor);
-      if (rand() > 0.4) set(grid, fx + 2, fy, flowerColor);
       break;
-
-    case 1: // Tall spike / tulip
-      set(grid, fx, fy - 2, flowerHighlight);
-      set(grid, fx, fy - 1, flowerColor);
+    }
+    case 1: { // Tulip
+      set(grid, fx, fy - 1, flowerHighlight);
       set(grid, fx, fy, flowerColor);
       set(grid, fx - 1, fy, flowerShadow);
       set(grid, fx + 1, fy, flowerShadow);
-      set(grid, fx - 1, fy + 1, flowerShadow);
-      set(grid, fx + 1, fy + 1, flowerShadow);
       break;
-
-    case 2: // Star / cross shape
+    }
+    case 2: { // Daisy (cross + center)
       set(grid, fx, fy, flowerHighlight);
       set(grid, fx - 1, fy, flowerColor);
       set(grid, fx + 1, fy, flowerColor);
       set(grid, fx, fy - 1, flowerColor);
       set(grid, fx, fy + 1, flowerColor);
-      set(grid, fx - 1, fy - 1, flowerShadow);
-      set(grid, fx + 1, fy - 1, flowerShadow);
+      break;
+    }
+    case 3: { // Droopy / bell
+      set(grid, fx, fy - 1, flowerColor);
+      set(grid, fx - 1, fy, flowerColor);
+      set(grid, fx, fy, flowerHighlight);
+      set(grid, fx + 1, fy, flowerColor);
       set(grid, fx - 1, fy + 1, flowerShadow);
       set(grid, fx + 1, fy + 1, flowerShadow);
       break;
-
-    case 3: // Wide / bushy (4x2)
-      for (let dx = -2; dx <= 1; dx++) {
-        set(grid, fx + dx, fy, rand() > 0.3 ? flowerColor : flowerHighlight);
-        set(grid, fx + dx, fy - 1, rand() > 0.3 ? flowerColor : flowerShadow);
-      }
-      if (rand() > 0.3) set(grid, fx - 1, fy - 2, flowerColor);
-      if (rand() > 0.3) set(grid, fx, fy - 2, flowerHighlight);
-      break;
-
-    case 4: // Small bud
+    }
+    case 4: { // Tiny bud
       set(grid, fx, fy, flowerHighlight);
       set(grid, fx, fy - 1, flowerColor);
-      set(grid, fx - 1, fy, flowerShadow);
-      set(grid, fx + 1, fy, flowerShadow);
-      // Little leaf bracts
-      set(grid, fx - 1, fy + 1, leafLight);
-      set(grid, fx + 1, fy + 1, leafLight);
+      if (rand() > 0.5) set(grid, fx - 1, fy, flowerShadow);
+      if (rand() > 0.5) set(grid, fx + 1, fy, flowerShadow);
       break;
-  }
-
-  // ── Random scatter (adds organic feel) ──
-  for (let i = 0; i < 3; i++) {
-    const sx = groundCenterX - 3 + Math.floor(rand() * 7);
-    const sy = 10 + Math.floor(rand() * 5);
-    if (!grid[sy]?.[sx] && rand() > 0.6) {
-      set(grid, sx, sy, rand() > 0.5 ? leafColor : leafDark);
+    }
+    case 5: { // Spiky / star
+      set(grid, fx, fy, flowerHighlight);
+      set(grid, fx - 1, fy - 1, flowerColor);
+      set(grid, fx + 1, fy - 1, flowerColor);
+      set(grid, fx - 1, fy + 1, flowerColor);
+      set(grid, fx + 1, fy + 1, flowerColor);
+      set(grid, fx, fy - 1, flowerShadow);
+      break;
     }
   }
 
