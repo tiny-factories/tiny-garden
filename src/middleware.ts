@@ -1,16 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const host = req.headers.get("host") || "";
+  const host = (req.headers.get("host") || "").toLowerCase();
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
 
-  // Check if this is a subdomain request
+  // Check if this is a subdomain request (e.g. my-site.tiny.garden)
   if (host.endsWith(`.${siteDomain}`) && host !== siteDomain && host !== `www.${siteDomain}`) {
     const subdomain = host.replace(`.${siteDomain}`, "");
 
-    // Rewrite to the generated site serving route
     return NextResponse.rewrite(
       new URL(`/api/serve/${subdomain}${req.nextUrl.pathname}`, req.url)
+    );
+  }
+
+  // Check if this is the main app domain
+  const isAppDomain =
+    host === siteDomain ||
+    host === `www.${siteDomain}` ||
+    host.startsWith("localhost") ||
+    host.startsWith("127.0.0.1");
+
+  // If not the app domain and not a subdomain, treat as custom domain
+  if (!isAppDomain) {
+    return NextResponse.rewrite(
+      new URL(`/api/serve/_custom/${host}${req.nextUrl.pathname}`, req.url)
     );
   }
 

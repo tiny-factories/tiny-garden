@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/db";
+import { removeDomainFromVercel } from "@/lib/vercel";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -77,6 +78,22 @@ export async function POST(req: NextRequest) {
         where: { userId: user.id },
         data: { plan: "free", status: "canceled" },
       });
+
+      // Remove custom domains from all user's sites on downgrade
+      const sitesWithDomains = await prisma.site.findMany({
+        where: { userId: user.id, customDomain: { not: null } },
+      });
+      for (const site of sitesWithDomains) {
+        if (site.customDomain) {
+          await removeDomainFromVercel(site.customDomain).catch(() => {});
+        }
+      }
+      if (sitesWithDomains.length > 0) {
+        await prisma.site.updateMany({
+          where: { userId: user.id, customDomain: { not: null } },
+          data: { customDomain: null, domainVerified: false },
+        });
+      }
     }
   }
 

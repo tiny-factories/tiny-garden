@@ -32,10 +32,12 @@ model Site {
   customCss     String?
   themeColors   String?  // JSON: { background, text, accent, border }
   themeFonts    String?  // JSON: { heading, body }
-  published     Boolean  @default(false)
-  featured      Boolean  @default(false)
-  blobUrl       String?
-  lastBuiltAt   DateTime?
+  published      Boolean  @default(false)
+  featured       Boolean  @default(false)
+  blobUrl        String?
+  customDomain   String?  @unique
+  domainVerified Boolean  @default(false)
+  lastBuiltAt    DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

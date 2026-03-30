@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { removeDomainFromVercel } from "@/lib/vercel";
 
 export async function DELETE(
   _req: NextRequest,
@@ -14,6 +15,11 @@ export async function DELETE(
   const site = await prisma.site.findUnique({ where: { id } });
   if (!site || site.userId !== session.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Clean up custom domain from Vercel if set
+  if (site.customDomain) {
+    await removeDomainFromVercel(site.customDomain).catch(() => {});
   }
 
   await prisma.site.delete({ where: { id } });

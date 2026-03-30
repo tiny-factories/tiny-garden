@@ -647,30 +647,7 @@ export default async function Home() {
         </Link>
       </section>
 
-      {/* Footer */}
-      <footer className="max-w-3xl mx-auto px-4 py-8 border-t border-neutral-100 flex items-center justify-between">
-        <span className="text-xs text-neutral-400">tiny.garden</span>
-        <div className="flex gap-4">
-          <a
-            href="https://are.na"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
-          >
-            Are.na
-          </a>
-          <a
-            href="#pricing"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
-          >
-            Pricing
-          </a>
-          <Link
-            href="/login"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
-          >
-            Log in
-          </Link>
-        </div>
-      </footer>
+      {/* Footer is in the layout */}
     </main>
   );
 }
