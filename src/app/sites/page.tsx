@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { track } from "@/lib/track";
 import { PlanTierBadge } from "@/components/PlanTierBadge";
+import { Toolbar, type ViewMode } from "@/components/toolbar";
 
 interface Site {
   id: string;
@@ -112,6 +113,8 @@ export default function SitesPage() {
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("single");
 
   const fetchSites = useCallback(() => {
     return fetch("/api/sites").then((r) => r.json());
@@ -209,8 +212,19 @@ export default function SitesPage() {
 
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
 
+  const filtered = useMemo(() => {
+    if (!search.trim()) return sites;
+    const q = search.toLowerCase();
+    return sites.filter(
+      (s) =>
+        s.channelTitle.toLowerCase().includes(q) ||
+        s.subdomain.toLowerCase().includes(q) ||
+        s.template.toLowerCase().includes(q)
+    );
+  }, [sites, search]);
+
   return (
-    <main className="min-h-screen max-w-2xl mx-auto px-4 py-16">
+    <main className="min-h-screen max-w-4xl mx-auto px-4 py-16">
       <div className="flex items-center justify-between mb-12">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -242,10 +256,6 @@ export default function SitesPage() {
                 </div>
                 <div className="h-5 w-9 bg-neutral-100 rounded-full" />
               </div>
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-50">
-                <div className="h-6 w-16 bg-neutral-50 rounded" />
-                <div className="h-6 w-14 bg-neutral-50 rounded" />
-              </div>
             </div>
           ))}
         </div>
@@ -260,91 +270,150 @@ export default function SitesPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
-          {sites.map((site) => {
-            const isBuilding = !!building[site.id];
-            return (
-              <div
-                key={site.id}
-                className={`border rounded overflow-hidden transition-colors ${
-                  isBuilding
-                    ? "border-amber-200 bg-amber-50/30"
-                    : site.published
-                    ? "border-neutral-200"
-                    : "border-neutral-200"
-                }`}
-              >
-                {/* Preview area with status badge overlay */}
-                <div className="relative">
-                  {site.published && !isBuilding ? (
-                    <a
-                      href={`https://${site.subdomain}.${siteDomain}`}
-                      target="_blank"
-                      rel="noopener"
-                      className="block bg-neutral-50 group cursor-pointer"
-                    >
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <iframe
-                          src={`https://${site.subdomain}.${siteDomain}`}
-                          className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
-                          tabIndex={-1}
-                          title={`Preview of ${site.channelTitle}`}
-                        />
-                      </div>
-                      <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center">
-                        <span className="text-xs bg-white/90 backdrop-blur px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                          Open preview
-                        </span>
-                      </div>
-                    </a>
-                  ) : isBuilding ? (
-                    <div className="aspect-[16/9] bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
-                  ) : (
-                    <div className="aspect-[16/9] bg-neutral-50" />
-                  )}
+        <>
+          <Toolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search sites..."
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
 
-                  {/* Status badge — upper right of preview */}
-                  <div className="absolute top-2 right-2 z-10">
-                    <StatusBadge site={site} isBuilding={isBuilding} />
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1 min-w-0">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-neutral-400 py-8 text-center">
+              No sites match &ldquo;{search}&rdquo;
+            </p>
+          ) : viewMode === "list" ? (
+            /* ── List view ── */
+            <div className="border border-neutral-200 rounded overflow-hidden divide-y divide-neutral-100">
+              {filtered.map((site) => {
+                const isBuilding = !!building[site.id];
+                return (
+                  <div
+                    key={site.id}
+                    className={`flex items-center gap-4 px-4 py-3 transition-colors ${
+                      isBuilding ? "bg-amber-50/30" : "hover:bg-neutral-50"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{site.channelTitle}</p>
                       <p className="text-xs text-neutral-400">
                         {site.subdomain}.{siteDomain} &middot; {site.template}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Toggle
-                        checked={site.published}
-                        loading={isBuilding}
-                        onChange={() => handleTogglePublish(site)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
+                    <StatusBadge site={site} isBuilding={isBuilding} />
+                    <Toggle
+                      checked={site.published}
+                      loading={isBuilding}
+                      onChange={() => handleTogglePublish(site)}
+                    />
                     <Link
                       href={`/sites/${site.id}`}
-                      className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                      className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors shrink-0"
                     >
                       Settings
                     </Link>
                     <button
                       onClick={() => handleDelete(site.id)}
-                      className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors ml-auto"
+                      className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors shrink-0"
                     >
                       Delete
                     </button>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ── Single / Grid view ── */
+            <div className={
+              viewMode === "grid"
+                ? "grid grid-cols-2 gap-3"
+                : "space-y-3"
+            }>
+              {filtered.map((site) => {
+                const isBuilding = !!building[site.id];
+                return (
+                  <div
+                    key={site.id}
+                    className={`border rounded overflow-hidden transition-colors ${
+                      isBuilding
+                        ? "border-amber-200 bg-amber-50/30"
+                        : "border-neutral-200"
+                    }`}
+                  >
+                    {/* Preview area with status badge overlay */}
+                    <div className="relative">
+                      {site.published && !isBuilding ? (
+                        <a
+                          href={`https://${site.subdomain}.${siteDomain}`}
+                          target="_blank"
+                          rel="noopener"
+                          className="block bg-neutral-50 group cursor-pointer"
+                        >
+                          <div className="aspect-[16/9] overflow-hidden">
+                            <iframe
+                              src={`https://${site.subdomain}.${siteDomain}`}
+                              className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
+                              tabIndex={-1}
+                              title={`Preview of ${site.channelTitle}`}
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                            <span className="text-xs bg-white/90 backdrop-blur px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                              Open preview
+                            </span>
+                          </div>
+                        </a>
+                      ) : isBuilding ? (
+                        <div className="aspect-[16/9] bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
+                      ) : (
+                        <div className="aspect-[16/9] bg-neutral-50" />
+                      )}
+
+                      {/* Status badge — upper right of preview */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <StatusBadge site={site} isBuilding={isBuilding} />
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{site.channelTitle}</p>
+                          <p className="text-xs text-neutral-400">
+                            {site.subdomain}.{siteDomain} &middot; {site.template}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <Toggle
+                            checked={site.published}
+                            loading={isBuilding}
+                            onChange={() => handleTogglePublish(site)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
+                        <Link
+                          href={`/sites/${site.id}`}
+                          className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                        >
+                          Settings
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(site.id)}
+                          className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors ml-auto"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </main>
   );

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/track";
+import { Toolbar } from "@/components/toolbar";
 import {
   BUILTIN_FONTS,
   GOOGLE_FONTS,
@@ -268,6 +269,7 @@ export default function SiteSettingsPage() {
   } | null>(null);
   const [domainLoading, setDomainLoading] = useState(false);
   const [domainError, setDomainError] = useState("");
+  const [configSearch, setConfigSearch] = useState("");
 
   const canCustomize = account?.isAdmin || account?.isFriend || account?.plan === "pro" || account?.plan === "studio";
 
@@ -446,29 +448,35 @@ export default function SiteSettingsPage() {
       <div className="flex gap-6 items-start">
         {/* Left panel — Controls */}
         <div className="w-80 shrink-0">
-          {/* Tab navigation */}
-          <div className="flex border-b border-neutral-200 mb-4">
-            <button
-              onClick={() => setActiveTab("theme")}
-              className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === "theme"
-                  ? "border-neutral-900 text-neutral-900"
-                  : "border-transparent text-neutral-400 hover:text-neutral-600"
-              }`}
-            >
-              Theme
-            </button>
-            <button
-              onClick={() => setActiveTab("config")}
-              className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === "config"
-                  ? "border-neutral-900 text-neutral-900"
-                  : "border-transparent text-neutral-400 hover:text-neutral-600"
-              }`}
-            >
-              Config
-            </button>
-          </div>
+          {/* Tab navigation + search */}
+          <Toolbar
+            search={activeTab === "config" ? configSearch : undefined}
+            onSearchChange={activeTab === "config" ? setConfigSearch : undefined}
+            searchPlaceholder="Search templates..."
+          >
+            <div className="flex border border-neutral-200 rounded overflow-hidden shrink-0">
+              <button
+                onClick={() => setActiveTab("theme")}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  activeTab === "theme"
+                    ? "bg-neutral-900 text-white"
+                    : "text-neutral-400 hover:bg-neutral-50"
+                }`}
+              >
+                Theme
+              </button>
+              <button
+                onClick={() => setActiveTab("config")}
+                className={`px-3 py-1.5 text-xs font-medium border-l border-neutral-200 transition-colors ${
+                  activeTab === "config"
+                    ? "bg-neutral-900 text-white"
+                    : "text-neutral-400 hover:bg-neutral-50"
+                }`}
+              >
+                Config
+              </button>
+            </div>
+          </Toolbar>
 
           {/* Theme tab */}
           {activeTab === "theme" && (
@@ -550,7 +558,11 @@ export default function SiteSettingsPage() {
               <div>
                 <h3 className="text-xs font-medium text-neutral-500 mb-3">Template</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {templates.map((t) => (
+                  {templates.filter((t) => {
+                    if (!configSearch.trim()) return true;
+                    const q = configSearch.toLowerCase();
+                    return t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q);
+                  }).map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setSelectedTemplate(t.id)}
