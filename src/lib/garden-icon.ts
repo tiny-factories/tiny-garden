@@ -87,10 +87,10 @@ function generatePlant(seed: number): Grid {
   const leafLight = hsl(greenHue, 50, 50);
   const leafDark = hsl(greenHue, 65, 25);
 
-  // ── Thin stem ──
+  // ── Thin stem (pushed lower in the frame) ──
   const stemX = 7 + Math.floor(rand() * 2); // center-ish
-  const stemTop = 3 + Math.floor(rand() * 3); // flower at row 3-5
-  const stemBottom = 13 + Math.floor(rand() * 2); // end at 13-14
+  const stemTop = 6 + Math.floor(rand() * 3); // flower at row 6-8 (lower)
+  const stemBottom = 15; // goes to bottom of frame
   const stemWobble = rand() > 0.4;
   let curX = stemX;
 
@@ -100,19 +100,12 @@ function generatePlant(seed: number): Grid {
     set(grid, curX, y, stemColor);
   }
 
-  // ── 1-2 small leaves off the stem ──
-  const numLeaves = Math.floor(rand() * 2) + 1;
-  for (let i = 0; i < numLeaves; i++) {
-    const ly = stemTop + 3 + Math.floor(rand() * (stemBottom - stemTop - 3));
+  // ── 0-1 small leaves off the stem ──
+  if (rand() > 0.3) {
+    const ly = stemTop + 2 + Math.floor(rand() * (stemBottom - stemTop - 3));
     const side = rand() > 0.5 ? 1 : -1;
     set(grid, curX + side, ly, leafColor);
-    if (rand() > 0.5) set(grid, curX + side, ly - 1, leafLight);
   }
-
-  // ── Tiny ground (just 2-3 pixels at base) ──
-  set(grid, curX, stemBottom + 1, leafDark);
-  set(grid, curX - 1, stemBottom + 1, leafColor);
-  set(grid, curX + 1, stemBottom + 1, leafColor);
 
   // ── Flower head ──
   const flowerType = Math.floor(rand() * 6);
