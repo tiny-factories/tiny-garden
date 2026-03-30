@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { put } from "@vercel/blob";
 import { ArenaClient, ArenaBlock } from "./arena";
 import { prisma } from "./db";
+import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -353,23 +354,18 @@ export async function buildSite(siteId: string): Promise<string> {
       themeOverrideCss += `a { color: ${c.accent}; }\n`;
     } catch {}
   }
+  let themeFontLinks = "";
   if (site.themeFonts) {
     try {
       const f = JSON.parse(site.themeFonts);
-      const fontMap: Record<string, string> = {
-        system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        inter: '"Inter", sans-serif',
-        georgia: '"Georgia", serif',
-        menlo: '"Menlo", "Consolas", monospace',
-        palatino: '"Palatino Linotype", "Palatino", serif',
-        helvetica: '"Helvetica Neue", "Helvetica", sans-serif',
-      };
       if (f.heading && f.heading !== "system") {
-        themeOverrideCss += `h1, h2, h3, h4, h5, h6 { font-family: ${fontMap[f.heading] || fontMap.system}; }\n`;
+        themeOverrideCss += `h1, h2, h3, h4, h5, h6 { font-family: ${fontFamilyCSS(f.heading)}; }\n`;
       }
       if (f.body && f.body !== "system") {
-        themeOverrideCss += `body { font-family: ${fontMap[f.body] || fontMap.system}; }\n`;
+        themeOverrideCss += `body { font-family: ${fontFamilyCSS(f.body)}; }\n`;
       }
+      // Google Fonts link tags
+      themeFontLinks = googleFontsLinkTag([f.heading, f.body].filter(Boolean));
     } catch {}
   }
 
@@ -384,9 +380,10 @@ export async function buildSite(siteId: string): Promise<string> {
     );
   }
 
-  // Inject theme overrides before </head>
-  if (themeOverrideCss) {
-    html = html.replace("</head>", `<style>${themeOverrideCss}</style>\n</head>`);
+  // Inject Google Fonts links + theme overrides before </head>
+  const themeInjection = themeFontLinks + (themeOverrideCss ? `<style>${themeOverrideCss}</style>\n` : "");
+  if (themeInjection) {
+    html = html.replace("</head>", `${themeInjection}</head>`);
   }
 
   // Upload to Vercel Blob if token available, otherwise write to filesystem

@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/track";
+import {
+  BUILTIN_FONTS,
+  GOOGLE_FONTS,
+  isGoogleFont,
+  googleFontName,
+  fontFamilyCSS,
+  googleFontsURL,
+} from "@/lib/fonts";
 
 interface Site {
   id: string;
@@ -47,21 +55,193 @@ const DEFAULT_COLORS: ThemeColors = {
   border: "#e5e5e5",
 };
 
-const FONT_OPTIONS = [
-  { value: "system", label: "System (default)" },
-  { value: "inter", label: "Inter" },
-  { value: "georgia", label: "Georgia" },
-  { value: "menlo", label: "Menlo (monospace)" },
-  { value: "palatino", label: "Palatino" },
-  { value: "helvetica", label: "Helvetica" },
-];
-
 const DEFAULT_FONTS: ThemeFonts = {
   heading: "system",
   body: "system",
 };
 
 type Tab = "theme" | "config";
+
+// ── Font Picker ──────────────────────────────────────────────
+
+function FontPicker({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  const displayName = isGoogleFont(value)
+    ? googleFontName(value)
+    : value === "system"
+    ? "System (default)"
+    : value.charAt(0).toUpperCase() + value.slice(1);
+
+  const q = search.toLowerCase();
+
+  const builtinOptions = Object.keys(BUILTIN_FONTS).filter(
+    (k) => k.toLowerCase().includes(q)
+  );
+
+  const googleOptions = GOOGLE_FONTS.filter(
+    (f) => f.toLowerCase().includes(q)
+  );
+
+  // Allow custom Google Font entry if search doesn't match any known font
+  const hasExactMatch =
+    builtinOptions.some((k) => k.toLowerCase() === q) ||
+    googleOptions.some((f) => f.toLowerCase() === q);
+
+  return (
+    <div ref={ref} className="relative">
+      <span className="text-xs text-neutral-500">{label}</span>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="mt-1 w-full text-left text-sm border border-neutral-200 rounded px-2 py-1.5 flex items-center justify-between hover:border-neutral-300 transition-colors"
+      >
+        <span className="truncate">{displayName}</span>
+        <svg className="w-3 h-3 text-neutral-400 shrink-0 ml-2" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3 5l3 3 3-3" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-neutral-200 rounded shadow-lg max-h-64 overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-neutral-100">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search fonts..."
+              className="w-full text-sm px-2 py-1 border border-neutral-200 rounded outline-none focus:border-neutral-400"
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto flex-1">
+            {builtinOptions.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider">
+                  System
+                </div>
+                {builtinOptions.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => { onChange(key); setOpen(false); setSearch(""); }}
+                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors ${
+                      value === key ? "bg-neutral-50 font-medium" : ""
+                    }`}
+                  >
+                    {key === "system" ? "System (default)" : key.charAt(0).toUpperCase() + key.slice(1)}
+                  </button>
+                ))}
+              </>
+            )}
+            {googleOptions.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1">
+                  Google Fonts
+                </div>
+                {googleOptions.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => { onChange(`gf:${name}`); setOpen(false); setSearch(""); }}
+                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors ${
+                      value === `gf:${name}` ? "bg-neutral-50 font-medium" : ""
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </>
+            )}
+            {search.trim() && !hasExactMatch && (
+              <>
+                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1">
+                  Custom
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { onChange(`gf:${search.trim()}`); setOpen(false); setSearch(""); }}
+                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors"
+                >
+                  Use &ldquo;{search.trim()}&rdquo; from Google Fonts
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Color Input (picker + hex) ───────────────────────────────
+
+function ColorInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [hex, setHex] = useState(value);
+
+  // Keep local hex in sync with parent when parent changes (e.g. reset)
+  useEffect(() => { setHex(value); }, [value]);
+
+  function commitHex(raw: string) {
+    let v = raw.trim();
+    if (v && !v.startsWith("#")) v = "#" + v;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      onChange(v);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setHex(e.target.value); }}
+        className="w-6 h-6 rounded border border-neutral-200 cursor-pointer shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <span className="text-xs text-neutral-500 capitalize">{label}</span>
+        <input
+          type="text"
+          value={hex}
+          onChange={(e) => setHex(e.target.value)}
+          onBlur={(e) => commitHex(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") commitHex(hex); }}
+          className="block w-full text-xs font-mono px-1.5 py-0.5 border border-neutral-200 rounded mt-0.5 outline-none focus:border-neutral-400 transition-colors"
+          placeholder="#000000"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────
 
 export default function SiteSettingsPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,6 +270,21 @@ export default function SiteSettingsPage() {
   const [domainError, setDomainError] = useState("");
 
   const canCustomize = account?.isAdmin || account?.isFriend || account?.plan === "pro" || account?.plan === "studio";
+
+  // Load Google Fonts in the settings page so the picker can preview them
+  useEffect(() => {
+    const url = googleFontsURL([fonts.heading, fonts.body]);
+    if (!url) return;
+    const id = "theme-google-fonts";
+    let link = document.getElementById(id) as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    link.href = url;
+  }, [fonts.heading, fonts.body]);
 
   // Build preview URL with theme params
   const previewUrl = useMemo(() => {
@@ -297,15 +492,12 @@ export default function SiteSettingsPage() {
                     <h3 className="text-xs font-medium text-neutral-500 mb-3">Colors</h3>
                     <div className="grid grid-cols-2 gap-3">
                       {(Object.keys(DEFAULT_COLORS) as (keyof ThemeColors)[]).map((key) => (
-                        <label key={key} className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={colors[key]}
-                            onChange={(e) => setColors({ ...colors, [key]: e.target.value })}
-                            className="w-6 h-6 rounded border border-neutral-200 cursor-pointer"
-                          />
-                          <span className="text-xs text-neutral-500 capitalize">{key}</span>
-                        </label>
+                        <ColorInput
+                          key={key}
+                          label={key}
+                          value={colors[key]}
+                          onChange={(v) => setColors({ ...colors, [key]: v })}
+                        />
                       ))}
                     </div>
                   </div>
@@ -314,30 +506,16 @@ export default function SiteSettingsPage() {
                   <div className="p-4 border border-neutral-100 rounded">
                     <h3 className="text-xs font-medium text-neutral-500 mb-3">Fonts</h3>
                     <div className="space-y-3">
-                      <label className="block">
-                        <span className="text-xs text-neutral-500">Headings</span>
-                        <select
-                          value={fonts.heading}
-                          onChange={(e) => setFonts({ ...fonts, heading: e.target.value })}
-                          className="mt-1 block w-full text-sm border border-neutral-200 rounded px-2 py-1.5"
-                        >
-                          {FONT_OPTIONS.map((f) => (
-                            <option key={f.value} value={f.value}>{f.label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block">
-                        <span className="text-xs text-neutral-500">Body</span>
-                        <select
-                          value={fonts.body}
-                          onChange={(e) => setFonts({ ...fonts, body: e.target.value })}
-                          className="mt-1 block w-full text-sm border border-neutral-200 rounded px-2 py-1.5"
-                        >
-                          {FONT_OPTIONS.map((f) => (
-                            <option key={f.value} value={f.value}>{f.label}</option>
-                          ))}
-                        </select>
-                      </label>
+                      <FontPicker
+                        label="Headings"
+                        value={fonts.heading}
+                        onChange={(v) => setFonts({ ...fonts, heading: v })}
+                      />
+                      <FontPicker
+                        label="Body"
+                        value={fonts.body}
+                        onChange={(v) => setFonts({ ...fonts, body: v })}
+                      />
                     </div>
                   </div>
 
@@ -596,16 +774,4 @@ export default function SiteSettingsPage() {
       </div>
     </main>
   );
-}
-
-function fontFamily(font: string): string {
-  const map: Record<string, string> = {
-    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    inter: '"Inter", sans-serif',
-    georgia: '"Georgia", serif',
-    menlo: '"Menlo", "Consolas", monospace',
-    palatino: '"Palatino Linotype", "Palatino", serif',
-    helvetica: '"Helvetica Neue", "Helvetica", sans-serif',
-  };
-  return map[font] || map.system;
 }

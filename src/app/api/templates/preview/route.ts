@@ -3,6 +3,7 @@ import Handlebars from "handlebars";
 import fs from "fs/promises";
 import path from "path";
 import { MOCK_SITE_DATA } from "@/lib/mock-data";
+import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
 
 // Register helper once
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
@@ -49,31 +50,31 @@ export async function GET(request: NextRequest) {
     );
 
     // Build theme override CSS if any params provided
-    const fontMap: Record<string, string> = {
-      system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      inter: '"Inter", sans-serif',
-      georgia: '"Georgia", serif',
-      menlo: '"Menlo", "Consolas", monospace',
-      palatino: '"Palatino Linotype", "Palatino", serif',
-      helvetica: '"Helvetica Neue", "Helvetica", sans-serif',
-    };
-
-    let themeCSS = "";
     const hasTheme = bg || text || accent || border || headingFont || bodyFont;
+    let themeCSS = "";
+    let fontLinks = "";
+
     if (hasTheme) {
+      // Google Fonts <link> tags
+      const fontValues = [headingFont, bodyFont].filter(Boolean) as string[];
+      fontLinks = googleFontsLinkTag(fontValues);
+
+      const headingCSS = headingFont ? fontFamilyCSS(headingFont) : null;
+      const bodyCSS = bodyFont ? fontFamilyCSS(bodyFont) : null;
+
       themeCSS = `<style>
         :root {
           ${bg ? `--color-background: ${bg};` : ""}
           ${text ? `--color-text: ${text};` : ""}
           ${accent ? `--color-accent: ${accent};` : ""}
           ${border ? `--color-border: ${border};` : ""}
-          ${headingFont ? `--font-heading: ${fontMap[headingFont] || fontMap.system};` : ""}
-          ${bodyFont ? `--font-body: ${fontMap[bodyFont] || fontMap.system};` : ""}
+          ${headingCSS ? `--font-heading: ${headingCSS};` : ""}
+          ${bodyCSS ? `--font-body: ${bodyCSS};` : ""}
         }
         ${bg ? `body { background-color: ${bg} !important; }` : ""}
         ${text ? `body { color: ${text} !important; }` : ""}
-        ${headingFont ? `h1, h2, h3, h4, h5, h6 { font-family: ${fontMap[headingFont] || fontMap.system} !important; }` : ""}
-        ${bodyFont ? `body, p, span, li, td { font-family: ${fontMap[bodyFont] || fontMap.system} !important; }` : ""}
+        ${headingCSS ? `h1, h2, h3, h4, h5, h6 { font-family: ${headingCSS} !important; }` : ""}
+        ${bodyCSS ? `body, p, span, li, td { font-family: ${bodyCSS} !important; }` : ""}
         ${accent ? `a { color: ${accent} !important; }` : ""}
         ${border ? `hr, .border, [class*="border"] { border-color: ${border} !important; }` : ""}
       </style>`;
@@ -86,12 +87,13 @@ export async function GET(request: NextRequest) {
     };
     let html = compiledTemplate({ ...siteData, styles: styleContent });
 
-    // Inject theme overrides before closing </head> or at end
-    if (themeCSS) {
+    // Inject font links + theme overrides before </head> or at start
+    const injection = fontLinks + themeCSS;
+    if (injection) {
       if (html.includes("</head>")) {
-        html = html.replace("</head>", `${themeCSS}</head>`);
+        html = html.replace("</head>", `${injection}</head>`);
       } else {
-        html = themeCSS + html;
+        html = injection + html;
       }
     }
 
