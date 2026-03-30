@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { seedFromSubdomain } from "@/lib/garden-icon";
 
 export async function GET() {
   const session = await getSession();
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
       channelSlug,
       channelTitle: channelTitle || channelSlug,
       template,
+      iconSeed: seedFromSubdomain(subdomain),
       userId: session.userId,
     },
   });

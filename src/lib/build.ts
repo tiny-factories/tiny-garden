@@ -6,6 +6,7 @@ import { put } from "@vercel/blob";
 import { ArenaClient, ArenaBlock } from "./arena";
 import { prisma } from "./db";
 import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
+import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -378,6 +379,25 @@ export async function buildSite(siteId: string): Promise<string> {
       /<link[^>]*rel=["']stylesheet["'][^>]*href=["']style\.css["'][^>]*\/?>/i,
       `<style>${styleContent}</style>`
     );
+  }
+
+  // Inject favicon (pixel-art plant)
+  const iconSeed = site.iconSeed ?? seedFromSubdomain(site.subdomain);
+  const faviconURI = generatePlantDataURI(iconSeed);
+  html = html.replace("</head>", `<link rel="icon" type="image/svg+xml" href="${faviconURI}">\n</head>`);
+
+  // Inject tiny.garden footer with plant icon before </body>
+  const plantSVGInline = generatePlantSVG(iconSeed).replace(/"/g, "'");
+  const gardenFooter = `<footer style="margin-top:3rem;padding:1rem 0;border-top:1px solid #e5e5e5;text-align:center;font-size:11px;color:#999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <a href="https://tiny.garden" target="_blank" rel="noopener" style="color:#999;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+    <span style="display:inline-block;width:16px;height:16px">${plantSVGInline}</span>
+    made with tiny.garden
+  </a>
+</footer>`;
+  if (html.includes("</body>")) {
+    html = html.replace("</body>", `${gardenFooter}\n</body>`);
+  } else {
+    html += gardenFooter;
   }
 
   // Inject Google Fonts links + theme overrides before </head>

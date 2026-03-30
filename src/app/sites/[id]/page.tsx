@@ -269,6 +269,8 @@ export default function SiteSettingsPage() {
   } | null>(null);
   const [domainLoading, setDomainLoading] = useState(false);
   const [domainError, setDomainError] = useState("");
+  const [iconSvg, setIconSvg] = useState<string | null>(null);
+  const [iconLoading, setIconLoading] = useState(false);
   const [configSearch, setConfigSearch] = useState("");
 
   const canCustomize = account?.isAdmin || account?.isFriend || account?.plan === "pro" || account?.plan === "studio";
@@ -317,8 +319,9 @@ export default function SiteSettingsPage() {
       fetch("/api/account").then((r) => r.json()),
       fetch("/api/templates").then((r) => r.json()),
       fetch(`/api/sites/${id}/domain`).then((r) => r.json()),
+      fetch(`/api/sites/${id}/icon`).then((r) => r.ok ? r.text() : null),
     ])
-      .then(([sites, theme, acc, tmpls, domain]) => {
+      .then(([sites, theme, acc, tmpls, domain, icon]) => {
         const s = (sites as Site[]).find((s: Site) => s.id === id);
         if (s) {
           setSite(s);
@@ -329,6 +332,7 @@ export default function SiteSettingsPage() {
         setAccount(acc);
         setTemplates(tmpls as Template[]);
         if (domain && !domain.error) setDomainStatus(domain);
+        if (icon) setIconSvg(icon);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -745,6 +749,47 @@ export default function SiteSettingsPage() {
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Site Icon */}
+              <div>
+                <h3 className="text-xs font-medium text-neutral-500 mb-3">Site Icon</h3>
+                <div className="p-4 border border-neutral-100 rounded">
+                  <div className="flex items-center gap-4">
+                    {iconSvg ? (
+                      <div
+                        className="w-16 h-16 border border-neutral-200 rounded bg-white flex items-center justify-center p-1"
+                        dangerouslySetInnerHTML={{ __html: iconSvg }}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 border border-neutral-200 rounded bg-neutral-50 animate-pulse" />
+                    )}
+                    <div>
+                      <p className="text-xs text-neutral-500 mb-2">
+                        Your site&apos;s unique plant icon, used as favicon and in the footer.
+                      </p>
+                      <button
+                        onClick={async () => {
+                          setIconLoading(true);
+                          const res = await fetch(`/api/sites/${id}/icon`, { method: "POST" });
+                          if (res.ok) {
+                            const svg = await res.text();
+                            setIconSvg(svg);
+                            track("icon-regenerated", { subdomain: site.subdomain });
+                          }
+                          setIconLoading(false);
+                        }}
+                        disabled={iconLoading}
+                        className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50"
+                      >
+                        {iconLoading ? "Growing..." : "Grow new plant"}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-3">
+                    Rebuild your site to update the favicon.
+                  </p>
+                </div>
               </div>
 
               {/* Channel info */}

@@ -37,6 +37,7 @@ model Site {
   blobUrl        String?
   customDomain   String?  @unique
   domainVerified Boolean  @default(false)
+  iconSeed       Int?     // Seed for procedural plant icon
   lastBuiltAt    DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
