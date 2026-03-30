@@ -111,13 +111,13 @@ export async function GET(request: Request) {
   // Deterministic "random" placement based on title
   const seed = title.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   const flowerPlacements = [
-    { flower: FLOWERS[seed % 5], size: 80, x: 40, y: 280 },
-    { flower: FLOWERS[(seed + 1) % 5], size: 64, x: 160, y: 300 },
-    { flower: FLOWERS[(seed + 2) % 5], size: 72, x: 280, y: 270 },
-    { flower: FLOWERS[(seed + 3) % 5], size: 56, x: 780, y: 290 },
-    { flower: FLOWERS[(seed + 4) % 5], size: 80, x: 900, y: 260 },
-    { flower: FLOWERS[(seed + 2) % 5], size: 48, x: 1020, y: 310 },
-    { flower: FLOWERS[(seed + 1) % 5], size: 60, x: 680, y: 300 },
+    { flower: FLOWERS[seed % 5], size: 80, x: 40, y: 420 },
+    { flower: FLOWERS[(seed + 1) % 5], size: 64, x: 160, y: 440 },
+    { flower: FLOWERS[(seed + 2) % 5], size: 72, x: 280, y: 410 },
+    { flower: FLOWERS[(seed + 3) % 5], size: 56, x: 780, y: 430 },
+    { flower: FLOWERS[(seed + 4) % 5], size: 80, x: 900, y: 400 },
+    { flower: FLOWERS[(seed + 2) % 5], size: 48, x: 1020, y: 450 },
+    { flower: FLOWERS[(seed + 1) % 5], size: 60, x: 680, y: 440 },
   ];
 
   return new ImageResponse(
@@ -133,29 +133,16 @@ export async function GET(request: Request) {
           overflow: "hidden",
         }}
       >
-        {/* Ground */}
+        {/* Light bottom border */}
         <div
           style={{
             position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            height: 200,
+            height: 1,
             display: "flex",
-            background: "linear-gradient(to top, #2d5016, #3a7020, #4a9030)",
-          }}
-        />
-
-        {/* Pixel grid ground texture */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 60,
-            display: "flex",
-            backgroundColor: "#2d5016",
+            backgroundColor: "#e5e5e5",
           }}
         />
 
@@ -173,7 +160,7 @@ export async function GET(request: Request) {
             justifyContent: "center",
             flex: 1,
             padding: "60px 80px",
-            paddingBottom: 200,
+            paddingBottom: 100,
           }}
         >
           <div
@@ -216,7 +203,7 @@ export async function GET(request: Request) {
           <div
             style={{
               fontSize: 18,
-              color: "#a3d977",
+              color: "#999",
               fontWeight: 500,
               display: "flex",
             }}
