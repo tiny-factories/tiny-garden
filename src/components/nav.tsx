@@ -24,7 +24,7 @@ export function Nav() {
   if (pathname.startsWith("/api/serve")) return null;
 
   return (
-    <nav className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between border-b border-neutral-100 mb-8">
+    <nav className="w-full px-4 py-4 flex items-center justify-between border-b border-neutral-100">
       <Link href="/sites" className="text-sm font-medium">
         tiny.garden
       </Link>
