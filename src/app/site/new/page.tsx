@@ -117,8 +117,8 @@ export default function NewSitePage() {
     if (filter === "following") return followingChannels;
     const group = groups.find((g) => g.slug === filter);
     if (group) return group.channels;
-    // "all" — deduplicated merge
-    const all = [...ownChannels, ...groups.flatMap((g) => g.channels), ...followingChannels];
+    // "all" — only channels user owns or collaborates on (own + group channels)
+    const all = [...ownChannels, ...groups.flatMap((g) => g.channels)];
     const seen = new Set<number>();
     return all
       .filter((ch) => {
@@ -211,7 +211,7 @@ export default function NewSitePage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search channels on Are.na..."
+            placeholder="Search your channels..."
             autoFocus
             className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
           />
