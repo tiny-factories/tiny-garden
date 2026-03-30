@@ -74,8 +74,19 @@ export default function NewSitePage() {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [subdomain, setSubdomain] = useState("");
 
+  const [existingSlugs, setExistingSlugs] = useState<Set<string>>(new Set());
+
   const loading = loadingOwn && ownChannels.length === 0;
   const stillLoading = loadingOwn || loadingGroups || loadingFollowing;
+
+  // Fetch existing sites to know which channels are already used
+  useEffect(() => {
+    fetch("/api/sites")
+      .then((r) => r.ok ? r.json() : [])
+      .then((sites: { channelSlug: string }[]) => {
+        setExistingSlugs(new Set(sites.map((s) => s.channelSlug)));
+      });
+  }, []);
 
   useEffect(() => {
     fetch("/api/templates")
@@ -253,6 +264,11 @@ export default function NewSitePage() {
                   {ch.owner?.type === "Group" && (
                     <span className="text-[10px] px-1 py-0.5 bg-blue-50 text-blue-400 rounded shrink-0">
                       {ch.owner.name}
+                    </span>
+                  )}
+                  {existingSlugs.has(ch.slug) && (
+                    <span className="text-[10px] px-1 py-0.5 bg-amber-50 text-amber-500 border border-amber-200 rounded shrink-0">
+                      Has site
                     </span>
                   )}
                 </div>
