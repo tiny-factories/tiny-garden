@@ -3,6 +3,8 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { buildSite } from "@/lib/build";
 
+export const maxDuration = 60;
+
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

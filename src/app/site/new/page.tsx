@@ -168,7 +168,8 @@ export default function NewSitePage() {
     if (res.ok) {
       const site = await res.json();
       track("site-created", { template: selectedTemplate, channel: selectedChannel.slug, subdomain });
-      await fetch(`/api/sites/${site.id}/build`, { method: "POST" });
+      // Fire build in background — don't wait for it
+      fetch(`/api/sites/${site.id}/build`, { method: "POST" });
       router.push("/sites");
     } else {
       const data = await res.json();

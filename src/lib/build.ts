@@ -87,9 +87,9 @@ async function processAssets(
   // Deduplicate
   const unique = [...new Set(urls.filter(Boolean))];
 
-  // Download and upload in batches of 5 to avoid overwhelming anything
-  for (let i = 0; i < unique.length; i += 5) {
-    const batch = unique.slice(i, i + 5);
+  // Download and upload in batches of 10
+  for (let i = 0; i < unique.length; i += 10) {
+    const batch = unique.slice(i, i + 10);
     const results = await Promise.all(
       batch.map((url) => downloadAndUploadAsset(url, blobPath, blobToken))
     );

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { ArenaClient } from "@/lib/arena";
 import { buildSite } from "@/lib/build";
 
+export const maxDuration = 300;
+
 export async function GET(req: NextRequest) {
   // Verify cron secret to prevent unauthorized access
   const authHeader = req.headers.get("authorization");
