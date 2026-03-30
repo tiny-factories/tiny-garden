@@ -67,7 +67,7 @@ function BuildingBadge() {
   }, []);
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-amber-50/90 backdrop-blur-sm text-amber-600 border border-amber-200">
       <span className="relative flex h-1.5 w-1.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
@@ -82,7 +82,7 @@ function StatusBadge({ site, isBuilding }: { site: Site; isBuilding: boolean }) 
 
   if (site.published) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+      <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50/90 backdrop-blur-sm text-emerald-600 border border-emerald-200">
         <span className="relative flex h-1.5 w-1.5">
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
         </span>
@@ -92,7 +92,7 @@ function StatusBadge({ site, isBuilding }: { site: Site; isBuilding: boolean }) 
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-neutral-50 text-neutral-400 border border-neutral-200">
+    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-neutral-50/90 backdrop-blur-sm text-neutral-400 border border-neutral-200">
       <span className="relative flex h-1.5 w-1.5">
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neutral-300" />
       </span>
@@ -126,14 +126,7 @@ export default function SitesPage() {
         setSites(sitesData);
         setAccount(accountData);
 
-        // Mark sites that are still building (created but not yet built)
-        const nowBuilding: Record<string, boolean> = {};
-        for (const site of sitesData) {
-          if (!site.published && !site.lastBuiltAt) {
-            nowBuilding[site.id] = true;
-          }
-        }
-        setBuilding((prev) => ({ ...prev, ...nowBuilding }));
+        // No auto-detection of building state — only show building when user toggles on
       })
       .finally(() => setLoading(false));
   }, [fetchSites]);
@@ -281,34 +274,40 @@ export default function SitesPage() {
                     : "border-neutral-200"
                 }`}
               >
-                {/* Preview iframe — shown when published */}
-                {site.published && !isBuilding && (
-                  <a
-                    href={`https://${site.subdomain}.${siteDomain}`}
-                    target="_blank"
-                    rel="noopener"
-                    className="block relative bg-neutral-50 group cursor-pointer"
-                  >
-                    <div className="aspect-[16/9] overflow-hidden">
-                      <iframe
-                        src={`https://${site.subdomain}.${siteDomain}`}
-                        className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
-                        tabIndex={-1}
-                        title={`Preview of ${site.channelTitle}`}
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center">
-                      <span className="text-xs bg-white/90 backdrop-blur px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        Open preview
-                      </span>
-                    </div>
-                  </a>
-                )}
+                {/* Preview area with status badge overlay */}
+                <div className="relative">
+                  {site.published && !isBuilding ? (
+                    <a
+                      href={`https://${site.subdomain}.${siteDomain}`}
+                      target="_blank"
+                      rel="noopener"
+                      className="block bg-neutral-50 group cursor-pointer"
+                    >
+                      <div className="aspect-[16/9] overflow-hidden">
+                        <iframe
+                          src={`https://${site.subdomain}.${siteDomain}`}
+                          className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
+                          tabIndex={-1}
+                          title={`Preview of ${site.channelTitle}`}
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                        <span className="text-xs bg-white/90 backdrop-blur px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                          Open preview
+                        </span>
+                      </div>
+                    </a>
+                  ) : isBuilding ? (
+                    <div className="aspect-[16/9] bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
+                  ) : (
+                    <div className="aspect-[16/9] bg-neutral-50" />
+                  )}
 
-                {/* Building shimmer placeholder */}
-                {isBuilding && (
-                  <div className="aspect-[16/9] bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
-                )}
+                  {/* Status badge — upper right of preview */}
+                  <div className="absolute top-2 right-2 z-10">
+                    <StatusBadge site={site} isBuilding={isBuilding} />
+                  </div>
+                </div>
 
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -319,7 +318,6 @@ export default function SitesPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <StatusBadge site={site} isBuilding={isBuilding} />
                       <Toggle
                         checked={site.published}
                         loading={isBuilding}
