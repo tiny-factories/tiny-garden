@@ -12,12 +12,6 @@ export function Footer() {
           >
             Changelog
           </a>
-          <a
-            href="https://fr.tiny.garden"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
-          >
-            Feature Requests
-          </a>
           <div className="flex items-center gap-3">
             {/* Are.na */}
             <a
