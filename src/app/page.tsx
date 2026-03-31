@@ -82,6 +82,7 @@ function FeatureItem({ title, desc }: { title: string; desc: string }) {
 }
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function Home() {
   const featuredSites = await getFeaturedSites();
