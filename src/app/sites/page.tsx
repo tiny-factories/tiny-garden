@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { track } from "@/lib/track";
 import { PlanTierBadge } from "@/components/PlanTierBadge";
@@ -107,6 +108,27 @@ function StatusBadge({ site, isBuilding }: { site: Site; isBuilding: boolean }) 
       </span>
       Offline
     </span>
+  );
+}
+
+function SitePlantThumb({
+  siteId,
+  size,
+  className = "",
+}: {
+  siteId: string;
+  size: number;
+  className?: string;
+}) {
+  return (
+    <Image
+      src={`/api/sites/${siteId}/icon`}
+      alt=""
+      width={size}
+      height={size}
+      unoptimized
+      className={`rounded border border-neutral-200 bg-white object-contain pointer-events-none select-none [image-rendering:crisp-edges] ${className}`}
+    />
   );
 }
 
@@ -342,6 +364,7 @@ export default function SitesPage() {
                       isBuilding ? "bg-amber-50/30" : "hover:bg-neutral-50"
                     }`}
                   >
+                    <SitePlantThumb siteId={site.id} size={36} className="shrink-0 size-9 p-1" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{site.channelTitle}</p>
                       <p className="text-xs text-neutral-400">
@@ -397,24 +420,46 @@ export default function SitesPage() {
                           rel="noopener"
                           className="block bg-neutral-50 group cursor-pointer"
                         >
-                          <div className="aspect-[16/9] overflow-hidden">
+                          <div className="aspect-[16/9] overflow-hidden relative">
                             <iframe
                               src={`https://${site.subdomain}.${siteDomain}`}
                               className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
                               tabIndex={-1}
                               title={`Preview of ${site.channelTitle}`}
                             />
-                          </div>
-                          <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center">
-                            <span className="text-xs bg-white/90 backdrop-blur px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                              Open preview
-                            </span>
+                            <div className="absolute top-2 left-2 z-20 pointer-events-none drop-shadow-sm">
+                              <SitePlantThumb
+                                siteId={site.id}
+                                size={viewMode === "grid" ? 28 : 32}
+                                className="p-0.5 shadow-sm"
+                              />
+                            </div>
+                            <div className="absolute inset-0 z-10 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center pointer-events-none">
+                              <span className="inline-flex items-center gap-2 text-xs bg-white/90 backdrop-blur px-2.5 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                                <SitePlantThumb siteId={site.id} size={22} className="p-px border-neutral-200/80" />
+                                Open preview
+                              </span>
+                            </div>
                           </div>
                         </a>
                       ) : isBuilding ? (
-                        <div className="aspect-[16/9] bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
+                        <div className="aspect-[16/9] relative bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]">
+                          <div className="absolute top-2 left-2 z-10 pointer-events-none drop-shadow-sm">
+                            <SitePlantThumb
+                              siteId={site.id}
+                              size={viewMode === "grid" ? 28 : 32}
+                              className="p-0.5 shadow-sm"
+                            />
+                          </div>
+                        </div>
                       ) : (
-                        <div className="aspect-[16/9] bg-neutral-50" />
+                        <div className="aspect-[16/9] relative bg-neutral-50 flex items-center justify-center">
+                          <SitePlantThumb
+                            siteId={site.id}
+                            size={viewMode === "grid" ? 40 : 48}
+                            className="p-1.5 opacity-75 border-neutral-200/80"
+                          />
+                        </div>
                       )}
 
                       {/* Status badge — upper right of preview */}
@@ -425,11 +470,18 @@ export default function SitesPage() {
 
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{site.channelTitle}</p>
-                          <p className="text-xs text-neutral-400">
-                            {site.subdomain}.{siteDomain} &middot; {site.template}
-                          </p>
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <SitePlantThumb
+                            siteId={site.id}
+                            size={36}
+                            className="shrink-0 size-9 p-1 mt-0.5"
+                          />
+                          <div className="space-y-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{site.channelTitle}</p>
+                            <p className="text-xs text-neutral-400">
+                              {site.subdomain}.{siteDomain} &middot; {site.template}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <Toggle

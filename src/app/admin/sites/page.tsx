@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import { SearchInput } from "@/components/search-input";
+
 interface Site {
   id: string;
   subdomain: string;
@@ -117,15 +119,12 @@ export default function AdminSitesPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center border border-neutral-200 rounded">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search sites..."
-            className="px-3 py-1.5 text-sm outline-none bg-transparent w-48"
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search sites..."
+          aria-label="Search sites"
+        />
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as "all" | "published" | "draft")}

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/track";
+import { SearchInput } from "@/components/search-input";
 import { Toolbar, SegmentedControl } from "@/components/toolbar";
 import { SiteSettingsSkeleton } from "@/components/sites-dashboard-skeletons";
 import {
@@ -14,6 +15,7 @@ import {
   fontFamilyCSS,
   googleFontsURL,
 } from "@/lib/fonts";
+import { PIXEL_POLLINATOR_SVG } from "@/lib/garden-icon";
 
 interface Site {
   id: string;
@@ -22,6 +24,7 @@ interface Site {
   channelTitle: string;
   template: string;
   published: boolean;
+  featured: boolean;
   customDomain: string | null;
   domainVerified: boolean;
 }
@@ -220,26 +223,40 @@ function ColorInput({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => { onChange(e.target.value); setHex(e.target.value); }}
-        className="w-6 h-6 rounded border border-neutral-200 cursor-pointer shrink-0"
-      />
-      <div className="flex-1 min-w-0">
-        <span className="text-xs text-neutral-500 capitalize">{label}</span>
+    <div className="min-w-0">
+      <span className="text-xs text-neutral-500 capitalize">{label}</span>
+      <div className="mt-1 flex h-9 w-full min-w-0 rounded border border-neutral-200 bg-white overflow-hidden transition-colors focus-within:border-neutral-400">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => { onChange(e.target.value); setHex(e.target.value); }}
+          title={`${label} — pick a color`}
+          className="h-full w-10 shrink-0 cursor-pointer border-0 bg-transparent p-0 appearance-none [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch-wrapper]:border-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-none [&::-moz-color-swatch]:border-0"
+        />
         <input
           type="text"
           value={hex}
           onChange={(e) => setHex(e.target.value)}
           onBlur={(e) => commitHex(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") commitHex(hex); }}
-          className="block w-full text-xs font-mono px-1.5 py-0.5 border border-neutral-200 rounded mt-0.5 outline-none focus:border-neutral-400 transition-colors"
+          className="min-w-0 flex-1 border-0 border-l border-neutral-200 bg-transparent px-3 text-sm font-mono outline-none"
           placeholder="#000000"
+          spellCheck={false}
+          autoComplete="off"
         />
       </div>
     </div>
+  );
+}
+
+/** Pixel bee — same 1×1 rects + crispEdges as procedural plant icons. */
+function PollinatorBee({ className }: { className?: string }) {
+  return (
+    <span
+      className={`inline-block [&>svg]:block [&>svg]:h-full [&>svg]:w-full ${className ?? ""}`}
+      dangerouslySetInnerHTML={{ __html: PIXEL_POLLINATOR_SVG }}
+      aria-hidden
+    />
   );
 }
 
@@ -250,6 +267,10 @@ function PlantIconFrame({
   className,
   decorative,
   growing,
+  growCycleKey = 0,
+  iconVersion = 0,
+  sproutActive = false,
+  showPollinator,
 }: {
   svg: string | null;
   sizeClass?: string;
@@ -257,28 +278,61 @@ function PlantIconFrame({
   className?: string;
   /** Hide from assistive tech when purely visual (e.g. fake tab favicon). */
   decorative?: boolean;
-  /** Sprout-style motion while a new icon is generating. */
+  /** Germinating motion while a new icon is generating. */
   growing?: boolean;
+  /** Bumps when “Grow” starts so layered stem/bloom animation replays on the current icon. */
+  growCycleKey?: number;
+  /** Bumps when a new SVG returns (remount + sprout playback). */
+  iconVersion?: number;
+  /** One-shot layer sprout after regrow (mutually exclusive with `growing` in UI). */
+  sproutActive?: boolean;
+  /** Friend, featured site, or paid plan — tiny bee by the plant. */
+  showPollinator?: boolean;
 }) {
   const extra = className ? ` ${className}` : "";
   const a11y = decorative ? ({ "aria-hidden": true } as const) : {};
   const growingCls = growing
-    ? " origin-bottom animate-[plant-grow-pulse_1.15s_ease-in-out_infinite] border-emerald-300/90 shadow-[0_0_14px_rgba(16,185,129,0.22)]"
+    ? " border-emerald-300/90 shadow-[0_0_14px_rgba(16,185,129,0.22)]"
     : "";
+  const plantMotionCls = [
+    growing ? "plant-icon--growing" : "",
+    sproutActive && !growing ? "plant-icon--sprout" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   if (!svg) {
     return (
       <div
-        className={`shrink-0 aspect-square ${sizeClass} border border-neutral-200 rounded bg-neutral-50 animate-pulse${growing ? " border-emerald-200/80" : ""}${extra}`}
+        className={`relative shrink-0 aspect-square ${sizeClass} overflow-visible border border-neutral-200 rounded bg-neutral-50 animate-pulse${growing ? " border-emerald-200/80" : ""}${extra}`}
         {...a11y}
-      />
+      >
+        {showPollinator && !growing && (
+          <PollinatorBee className="absolute -top-0.5 -right-0.5 w-[34%] max-w-[20px] aspect-[7/6] max-h-[18px] animate-[bee-gentle_2.8s_ease-in-out_infinite]" />
+        )}
+      </div>
     );
   }
+
   return (
     <div
-      className={`shrink-0 aspect-square ${sizeClass} border border-neutral-200 rounded bg-white flex items-center justify-center p-1 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full transition-[border-color,box-shadow] duration-300${growingCls}${extra}`}
-      dangerouslySetInnerHTML={{ __html: svg }}
+      className={`relative shrink-0 aspect-square ${sizeClass} border border-neutral-200 rounded bg-white flex items-center justify-center p-1 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full transition-[border-color,box-shadow] duration-300 overflow-visible${growingCls} ${plantMotionCls}${extra}`}
       {...a11y}
-    />
+    >
+      <div
+        key={`plant-${growCycleKey}-${iconVersion}`}
+        className="flex items-center justify-center size-full min-h-0 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full"
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+      {showPollinator && !growing && (
+        <span
+          className="pointer-events-none absolute -top-1 -right-1 z-10 select-none"
+          aria-hidden
+        >
+          <PollinatorBee className="w-[34%] max-w-[22px] min-w-[12px] aspect-[7/6] animate-[bee-gentle_2.8s_ease-in-out_infinite]" />
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -311,9 +365,24 @@ export default function SiteSettingsPage() {
   const [domainError, setDomainError] = useState("");
   const [iconSvg, setIconSvg] = useState<string | null>(null);
   const [iconLoading, setIconLoading] = useState(false);
+  const [iconGrowCycle, setIconGrowCycle] = useState(0);
+  const [iconVersion, setIconVersion] = useState(0);
+  const [iconSproutPulse, setIconSproutPulse] = useState(false);
   const [configSearch, setConfigSearch] = useState("");
 
   const canCustomize = account?.isAdmin || account?.isFriend || account?.plan === "pro" || account?.plan === "studio";
+
+  /** Friends, homepage-featured sites, team, and paying plans (supporters). */
+  const showPollinator = useMemo(() => {
+    if (!site || !account) return false;
+    return (
+      site.featured ||
+      account.isFriend ||
+      account.isAdmin ||
+      account.plan === "pro" ||
+      account.plan === "studio"
+    );
+  }, [site, account]);
 
   // Load Google Fonts in the settings page so the picker can preview them
   useEffect(() => {
@@ -538,12 +607,8 @@ export default function SiteSettingsPage() {
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Left panel — Controls */}
         <div className="w-full shrink-0 md:w-80">
-          {/* Tab navigation + search */}
-          <Toolbar
-            search={activeTab === "config" ? configSearch : undefined}
-            onSearchChange={activeTab === "config" ? setConfigSearch : undefined}
-            searchPlaceholder="Search templates..."
-          >
+          {/* Tab navigation */}
+          <Toolbar>
             <SegmentedControl<Tab>
               segments={[
                 { value: "theme", label: "Theme" },
@@ -565,32 +630,43 @@ export default function SiteSettingsPage() {
                 <h3 className="text-xs font-medium text-neutral-500 mb-3">Site Icon</h3>
                 <div className="p-4 border border-neutral-100 rounded">
                   <div className="flex items-center gap-4">
-                    <PlantIconFrame svg={iconSvg} growing={iconLoading} />
+                    <PlantIconFrame
+                      svg={iconSvg}
+                      sizeClass="w-14 h-14"
+                      growing={iconLoading}
+                      growCycleKey={iconGrowCycle}
+                      iconVersion={iconVersion}
+                      sproutActive={iconSproutPulse}
+                      showPollinator={showPollinator}
+                    />
                     <div>
-                      <p className="text-xs text-neutral-500 mb-2">
+                      <p className="text-xs text-neutral-500 mb-2 leading-relaxed">
                         Your site&apos;s unique plant icon, used as favicon and in the footer.
+                        <span className="text-neutral-400"> Rebuild your site to update the favicon.</span>
                       </p>
                       <button
+                        type="button"
                         onClick={async () => {
+                          setIconGrowCycle((k) => k + 1);
                           setIconLoading(true);
                           const res = await fetch(`/api/sites/${id}/icon`, { method: "POST" });
                           if (res.ok) {
                             const svg = await res.text();
                             setIconSvg(svg);
+                            setIconVersion((v) => v + 1);
+                            setIconSproutPulse(true);
+                            window.setTimeout(() => setIconSproutPulse(false), 1700);
                             track("icon-regenerated", { subdomain: site.subdomain });
                           }
                           setIconLoading(false);
                         }}
                         disabled={iconLoading}
-                        className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50"
                       >
                         {iconLoading ? "Growing..." : "Grow new plant"}
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-neutral-400 mt-3">
-                    Rebuild your site to update the favicon.
-                  </p>
                 </div>
               </div>
 
@@ -670,6 +746,13 @@ export default function SiteSettingsPage() {
               {/* Template Picker */}
               <div>
                 <h3 className="text-xs font-medium text-neutral-500 mb-3">Template</h3>
+                <SearchInput
+                  value={configSearch}
+                  onChange={(e) => setConfigSearch(e.target.value)}
+                  placeholder="Search templates..."
+                  aria-label="Search templates"
+                  className="mb-3"
+                />
                 {/* Narrow screens: compact dropdown */}
                 <div className="md:hidden space-y-2">
                   {templateSelectOptions.length === 0 ? (
@@ -912,7 +995,15 @@ export default function SiteSettingsPage() {
               Share preview
             </p>
             <div className="flex gap-3">
-              <PlantIconFrame svg={iconSvg} sizeClass="w-14 h-14" growing={iconLoading} />
+              <PlantIconFrame
+                svg={iconSvg}
+                sizeClass="w-14 h-14"
+                growing={iconLoading}
+                growCycleKey={iconGrowCycle}
+                iconVersion={iconVersion}
+                sproutActive={iconSproutPulse}
+                showPollinator={showPollinator}
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] text-neutral-400 truncate">
                   {site.subdomain}.tiny.garden
@@ -964,6 +1055,9 @@ export default function SiteSettingsPage() {
                   className="p-0.5! rounded-[3px] border-neutral-200/90"
                   decorative
                   growing={iconLoading}
+                  growCycleKey={iconGrowCycle}
+                  iconVersion={iconVersion}
+                  sproutActive={iconSproutPulse}
                 />
                 <span
                   className={`text-[10px] min-w-0 flex-1 truncate transition-colors duration-300 ${

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/button";
 import { prisma } from "@/lib/db";
 
 interface FeaturedSite {
@@ -92,12 +93,14 @@ export default async function Home() {
       {/* Nav */}
       <nav className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-between">
         <span className="text-sm font-medium">tiny.garden</span>
-        <Link
-          href="/login"
-          className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors"
-        >
-          Log in
-        </Link>
+        <div className="flex items-center gap-2">
+          <Button href="/login" variant="ghost">
+            Log in
+          </Button>
+          <Button href="/login" variant="primary" size="compact">
+            Try now
+          </Button>
+        </div>
       </nav>
 
       {/* Hero */}

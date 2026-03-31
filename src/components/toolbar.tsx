@@ -11,6 +11,8 @@ import {
 } from "react";
 import { LayoutGrid, LayoutList, Square } from "lucide-react";
 
+import { SearchInput } from "@/components/search-input";
+
 export type ViewMode = "single" | "grid" | "list";
 
 const VIEW_ICON = { size: 18, strokeWidth: 1.75, className: "shrink-0" as const };
@@ -325,9 +327,6 @@ interface ToolbarProps {
   children?: React.ReactNode;
 }
 
-const searchInputClassName =
-  "h-9 min-w-0 flex-1 w-full box-border text-sm px-3 border border-neutral-200 rounded outline-none focus:border-neutral-400 transition-colors";
-
 export function Toolbar({
   search,
   onSearchChange,
@@ -341,12 +340,10 @@ export function Toolbar({
   const hasChildren = children != null;
 
   const searchInput = onSearchChange ? (
-    <input
-      type="text"
+    <SearchInput
       value={search || ""}
       onChange={(e) => onSearchChange(e.target.value)}
       placeholder={searchPlaceholder}
-      className={searchInputClassName}
     />
   ) : null;
 

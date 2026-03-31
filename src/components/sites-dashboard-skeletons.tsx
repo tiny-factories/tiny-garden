@@ -1,3 +1,4 @@
+import { searchInputClassName } from "@/components/search-input";
 import type { ViewMode } from "@/components/toolbar";
 
 function HeaderSkeleton() {
@@ -18,7 +19,9 @@ function HeaderSkeleton() {
 function ToolbarSkeleton() {
   return (
     <div className="mb-4 flex items-center gap-2">
-      <div className="h-9 min-w-0 flex-1 rounded border border-neutral-200 bg-neutral-50 animate-pulse" />
+      <div
+        className={`${searchInputClassName} bg-neutral-50 animate-pulse pointer-events-none border-neutral-200`}
+      />
       <div className="h-9 min-w-23 shrink-0 rounded-md border border-neutral-200 bg-neutral-100/80 animate-pulse" />
     </div>
   );
@@ -29,6 +32,7 @@ function ListBodySkeleton() {
     <div className="border border-neutral-200 rounded-lg overflow-hidden divide-y divide-neutral-100 bg-white">
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-4 px-4 py-3">
+          <div className="size-9 shrink-0 rounded border border-neutral-100 bg-neutral-50 animate-pulse" />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="h-4 w-[40%] max-w-xs rounded bg-neutral-100 animate-pulse" />
             <div className="h-3 w-[55%] max-w-md rounded bg-neutral-50 animate-pulse" />
@@ -51,12 +55,17 @@ function CardBodySkeleton({ count }: { count: number }) {
           key={i}
           className="border border-neutral-200 rounded-lg overflow-hidden bg-white"
         >
-          <div className="aspect-video bg-linear-to-br from-neutral-100 via-neutral-50 to-neutral-100 animate-pulse" />
+          <div className="relative aspect-video bg-linear-to-br from-neutral-100 via-neutral-50 to-neutral-100 animate-pulse">
+            <div className="absolute top-2 left-2 z-10 size-8 rounded border border-neutral-100/80 bg-white/60 animate-pulse" />
+          </div>
           <div className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-2 min-w-0 flex-1">
-                <div className="h-4 w-full max-w-56 rounded bg-neutral-100 animate-pulse" />
-                <div className="h-3 w-36 rounded bg-neutral-50 animate-pulse" />
+              <div className="flex gap-2.5 min-w-0 flex-1">
+                <div className="mt-0.5 size-9 shrink-0 rounded border border-neutral-100 bg-neutral-50 animate-pulse" />
+                <div className="space-y-2 min-w-0 flex-1">
+                  <div className="h-4 w-full max-w-56 rounded bg-neutral-100 animate-pulse" />
+                  <div className="h-3 w-36 rounded bg-neutral-50 animate-pulse" />
+                </div>
               </div>
               <div className="h-5 w-9 shrink-0 rounded-full bg-neutral-100 animate-pulse" />
             </div>

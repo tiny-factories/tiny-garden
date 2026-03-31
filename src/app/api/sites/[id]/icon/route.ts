@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { generatePlantSVG, seedFromSubdomain } from "@/lib/garden-icon";
+import { generatePlantSVGLayered, seedFromSubdomain } from "@/lib/garden-icon";
 
 /** GET — Serve the plant icon SVG for a site */
 export async function GET(
@@ -16,7 +16,7 @@ export async function GET(
   }
 
   const seed = site.iconSeed ?? seedFromSubdomain(site.subdomain);
-  const svg = generatePlantSVG(seed);
+  const svg = generatePlantSVGLayered(seed);
 
   return new NextResponse(svg, {
     headers: {
@@ -50,7 +50,7 @@ export async function POST(
     data: { iconSeed: newSeed },
   });
 
-  const svg = generatePlantSVG(newSeed);
+  const svg = generatePlantSVGLayered(newSeed);
 
   return new NextResponse(svg, {
     headers: { "Content-Type": "image/svg+xml" },
