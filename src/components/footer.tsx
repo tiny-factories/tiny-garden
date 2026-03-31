@@ -15,7 +15,7 @@ export function Footer() {
           <div className="flex items-center gap-3">
             {/* Are.na */}
             <a
-              href="https://are.na/tiny-garden"
+              href="https://www.are.na/tiny-factories/channels"
               target="_blank"
               rel="noopener"
               className="text-neutral-300 hover:text-neutral-600 transition-colors"
@@ -39,7 +39,7 @@ export function Footer() {
             </a>
             {/* X / Twitter */}
             <a
-              href="https://x.com/tinyfactories"
+              href="https://x.com/tiny_factories"
               target="_blank"
               rel="noopener"
               className="text-neutral-300 hover:text-neutral-600 transition-colors"
@@ -51,7 +51,7 @@ export function Footer() {
             </a>
             {/* Bluesky */}
             <a
-              href="https://bsky.app/profile/tiny.garden"
+              href="https://bsky.app/profile/tinyfactories.bsky.social"
               target="_blank"
               rel="noopener"
               className="text-neutral-300 hover:text-neutral-600 transition-colors"
