@@ -62,6 +62,9 @@
     {{/if}}
 
     {{#if (eq type "attachment")}}
+      {{#if image.display}}
+        <img class="sv-fr-card-img" src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+      {{/if}}
       {{#if title}}
         <h2 class="sv-fr-card-title">{{title}}</h2>
       {{else}}

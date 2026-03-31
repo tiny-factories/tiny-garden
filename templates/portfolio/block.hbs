@@ -31,6 +31,11 @@
   {{/if}}
 
   {{#if (eq type "attachment")}}
+    {{#if image.display}}
+      <figure class="portfolio-figure">
+        <img src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+      </figure>
+    {{/if}}
     <a href="{{attachment.url}}" class="portfolio-attachment" download>
       {{attachment.file_name}}
     </a>
