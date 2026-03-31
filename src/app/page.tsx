@@ -13,10 +13,8 @@ const BETA_SPOTS = 33;
 
 async function getBetaSpotsRemaining(): Promise<number> {
   try {
-    const friendCount = await prisma.user.count({
-      where: { OR: [{ isFriend: true }, { isAdmin: true }] },
-    });
-    return Math.max(BETA_SPOTS - friendCount, 0);
+    const userCount = await prisma.user.count();
+    return Math.max(BETA_SPOTS - userCount, 0);
   } catch {
     return BETA_SPOTS;
   }
@@ -82,6 +80,8 @@ function FeatureItem({ title, desc }: { title: string; desc: string }) {
     </div>
   );
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const featuredSites = await getFeaturedSites();
