@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import "./globals.css";
@@ -32,19 +33,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
-          <script
-            defer
-            src={process.env.NEXT_PUBLIC_UMAMI_URL || "https://cloud.umami.is/script.js"}
-            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-          />
-        )}
-      </head>
       <body className={`${inter.className} antialiased flex flex-col min-h-screen`}>
         <Nav />
         <div className="flex-1">{children}</div>
         <Footer />
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ? (
+          <Script
+            src={process.env.NEXT_PUBLIC_UMAMI_URL || "https://cloud.umami.is/script.js"}
+            strategy="lazyOnload"
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          />
+        ) : null}
       </body>
     </html>
   );

@@ -13,7 +13,10 @@ export async function GET() {
   if (!user?.isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [totalUsers, totalSites, publishedSites, freeUsers, proUsers, recentSites] =
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const [totalUsers, totalSites, publishedSites, freeUsers, proUsers, recentSites, recentUsers, recentSiteCreations] =
     await Promise.all([
       prisma.user.count(),
       prisma.site.count(),
@@ -36,13 +39,44 @@ export async function GET() {
           user: { select: { arenaUsername: true } },
         },
       }),
+      // Users created in last 30 days for signup chart
+      prisma.user.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      // Sites created in last 30 days for growth chart
+      prisma.site.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
+
+  // Group by day
+  function groupByDay(items: { createdAt: Date }[]): { date: string; count: number }[] {
+    const counts: Record<string, number> = {};
+    for (const item of items) {
+      const date = item.createdAt.toISOString().slice(0, 10);
+      counts[date] = (counts[date] || 0) + 1;
+    }
+    const timeline: { date: string; count: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      timeline.push({ date: key, count: counts[key] || 0 });
+    }
+    return timeline;
+  }
 
   return NextResponse.json({
     totalUsers,
     totalSites,
     publishedSites,
     planBreakdown: { free: freeUsers, pro: proUsers },
+    userSignups: groupByDay(recentUsers),
+    siteCreations: groupByDay(recentSiteCreations),
     recentSites: recentSites.map((s) => ({
       id: s.id,
       subdomain: s.subdomain,
