@@ -5,6 +5,14 @@ import Link from "next/link";
 import { track } from "@/lib/track";
 import { PlanTierBadge } from "@/components/PlanTierBadge";
 import { Toolbar, type ViewMode } from "@/components/toolbar";
+import { SitesPageSkeleton } from "@/components/sites-dashboard-skeletons";
+
+const SITES_VIEW_MODE_KEY = "tinygarden:sites-view-mode";
+
+function parseStoredViewMode(raw: string | null): ViewMode | null {
+  if (raw === "single" || raw === "grid" || raw === "list") return raw;
+  return null;
+}
 
 interface Site {
   id: string;
@@ -116,22 +124,57 @@ export default function SitesPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("single");
 
+  useEffect(() => {
+    try {
+      const stored = parseStoredViewMode(localStorage.getItem(SITES_VIEW_MODE_KEY));
+      if (stored) setViewMode(stored);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const setViewModePersist = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(SITES_VIEW_MODE_KEY, mode);
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, []);
+
   const fetchSites = useCallback(() => {
     return fetch("/api/sites").then((r) => r.json());
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     Promise.all([
       fetchSites(),
       fetch("/api/account").then((r) => r.json()),
     ])
       .then(([sitesData, accountData]) => {
-        setSites(sitesData);
-        setAccount(accountData);
-
-        // No auto-detection of building state — only show building when user toggles on
+        if (cancelled) return;
+        setSites(Array.isArray(sitesData) ? sitesData : []);
+        setAccount(
+          accountData && typeof accountData === "object" && !("error" in accountData && accountData.error)
+            ? accountData
+            : null
+        );
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) {
+          setSites([]);
+          setAccount(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [fetchSites]);
 
   // Poll for sites that are building
@@ -143,6 +186,7 @@ export default function SitesPage() {
 
     const interval = setInterval(async () => {
       const updated = await fetchSites();
+      if (!Array.isArray(updated)) return;
       setSites(updated);
 
       // Check if any building sites are now done
@@ -223,6 +267,10 @@ export default function SitesPage() {
     );
   }, [sites, search]);
 
+  if (loading) {
+    return <SitesPageSkeleton viewMode={viewMode} />;
+  }
+
   return (
     <main className="min-h-screen max-w-4xl mx-auto px-4 py-16">
       <div className="flex items-center justify-between mb-12">
@@ -245,21 +293,7 @@ export default function SitesPage() {
         </Link>
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 border border-neutral-200 rounded animate-pulse">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="h-3.5 w-36 bg-neutral-100 rounded" />
-                  <div className="h-3 w-52 bg-neutral-50 rounded" />
-                </div>
-                <div className="h-5 w-9 bg-neutral-100 rounded-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : sites.length === 0 ? (
+      {sites.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <p className="text-sm text-neutral-500">No sites yet.</p>
           <Link
@@ -276,7 +310,7 @@ export default function SitesPage() {
             onSearchChange={setSearch}
             searchPlaceholder="Search sites..."
             viewMode={viewMode}
-            onViewModeChange={setViewMode}
+            onViewModeChange={setViewModePersist}
           />
 
           {filtered.length === 0 ? (
@@ -418,3 +452,4 @@ export default function SitesPage() {
     </main>
   );
 }
+

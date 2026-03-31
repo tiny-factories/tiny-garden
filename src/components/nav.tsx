@@ -29,6 +29,16 @@ export function Nav() {
         tiny.garden
       </Link>
       <div className="flex items-center gap-4">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={`text-sm transition-colors ${
+              pathname.startsWith("/admin") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+            }`}
+          >
+            Admin
+          </Link>
+        )}
         <Link
           href="/sites"
           className={`text-sm transition-colors ${
@@ -53,16 +63,6 @@ export function Nav() {
         >
           Account
         </Link>
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className={`text-sm transition-colors ${
-              pathname.startsWith("/admin") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
-            }`}
-          >
-            Admin
-          </Link>
-        )}
       </div>
     </nav>
   );

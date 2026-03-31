@@ -4,6 +4,14 @@ import fs from "fs/promises";
 import path from "path";
 import { MOCK_SITE_DATA } from "@/lib/mock-data";
 import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
+import { prisma } from "@/lib/db";
+
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
+}
 
 // Register helper once
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
@@ -24,6 +32,7 @@ export async function GET(request: NextRequest) {
   const border = request.nextUrl.searchParams.get("border");
   const headingFont = request.nextUrl.searchParams.get("headingFont");
   const bodyFont = request.nextUrl.searchParams.get("bodyFont");
+  const siteId = request.nextUrl.searchParams.get("siteId");
 
   const templateDir = path.join(process.cwd(), "templates", template);
 
@@ -87,8 +96,35 @@ export async function GET(request: NextRequest) {
     };
     let html = compiledTemplate({ ...siteData, styles: styleContent });
 
-    // Inject font links + theme overrides before </head> or at start
-    const injection = fontLinks + themeCSS;
+    let siteHead = "";
+    if (siteId) {
+      const site = await prisma.site.findUnique({
+        where: { id: siteId },
+        select: { id: true, channelTitle: true },
+      });
+      if (site) {
+        const origin = request.nextUrl.origin;
+        const iconUrl = new URL(`/api/sites/${site.id}/icon`, origin).href;
+        const pageUrl = request.nextUrl.toString();
+        const title = escapeHtmlAttr(site.channelTitle);
+        const desc = escapeHtmlAttr(`${site.channelTitle} — a tiny.garden site`);
+        siteHead = `
+<link rel="icon" type="image/svg+xml" href="${escapeHtmlAttr(iconUrl)}" />
+<meta property="og:title" content="${title}" />
+<meta property="og:description" content="${desc}" />
+<meta property="og:image" content="${escapeHtmlAttr(iconUrl)}" />
+<meta property="og:url" content="${escapeHtmlAttr(pageUrl)}" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="${title}" />
+<meta name="twitter:description" content="${desc}" />
+<meta name="twitter:image" content="${escapeHtmlAttr(iconUrl)}" />
+`;
+      }
+    }
+
+    // Inject font links + theme overrides + site icon / OG before </head> or at start
+    const injection = fontLinks + themeCSS + siteHead;
     if (injection) {
       if (html.includes("</head>")) {
         html = html.replace("</head>", `${injection}</head>`);
