@@ -146,6 +146,19 @@ export default function SitesPage() {
     return fetch("/api/sites").then((r) => r.json());
   }, []);
 
+  // New-site flow: server kicks off build in `after()`; show building state until publish completes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const buildingId = params.get("building");
+    if (!buildingId) return;
+    setBuilding((b) => ({ ...b, [buildingId]: true }));
+    params.delete("building");
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState({}, "", next);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 

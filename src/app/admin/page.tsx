@@ -126,6 +126,28 @@ function Sparkline({
   );
 }
 
+/** Compact donut for free vs paid plan counts; uses conic-gradient (no chart deps). */
+function PlanDonut({ free, pro }: { free: number; pro: number }) {
+  const total = free + pro;
+  const freeDeg = total > 0 ? (free / total) * 360 : 0;
+
+  return (
+    <div className="relative h-14 w-14 shrink-0" aria-hidden>
+      <div
+        className="absolute inset-0 rounded-full"
+        style={
+          total === 0
+            ? { background: "rgb(245 245 245)" }
+            : {
+                background: `conic-gradient(from -90deg, rgb(229 229 229) 0deg ${freeDeg}deg, rgb(38 38 38) ${freeDeg}deg 360deg)`,
+              }
+        }
+      />
+      <div className="absolute inset-[22%] rounded-full bg-white" />
+    </div>
+  );
+}
+
 function StatCard({
   label,
   value,
@@ -243,24 +265,34 @@ export default function AdminPage() {
           label="Free / Pro"
           value={`${stats.planBreakdown.free} / ${stats.planBreakdown.pro}`}
           chart={
-            <div className="flex gap-1 items-end h-8">
-              <div className="flex-1 flex flex-col justify-end">
-                <div
-                  className="bg-neutral-200 rounded-sm"
-                  style={{
-                    height: `${Math.max((stats.planBreakdown.free / Math.max(stats.totalUsers, 1)) * 32, 2)}px`,
-                  }}
-                />
-                <span className="text-[10px] text-neutral-400 mt-1">Free</span>
-              </div>
-              <div className="flex-1 flex flex-col justify-end">
-                <div
-                  className="bg-neutral-800 rounded-sm"
-                  style={{
-                    height: `${Math.max((stats.planBreakdown.pro / Math.max(stats.totalUsers, 1)) * 32, 2)}px`,
-                  }}
-                />
-                <span className="text-[10px] text-neutral-400 mt-1">Pro</span>
+            <div
+              className="flex items-center gap-3"
+              role="img"
+              aria-label={`Plan split: ${stats.planBreakdown.free} free, ${stats.planBreakdown.pro} pro`}
+            >
+              <PlanDonut
+                free={stats.planBreakdown.free}
+                pro={stats.planBreakdown.pro}
+              />
+              <div className="flex min-w-0 flex-col gap-1.5 text-[10px] leading-tight text-neutral-500">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full bg-neutral-200"
+                    aria-hidden
+                  />
+                  <span className="truncate">
+                    Free <span className="font-medium text-neutral-700">{stats.planBreakdown.free}</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full bg-neutral-800"
+                    aria-hidden
+                  />
+                  <span className="truncate">
+                    Pro <span className="font-medium text-neutral-800">{stats.planBreakdown.pro}</span>
+                  </span>
+                </div>
               </div>
             </div>
           }

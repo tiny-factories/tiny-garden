@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { seedFromSubdomain } from "@/lib/garden-icon";
+import { buildSite } from "@/lib/build";
+
+export const maxDuration = 60;
 
 export async function GET() {
   const session = await getSession();
@@ -58,6 +61,12 @@ export async function POST(req: NextRequest) {
       userId: session.userId,
     },
   });
+
+  after(() =>
+    buildSite(site.id).catch((err) => {
+      console.error("Initial build failed for site", site.id, err);
+    })
+  );
 
   return NextResponse.json(site, { status: 201 });
 }
