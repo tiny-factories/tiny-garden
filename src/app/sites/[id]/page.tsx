@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowBigLeft } from "lucide-react";
 import { track } from "@/lib/track";
 import { SearchInput } from "@/components/search-input";
 import { Toolbar, SegmentedControl } from "@/components/toolbar";
@@ -595,11 +596,17 @@ export default function SiteSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Link href="/sites" className="text-xs text-neutral-400 hover:text-neutral-600">
-            &larr; Back to sites
-          </Link>
-          <h1 className="text-lg font-medium mt-1">{site.channelTitle}</h1>
-          <p className="text-xs text-neutral-400">{site.subdomain}.tiny.garden &middot; {site.template}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg font-medium">
+            <Link
+              href="/sites"
+              className="text-neutral-400 hover:text-neutral-600 shrink-0 inline-flex"
+              aria-label="Back to sites"
+            >
+              <ArrowBigLeft className="size-7" strokeWidth={1.75} aria-hidden />
+            </Link>
+            <h1 className="text-lg font-medium">{site.channelTitle}</h1>
+          </div>
+          <p className="text-xs text-neutral-400 mt-1">{site.subdomain}.tiny.garden &middot; {site.template}</p>
         </div>
       </div>
 

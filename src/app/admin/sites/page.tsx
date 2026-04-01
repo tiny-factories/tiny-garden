@@ -48,6 +48,8 @@ export default function AdminSitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
+  const [rebuilding, setRebuilding] = useState<Record<string, boolean>>({});
+  const [rebuildError, setRebuildError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<"all" | "published" | "draft">("all");
   const [filterFeatured, setFilterFeatured] = useState(false);
   const [search, setSearch] = useState("");
@@ -80,6 +82,32 @@ export default function AdminSitesPage() {
       );
     }
     setToggling((t) => ({ ...t, [siteId]: false }));
+  }
+
+  async function rebuildSite(siteId: string) {
+    setRebuildError(null);
+    setRebuilding((r) => ({ ...r, [siteId]: true }));
+    try {
+      const res = await fetch(`/api/admin/sites/${siteId}/build`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRebuildError(
+          typeof data.error === "string" ? data.error : "Rebuild failed"
+        );
+        return;
+      }
+      if (typeof data.lastBuiltAt === "string") {
+        setSites((prev) =>
+          prev.map((s) =>
+            s.id === siteId ? { ...s, lastBuiltAt: data.lastBuiltAt } : s
+          )
+        );
+      }
+    } finally {
+      setRebuilding((r) => ({ ...r, [siteId]: false }));
+    }
   }
 
   const filtered = sites.filter((s) => {
@@ -145,6 +173,12 @@ export default function AdminSitesPage() {
         </label>
       </div>
 
+      {rebuildError && (
+        <p className="text-xs text-red-600 mb-3" role="alert">
+          {rebuildError}
+        </p>
+      )}
+
       {/* Table */}
       {loading ? (
         <div className="space-y-2">
@@ -163,6 +197,7 @@ export default function AdminSitesPage() {
                 <th className="px-3 py-2 font-medium">Status</th>
                 <th className="px-3 py-2 font-medium">Created</th>
                 <th className="px-3 py-2 font-medium">Last built</th>
+                <th className="px-3 py-2 font-medium text-right">Rebuild</th>
                 <th className="px-3 py-2 font-medium text-right">Featured</th>
               </tr>
             </thead>
@@ -200,6 +235,16 @@ export default function AdminSitesPage() {
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <button
+                      type="button"
+                      onClick={() => rebuildSite(site.id)}
+                      disabled={!!rebuilding[site.id]}
+                      className="text-[10px] px-2 py-0.5 rounded transition-colors disabled:opacity-50 bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                    >
+                      {rebuilding[site.id] ? "…" : "Rebuild"}
+                    </button>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    <button
                       onClick={() => toggleFeatured(site.id, !site.featured)}
                       disabled={!!toggling[site.id]}
                       className={`text-[10px] px-2 py-0.5 rounded transition-colors disabled:opacity-50 ${
@@ -215,7 +260,7 @@ export default function AdminSitesPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-3 py-8 text-center text-xs text-neutral-400">
+                  <td colSpan={8} className="px-3 py-8 text-center text-xs text-neutral-400">
                     No sites match your filters.
                   </td>
                 </tr>

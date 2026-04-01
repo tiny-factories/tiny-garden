@@ -55,9 +55,7 @@ function CardBodySkeleton({ count }: { count: number }) {
           key={i}
           className="border border-neutral-200 rounded-lg overflow-hidden bg-white"
         >
-          <div className="relative aspect-video bg-linear-to-br from-neutral-100 via-neutral-50 to-neutral-100 animate-pulse">
-            <div className="absolute top-2 left-2 z-10 size-8 rounded border border-neutral-100/80 bg-white/60 animate-pulse" />
-          </div>
+          <div className="relative aspect-video bg-linear-to-br from-neutral-100 via-neutral-50 to-neutral-100 animate-pulse" />
           <div className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex gap-2.5 min-w-0 flex-1">

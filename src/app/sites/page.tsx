@@ -3,10 +3,12 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { track } from "@/lib/track";
 import { PlanTierBadge } from "@/components/PlanTierBadge";
 import { Toolbar, type ViewMode } from "@/components/toolbar";
 import { SitesPageSkeleton } from "@/components/sites-dashboard-skeletons";
+import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 
 const SITES_VIEW_MODE_KEY = "tinygarden:sites-view-mode";
 
@@ -64,7 +66,7 @@ const buildingPhrases = [
   "Stitching together...",
 ];
 
-function BuildingBadge() {
+function BuildingBadge({ compact }: { compact?: boolean }) {
   const [phraseIndex, setPhraseIndex] = useState(
     () => Math.floor(Math.random() * buildingPhrases.length)
   );
@@ -76,37 +78,69 @@ function BuildingBadge() {
     return () => clearInterval(interval);
   }, []);
 
+  const shell = compact
+    ? "min-h-[22px] items-center gap-0 px-1.5 py-0 max-md:gap-1.5 max-md:px-2 md:group-hover/card:gap-1.5 md:group-hover/card:px-2 md:group-focus-within/card:gap-1.5 md:group-focus-within/card:px-2"
+    : "px-2 py-0.5 gap-1.5";
+
+  const phraseClass = compact
+    ? "max-md:inline md:hidden md:group-hover/card:inline md:group-focus-within/card:inline whitespace-nowrap"
+    : "";
+
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-amber-50/90 backdrop-blur-sm text-amber-600 border border-amber-200">
-      <span className="relative flex h-1.5 w-1.5">
+    <span
+      className={`inline-flex items-center text-[11px] rounded-full bg-amber-50/90 backdrop-blur-sm text-amber-600 border border-amber-200 ${shell}`}
+    >
+      <span className="relative flex h-1.5 w-1.5 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
       </span>
-      <span className="transition-all duration-300">{buildingPhrases[phraseIndex]}</span>
+      <span className={`transition-all duration-300 ${phraseClass}`}>
+        {buildingPhrases[phraseIndex]}
+      </span>
     </span>
   );
 }
 
-function StatusBadge({ site, isBuilding }: { site: Site; isBuilding: boolean }) {
-  if (isBuilding) return <BuildingBadge />;
+function StatusBadge({
+  site,
+  isBuilding,
+  compact,
+}: {
+  site: Site;
+  isBuilding: boolean;
+  compact?: boolean;
+}) {
+  if (isBuilding) return <BuildingBadge compact={compact} />;
+
+  const shell = compact
+    ? "min-h-[22px] items-center gap-0 px-1.5 py-0 max-md:gap-1.5 max-md:px-2 md:group-hover/card:gap-1.5 md:group-hover/card:px-2 md:group-focus-within/card:gap-1.5 md:group-focus-within/card:px-2"
+    : "px-2 py-0.5 gap-1.5";
+
+  const labelClass = compact
+    ? "max-md:inline md:hidden md:group-hover/card:inline md:group-focus-within/card:inline whitespace-nowrap"
+    : "";
 
   if (site.published) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50/90 backdrop-blur-sm text-emerald-600 border border-emerald-200">
-        <span className="relative flex h-1.5 w-1.5">
+      <span
+        className={`inline-flex items-center text-[11px] rounded-full bg-emerald-50/90 backdrop-blur-sm text-emerald-600 border border-emerald-200 ${shell}`}
+      >
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
         </span>
-        Online
+        <span className={labelClass}>Online</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-neutral-50/90 backdrop-blur-sm text-neutral-400 border border-neutral-200">
-      <span className="relative flex h-1.5 w-1.5">
+    <span
+      className={`inline-flex items-center text-[11px] rounded-full bg-neutral-50/90 backdrop-blur-sm text-neutral-400 border border-neutral-200 ${shell}`}
+    >
+      <span className="relative flex h-1.5 w-1.5 shrink-0">
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neutral-300" />
       </span>
-      Offline
+      <span className={labelClass}>Offline</span>
     </span>
   );
 }
@@ -136,6 +170,8 @@ interface AccountInfo {
   plan: string;
   isAdmin: boolean;
   isFriend: boolean;
+  betaFull?: boolean;
+  betaGated?: boolean;
 }
 
 export default function SitesPage() {
@@ -306,6 +342,17 @@ export default function SitesPage() {
     return <SitesPageSkeleton viewMode={viewMode} />;
   }
 
+  const siteLimitLabel =
+    account?.isAdmin || account?.isFriend
+      ? "∞"
+      : account?.plan === "studio"
+        ? "50"
+        : account?.plan === "pro"
+          ? "∞"
+          : account?.betaGated
+            ? "0"
+            : "3";
+
   return (
     <main className="min-h-screen max-w-4xl mx-auto px-4 py-16">
       <div className="flex items-center justify-between mb-12">
@@ -316,19 +363,42 @@ export default function SitesPage() {
           </div>
           {account && (
             <p className="text-xs text-neutral-400 mt-1">
-              {sites.length} / {account.isAdmin || account.isFriend ? "∞" : account.plan === "studio" ? "50" : account.plan === "pro" ? "∞" : "3"}
+              {sites.length} / {siteLimitLabel}
             </p>
           )}
         </div>
-        <Link
-          href="/site/new"
-          className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
-        >
-          New site
-        </Link>
+        {account?.betaGated ? (
+          <span
+            className="text-sm px-3 py-1.5 border border-neutral-100 rounded text-neutral-400 cursor-not-allowed"
+            title="Free beta is full. Become a supporter from Account, or join the waitlist on the homepage."
+          >
+            New site
+          </span>
+        ) : (
+          <Link
+            href="/site/new"
+            className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+          >
+            New site
+          </Link>
+        )}
       </div>
 
-      {sites.length === 0 ? (
+      {sites.length === 0 && account?.betaGated ? (
+        <div className="text-center py-16 space-y-5 max-w-md mx-auto">
+          <p className="text-sm text-neutral-600 leading-relaxed">
+            Free beta spots are full. Join the waitlist and we&apos;ll email you when there&apos;s room, or
+            become a supporter for lifetime access.
+          </p>
+          <ButtondownWaitlistForm idPrefix="sites-dashboard-waitlist" className="text-left" />
+          <Link
+            href="/account"
+            className="inline-block text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+          >
+            Become a supporter
+          </Link>
+        </div>
+      ) : sites.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <p className="text-sm text-neutral-500">No sites yet.</p>
           <Link
@@ -405,7 +475,7 @@ export default function SitesPage() {
                 return (
                   <div
                     key={site.id}
-                    className={`border rounded overflow-hidden transition-colors ${
+                    className={`group/card border rounded overflow-hidden transition-colors ${
                       isBuilding
                         ? "border-amber-200 bg-amber-50/30"
                         : "border-neutral-200"
@@ -418,7 +488,7 @@ export default function SitesPage() {
                           href={`https://${site.subdomain}.${siteDomain}`}
                           target="_blank"
                           rel="noopener"
-                          className="block bg-neutral-50 group cursor-pointer"
+                          className="block bg-neutral-50 group/preview cursor-pointer"
                         >
                           <div className="aspect-[16/9] overflow-hidden relative">
                             <iframe
@@ -427,44 +497,24 @@ export default function SitesPage() {
                               tabIndex={-1}
                               title={`Preview of ${site.channelTitle}`}
                             />
-                            <div className="absolute top-2 left-2 z-20 pointer-events-none drop-shadow-sm">
-                              <SitePlantThumb
-                                siteId={site.id}
-                                size={viewMode === "grid" ? 28 : 32}
-                                className="p-0.5 shadow-sm"
-                              />
-                            </div>
-                            <div className="absolute inset-0 z-10 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center pointer-events-none">
-                              <span className="inline-flex items-center gap-2 text-xs bg-white/90 backdrop-blur px-2.5 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
-                                <SitePlantThumb siteId={site.id} size={22} className="p-px border-neutral-200/80" />
+                            <div className="absolute inset-0 z-10 bg-transparent group-hover/preview:bg-black/5 transition-colors pointer-events-none">
+                              <span className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 bg-white/90 backdrop-blur px-2 py-1 rounded-md opacity-0 group-hover/preview:opacity-100 transition-opacity shadow-sm border border-neutral-200/80">
                                 Open preview
+                                <ArrowUpRight className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
                               </span>
                             </div>
                           </div>
                         </a>
                       ) : isBuilding ? (
-                        <div className="aspect-[16/9] relative bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]">
-                          <div className="absolute top-2 left-2 z-10 pointer-events-none drop-shadow-sm">
-                            <SitePlantThumb
-                              siteId={site.id}
-                              size={viewMode === "grid" ? 28 : 32}
-                              className="p-0.5 shadow-sm"
-                            />
-                          </div>
-                        </div>
+                        <div className="aspect-[16/9] relative bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
                       ) : (
                         <div className="aspect-[16/9] relative bg-neutral-50 flex items-center justify-center">
-                          <SitePlantThumb
-                            siteId={site.id}
-                            size={viewMode === "grid" ? 40 : 48}
-                            className="p-1.5 opacity-75 border-neutral-200/80"
-                          />
+                          <span className="text-xs text-neutral-400">No preview</span>
                         </div>
                       )}
 
-                      {/* Status badge — upper right of preview */}
-                      <div className="absolute top-2 right-2 z-10">
-                        <StatusBadge site={site} isBuilding={isBuilding} />
+                      <div className="absolute top-2 left-2 z-20">
+                        <StatusBadge site={site} isBuilding={isBuilding} compact />
                       </div>
                     </div>
 
@@ -476,10 +526,13 @@ export default function SitesPage() {
                             size={36}
                             className="shrink-0 size-9 p-1 mt-0.5"
                           />
-                          <div className="space-y-1 min-w-0">
+                          <div className="min-w-0 self-center space-y-0.5">
                             <p className="text-sm font-medium truncate">{site.channelTitle}</p>
-                            <p className="text-xs text-neutral-400">
-                              {site.subdomain}.{siteDomain} &middot; {site.template}
+                            <p
+                              className="text-xs text-neutral-400 truncate max-md:block md:hidden md:group-hover/card:block md:group-focus-within/card:block"
+                              title={`${site.subdomain}.${siteDomain}`}
+                            >
+                              {site.subdomain}.{siteDomain}
                             </p>
                           </div>
                         </div>
@@ -492,7 +545,9 @@ export default function SitesPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
+                      <div
+                        className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100 transition-opacity duration-150 max-md:opacity-100 md:opacity-0 md:group-hover/card:opacity-100 md:group-focus-within/card:opacity-100"
+                      >
                         <Link
                           href={`/sites/${site.id}`}
                           className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
@@ -500,6 +555,7 @@ export default function SitesPage() {
                           Settings
                         </Link>
                         <button
+                          type="button"
                           onClick={() => handleDelete(site.id)}
                           className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors ml-auto"
                         >

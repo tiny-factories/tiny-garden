@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { setSession } from "@/lib/session";
+import { BETA_SPOTS, getBetaAccessCount } from "@/lib/beta";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
@@ -57,11 +58,8 @@ export async function GET(req: NextRequest) {
 
   let grantFriend = false;
   if (!existingUser) {
-    const BETA_SPOTS = 33;
-    const friendCount = await prisma.user.count({
-      where: { OR: [{ isFriend: true }, { isAdmin: true }] },
-    });
-    grantFriend = friendCount < BETA_SPOTS;
+    const betaAccessCount = await getBetaAccessCount();
+    grantFriend = betaAccessCount < BETA_SPOTS;
   }
 
   // Upsert user

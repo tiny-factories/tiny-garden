@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { isBetaFull } from "@/lib/beta";
 
 export async function GET() {
   const session = await getSession();
@@ -11,15 +12,22 @@ export async function GET() {
     include: { subscription: true, sites: { select: { id: true } } },
   });
 
+  const plan = user.subscription?.plan || "free";
+  const betaFull = await isBetaFull();
+  const betaGated =
+    betaFull && !user.isAdmin && !user.isFriend && plan === "free";
+
   return NextResponse.json({
     id: user.id,
     arenaUsername: user.arenaUsername,
     avatarUrl: user.avatarUrl,
     isAdmin: user.isAdmin,
     isFriend: user.isFriend,
-    plan: user.subscription?.plan || "free",
+    plan,
     subscriptionStatus: user.subscription?.status || "active",
     siteCount: user.sites.length,
     createdAt: user.createdAt,
+    betaFull,
+    betaGated,
   });
 }

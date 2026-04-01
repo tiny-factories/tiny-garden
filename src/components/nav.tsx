@@ -7,14 +7,24 @@ import { useEffect, useState } from "react";
 export function Nav() {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     fetch("/api/account")
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => {
+        if (r.ok) {
+          setIsLoggedIn(true);
+          return r.json();
+        }
+        setIsLoggedIn(false);
+        return null;
+      })
       .then((data) => {
         if (data?.isAdmin) setIsAdmin(true);
       })
-      .catch(() => {});
+      .catch(() => {
+        setIsLoggedIn(false);
+      });
   }, []);
 
   // Don't show nav on public pages
@@ -47,14 +57,16 @@ export function Nav() {
         >
           Sites
         </Link>
-        <Link
-          href="/about"
-          className={`text-sm transition-colors ${
-            pathname === "/about" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
-          }`}
-        >
-          About
-        </Link>
+        {!isLoggedIn && (
+          <Link
+            href="/about"
+            className={`text-sm transition-colors ${
+              pathname === "/about" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+            }`}
+          >
+            About
+          </Link>
+        )}
         <Link
           href="/account"
           className={`text-sm transition-colors ${

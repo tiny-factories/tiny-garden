@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/button";
+import {
+  BetaCtaLink,
+  BetaLandingShell,
+  BetaTryNowButton,
+} from "@/components/beta-landing-shell";
+import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 import { prisma } from "@/lib/db";
+import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
 
 interface FeaturedSite {
   id: string;
@@ -8,17 +15,6 @@ interface FeaturedSite {
   channelTitle: string;
   template: string;
   arenaUsername: string;
-}
-
-const BETA_SPOTS = 33;
-
-async function getBetaSpotsRemaining(): Promise<number> {
-  try {
-    const userCount = await prisma.user.count();
-    return Math.max(BETA_SPOTS - userCount, 0);
-  } catch {
-    return BETA_SPOTS;
-  }
 }
 
 async function getFeaturedSites(): Promise<FeaturedSite[]> {
@@ -88,18 +84,21 @@ export const revalidate = 0;
 export default async function Home() {
   const featuredSites = await getFeaturedSites();
   const spotsRemaining = await getBetaSpotsRemaining();
+  const betaFull = await isBetaFull();
   return (
+    <BetaLandingShell isBetaFull={betaFull}>
     <main className="min-h-screen">
       {/* Nav */}
       <nav className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-between">
         <span className="text-sm font-medium">tiny.garden</span>
         <div className="flex items-center gap-2">
+          <Button href="/about" variant="ghost">
+            About
+          </Button>
           <Button href="/login" variant="ghost">
             Log in
           </Button>
-          <Button href="/login" variant="primary" size="compact">
-            Try now
-          </Button>
+          <BetaTryNowButton />
         </div>
       </nav>
 
@@ -115,12 +114,12 @@ export default async function Home() {
           setup. Your Are.na content, published in seconds.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
-          <Link
-            href="/login"
+          <BetaCtaLink
+            hrefWhenOpen="/login"
             className="px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
           >
-            Get started free
-          </Link>
+            {betaFull ? "Get notified" : "Get started free"}
+          </BetaCtaLink>
           <a
             href="#templates"
             className="px-4 py-2 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
@@ -480,29 +479,45 @@ export default async function Home() {
             <div className="mt-5 pt-4 border-t border-neutral-100">
               <p className="text-sm font-medium">
                 {spotsRemaining > 0
-                  ? `${spotsRemaining} of 33 spots remaining`
+                  ? `${spotsRemaining} of ${BETA_SPOTS} spots remaining`
                   : "All spots claimed"}
               </p>
               {spotsRemaining > 0 && (
                 <div className="mt-2 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-neutral-900 rounded-full transition-all"
-                    style={{ width: `${((33 - spotsRemaining) / 33) * 100}%` }}
+                    style={{
+                      width: `${((BETA_SPOTS - spotsRemaining) / BETA_SPOTS) * 100}%`,
+                    }}
                   />
                 </div>
               )}
             </div>
-            <Link
-              href="/login"
-              className="inline-block mt-4 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
-            >
-              {spotsRemaining > 0 ? "Claim your spot" : "Join waitlist"}
-            </Link>
+            {betaFull ? (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                  Beta is full. Get notified when we open more spots.
+                </p>
+                <ButtondownWaitlistForm idPrefix="pricing-waitlist" />
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-block mt-4 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
+              >
+                Claim your spot
+              </Link>
+            )}
           </div>
           <div className="border border-neutral-200 rounded p-6">
             <p className="text-sm font-medium">Supporter</p>
             <p className="text-2xl font-medium mt-2">$300</p>
             <p className="text-xs text-neutral-400 mt-1">one-time, lifetime access</p>
+            {betaFull && (
+              <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-100 rounded px-2 py-1.5 mt-2 leading-relaxed">
+                Beta invites are full, but supporters can still get lifetime access — log in and upgrade from Account.
+              </p>
+            )}
             <ul className="mt-4 space-y-2 text-xs text-neutral-500">
               <li>Everything in the beta, forever</li>
               <li>Unlimited sites</li>
@@ -516,8 +531,11 @@ export default async function Home() {
               href="/login"
               className="inline-block mt-4 px-4 py-2 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
             >
-              Become a supporter
+              Log in to become a supporter
             </Link>
+            <p className="text-[11px] text-neutral-400 mt-2">
+              After you sign in with Are.na, open Account to complete the one-time purchase.
+            </p>
           </div>
         </div>
 
@@ -643,15 +661,16 @@ export default async function Home() {
         <p className="text-sm text-neutral-400 mt-2">
           You just haven&apos;t published it yet.
         </p>
-        <Link
-          href="/login"
+        <BetaCtaLink
+          hrefWhenOpen="/login"
           className="inline-block mt-6 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
         >
-          Get started free
-        </Link>
+          {betaFull ? "Get notified" : "Get started free"}
+        </BetaCtaLink>
       </section>
 
       {/* Footer is in the layout */}
     </main>
+    </BetaLandingShell>
   );
 }

@@ -3,8 +3,10 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { seedFromSubdomain } from "@/lib/garden-icon";
 import { buildSite } from "@/lib/build";
+import { isBetaFull } from "@/lib/beta";
 
-export const maxDuration = 60;
+// POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
+export const maxDuration = 300;
 
 export async function GET() {
   const session = await getSession();
@@ -35,6 +37,23 @@ export async function POST(req: NextRequest) {
   });
 
   const plan = user.subscription?.plan || "free";
+
+  if (
+    (await isBetaFull()) &&
+    !user.isAdmin &&
+    !user.isFriend &&
+    plan === "free"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Beta is full for free accounts. Join the waitlist on the homepage, or log in and become a supporter for lifetime access.",
+        code: "beta_full",
+      },
+      { status: 403 }
+    );
+  }
+
   const limits: Record<string, number> = { free: 3, pro: Infinity, studio: 50 };
   const limit = limits[plan] ?? 3;
 

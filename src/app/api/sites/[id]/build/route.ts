@@ -3,7 +3,8 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { buildSite } from "@/lib/build";
 
-export const maxDuration = 60;
+// Large Are.na channels can exceed 60s (fetch + template + I/O). Match cron rebuild.
+export const maxDuration = 300;
 
 export async function POST(
   _req: NextRequest,

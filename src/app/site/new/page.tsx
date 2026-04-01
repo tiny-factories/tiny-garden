@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/track";
+import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 
 interface Channel {
   id: number;
@@ -56,8 +57,11 @@ function ChannelSkeleton() {
   );
 }
 
+type AccessGate = "loading" | "ok" | "gated";
+
 export default function NewSitePage() {
   const router = useRouter();
+  const [accessGate, setAccessGate] = useState<AccessGate>("loading");
   const [ownChannels, setOwnChannels] = useState<Channel[]>([]);
   const [followingChannels, setFollowingChannels] = useState<Channel[]>([]);
   const [groups, setGroups] = useState<GroupData[]>([]);
@@ -78,6 +82,16 @@ export default function NewSitePage() {
 
   const loading = loadingOwn && ownChannels.length === 0;
   const stillLoading = loadingOwn || loadingGroups || loadingFollowing;
+
+  useEffect(() => {
+    fetch("/api/account")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data: { betaGated?: boolean }) => {
+        if (data.betaGated) setAccessGate("gated");
+        else setAccessGate("ok");
+      })
+      .catch(() => setAccessGate("ok"));
+  }, []);
 
   // Fetch existing sites to know which channels are already used
   useEffect(() => {
@@ -186,6 +200,40 @@ export default function NewSitePage() {
       setError(data.error || "Failed to create site");
       setCreating(false);
     }
+  }
+
+  if (accessGate === "loading") {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16 max-w-md mx-auto text-center">
+        <p className="text-sm text-neutral-500">Checking access…</p>
+      </main>
+    );
+  }
+
+  if (accessGate === "gated") {
+    return (
+      <main className="min-h-screen flex flex-col px-4 py-16 max-w-md mx-auto">
+        <h1 className="text-lg font-medium text-center">Beta is full</h1>
+        <p className="text-sm text-neutral-500 mt-3 text-center leading-relaxed">
+          Free beta spots are full. Get notified when we open more, or become a supporter for lifetime access.
+        </p>
+        <div className="mt-6">
+          <ButtondownWaitlistForm idPrefix="new-site-gate" />
+        </div>
+        <Link
+          href="/account"
+          className="mt-6 text-center text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+        >
+          Become a supporter
+        </Link>
+        <Link
+          href="/sites"
+          className="mt-4 text-center text-sm text-neutral-400 hover:text-neutral-600"
+        >
+          Back to sites
+        </Link>
+      </main>
+    );
   }
 
   // Step 1: Full-page channel picker
