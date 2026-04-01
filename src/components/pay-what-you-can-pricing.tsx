@@ -245,16 +245,28 @@ export function PayWhatYouCanPricing() {
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      <div className="rounded-lg border border-neutral-200 bg-neutral-50/40 px-4 py-4 sm:px-5 sm:py-5">
-        <p className="text-sm font-medium text-neutral-900">Closed beta</p>
-        <p className="text-xs text-neutral-600 mt-1.5 leading-relaxed max-w-xl">
-          tiny.garden is in closed beta right now. Leave your email and we&apos;ll notify you when
-          open beta starts — no spam, one list.
+      <div className="relative overflow-hidden rounded-xl border border-emerald-200/60 bg-linear-to-br from-white via-emerald-50/35 to-teal-50/50 px-4 py-5 sm:px-6 sm:py-6 shadow-sm ring-1 ring-emerald-500/10">
+        <div
+          className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-emerald-400/15 blur-2xl"
+          aria-hidden
+        />
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-800/80">
+          Rolling invites
         </p>
-        <div className="mt-4 max-w-md">
+        <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
+          Beta is closed right now — we&apos;re letting more people in every day.
+        </p>
+        <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
+          Over the next week we&apos;ll keep adding folks from the waitlist. Leave your email and
+          we&apos;ll ping you as soon as there&apos;s a spot with your name on it.
+        </p>
+        <p className="mt-2 text-xs text-neutral-500 max-w-xl">
+          One list, one heads-up when you&apos;re up. No newsletter spam.
+        </p>
+        <div className="mt-5 max-w-md">
           <ButtondownWaitlistForm
             idPrefix="pricing-open-beta"
-            successMessage="You’re on the list. We’ll email you when open beta starts."
+            successMessage="You’re on the list — we’ll email you as we open more spots this week."
           />
         </div>
       </div>

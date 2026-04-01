@@ -402,8 +402,8 @@ export default async function Home() {
           Below is a peek at two future tiers —{" "}
           <span className="text-neutral-600">Individual</span> and{" "}
           <span className="text-neutral-600">Small studio</span> — with pay-what-you-can
-          sliders. Checkout isn&apos;t open yet. Sign up above the preview to get notified when open
-          beta starts.
+          sliders. Checkout isn&apos;t open yet. Beta is invite-only for the moment — sign up above
+          the preview to get a spot as we roll out more access this week.
         </p>
 
         <PayWhatYouCanPricing />
