@@ -75,40 +75,234 @@
   }
 }
 
-/* Landing hero — Are.na channel → webpage illustration */
+/* Landing hero — Are.na channel → load → webpage (shared block colors) */
 @keyframes landing-hero-arena-layer {
   0%,
-  18% {
+  21% {
     opacity: 1;
     transform: scale(1);
+    filter: brightness(1);
   }
-  26%,
-  88% {
+  /* Hand off while “loading” overlay reads */
+  28%,
+  86% {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.97);
+    filter: brightness(1);
   }
-  96%,
+  94%,
   100% {
     opacity: 1;
     transform: scale(1);
+    filter: brightness(1);
   }
 }
 
 @keyframes landing-hero-web-layer {
   0%,
-  18% {
+  21% {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.97);
   }
-  26%,
-  88% {
+  30%,
+  86% {
     opacity: 1;
     transform: scale(1);
   }
-  96%,
+  94%,
   100% {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.97);
+  }
+}
+
+@keyframes landing-hero-loading-overlay {
+  0%,
+  21% {
+    opacity: 0;
+  }
+  24%,
+  29% {
+    opacity: 1;
+  }
+  32%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes landing-hero-loading-bar {
+  0%,
+  22% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+  30% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  32%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes landing-hero-reload-btn {
+  0%,
+  44% {
+    transform: scale(1);
+    background-color: rgb(23 23 23);
+  }
+  46%,
+  48.5% {
+    transform: scale(0.78);
+    background-color: rgb(55 55 55);
+  }
+  50%,
+  100% {
+    transform: scale(1);
+    background-color: rgb(23 23 23);
+  }
+}
+
+@keyframes landing-hero-reload-spin {
+  0%,
+  45% {
+    transform: rotate(0deg);
+  }
+  46% {
+    transform: rotate(0deg);
+  }
+  53% {
+    transform: rotate(540deg);
+  }
+  100% {
+    transform: rotate(540deg);
+  }
+}
+
+@keyframes landing-hero-reload-flash {
+  0%,
+  48.5% {
+    opacity: 0;
+  }
+  49.5%,
+  53.5% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes landing-hero-chrome-dim {
+  0%,
+  44% {
+    filter: brightness(1);
+  }
+  46%,
+  54% {
+    filter: brightness(0.68);
+  }
+  56%,
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes landing-hero-site-layout-a {
+  0%,
+  29% {
+    opacity: 0;
+  }
+  31%,
+  48.5% {
+    opacity: 1;
+  }
+  49.5%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes landing-hero-site-layout-b {
+  0%,
+  48.5% {
+    opacity: 0;
+  }
+  49.5%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes landing-hero-b-row-0 {
+  0%,
+  51.5% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  54%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-hero-b-row-1 {
+  0%,
+  52.5% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  55%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-hero-b-row-2 {
+  0%,
+  53.5% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  56%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-hero-b-row-3 {
+  0%,
+  54.5% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  57%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-hero-b-row-4 {
+  0%,
+  55.5% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  58%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -132,11 +326,65 @@
 }
 
 .landing-hero-arena-layer {
-  animation: landing-hero-arena-layer 14s ease-in-out infinite;
+  animation: landing-hero-arena-layer 16s ease-in-out infinite;
 }
 
 .landing-hero-web-layer {
-  animation: landing-hero-web-layer 14s ease-in-out infinite;
+  animation: landing-hero-web-layer 16s ease-in-out infinite;
+}
+
+.landing-hero-loading-overlay {
+  animation: landing-hero-loading-overlay 16s ease-in-out infinite;
+}
+
+.landing-hero-loading-bar {
+  transform-origin: left center;
+  animation: landing-hero-loading-bar 16s ease-in-out infinite;
+}
+
+.landing-hero-reload-btn {
+  animation: landing-hero-reload-btn 16s ease-in-out infinite;
+}
+
+.landing-hero-reload-spin {
+  display: block;
+  animation: landing-hero-reload-spin 16s ease-in-out infinite;
+}
+
+.landing-hero-reload-flash {
+  animation: landing-hero-reload-flash 16s ease-in-out infinite;
+}
+
+.landing-hero-chrome-dim {
+  animation: landing-hero-chrome-dim 16s ease-in-out infinite;
+}
+
+.landing-hero-site-layout-a {
+  animation: landing-hero-site-layout-a 16s ease-in-out infinite;
+}
+
+.landing-hero-site-layout-b {
+  animation: landing-hero-site-layout-b 16s ease-in-out infinite;
+}
+
+.landing-hero-b-row-0 {
+  animation: landing-hero-b-row-0 16s ease-in-out infinite;
+}
+
+.landing-hero-b-row-1 {
+  animation: landing-hero-b-row-1 16s ease-in-out infinite;
+}
+
+.landing-hero-b-row-2 {
+  animation: landing-hero-b-row-2 16s ease-in-out infinite;
+}
+
+.landing-hero-b-row-3 {
+  animation: landing-hero-b-row-3 16s ease-in-out infinite;
+}
+
+.landing-hero-b-row-4 {
+  animation: landing-hero-b-row-4 16s ease-in-out infinite;
 }
 
 .landing-hero-block-drift {
@@ -144,29 +392,27 @@
 }
 
 .landing-hero-scroll-content {
-  animation: landing-hero-scroll-content 18s linear infinite;
-}
-
-/* Landing features — slow ring on rebuild icon */
-@keyframes landing-feature-rebuild-ring {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.landing-feature-rebuild-ring {
-  animation: landing-feature-rebuild-ring 14s linear infinite;
+  animation: landing-hero-scroll-content 16s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing-hero-arena-layer,
   .landing-hero-web-layer,
+  .landing-hero-loading-overlay,
+  .landing-hero-loading-bar,
+  .landing-hero-reload-btn,
+  .landing-hero-reload-spin,
+  .landing-hero-reload-flash,
+  .landing-hero-chrome-dim,
+  .landing-hero-site-layout-a,
+  .landing-hero-site-layout-b,
+  .landing-hero-b-row-0,
+  .landing-hero-b-row-1,
+  .landing-hero-b-row-2,
+  .landing-hero-b-row-3,
+  .landing-hero-b-row-4,
   .landing-hero-block-drift,
-  .landing-hero-scroll-content,
-  .landing-feature-rebuild-ring {
+  .landing-hero-scroll-content {
     animation: none;
   }
 }
@@ -182,7 +428,7 @@
 }
 
 .template-ticker-track {
-  animation: template-ticker 65s linear infinite;
+  animation: template-ticker 110s linear infinite;
 }
 
 .template-ticker-track:hover {

@@ -88,7 +88,13 @@ export function SitesPageSkeleton({ viewMode }: { viewMode: ViewMode }) {
       {viewMode === "list" ? (
         <ListBodySkeleton />
       ) : (
-        <div className={viewMode === "grid" ? "grid grid-cols-2 gap-3" : "space-y-3"}>
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:[&>*:nth-last-child(1):nth-child(odd)]:col-span-2"
+              : "space-y-3"
+          }
+        >
           <CardBodySkeleton count={viewMode === "grid" ? 4 : 3} />
         </div>
       )}

@@ -50,11 +50,11 @@ function TemplatePreview({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`${name} — open template preview in a new tab`}
-      className="border border-neutral-200 rounded-lg overflow-hidden block group hover:border-neutral-400 transition-colors"
+      className="border border-neutral-200 overflow-hidden block group hover:border-neutral-400 transition-colors"
     >
       <div className="relative bg-neutral-50 border-b border-neutral-100 aspect-[4/3] overflow-hidden p-5 sm:p-6">
         <span
-          className="absolute top-3 right-3 z-10 inline-flex rounded-md bg-white/95 p-1.5 text-neutral-700 opacity-0 shadow-sm ring-1 ring-neutral-200/90 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none"
+          className="absolute top-3 right-3 z-10 inline-flex bg-white/95 p-1.5 text-neutral-700 opacity-0 ring-1 ring-neutral-200/80 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none"
           aria-hidden
         >
           <ArrowUpRight className="size-3.5 sm:size-4 shrink-0" strokeWidth={2} />
@@ -397,11 +397,10 @@ export default async function Home() {
           Pricing
         </h2>
         <p className="text-xs text-neutral-400 mb-10 max-w-xl leading-relaxed">
-          Two shapes: <span className="text-neutral-600">Individual</span> and{" "}
-          <span className="text-neutral-600">Small studio</span> — mostly how you think
-          about scale, not a different app. Each card has a slider to pick a monthly
-          amount. We&apos;re still filling the first {BETA_SPOTS} spots at $0; after that,
-          this is the path for new accounts.
+          Use everything free while we test. Below is a peek at two future tiers —{" "}
+          <span className="text-neutral-600">Individual</span> and{" "}
+          <span className="text-neutral-600">Small studio</span> — with pay-what-you-can
+          sliders. Checkout isn&apos;t open yet; join via beta to publish today.
         </p>
 
         <PayWhatYouCanPricing
