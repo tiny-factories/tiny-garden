@@ -204,17 +204,36 @@ export default function SitesPage() {
     return fetch("/api/sites").then((r) => r.json());
   }, []);
 
-  // New-site flow: server kicks off build in `after()`; show building state until publish completes
+  // URL params: new-site build state, post-OAuth, post-Stripe return (clean up + analytics)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
+    let changed = false;
+
     const buildingId = params.get("building");
-    if (!buildingId) return;
-    setBuilding((b) => ({ ...b, [buildingId]: true }));
-    params.delete("building");
-    const qs = params.toString();
-    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-    window.history.replaceState({}, "", next);
+    if (buildingId) {
+      setBuilding((b) => ({ ...b, [buildingId]: true }));
+      params.delete("building");
+      changed = true;
+    }
+
+    if (params.get("signed_in") === "1") {
+      track("oauth-completed");
+      params.delete("signed_in");
+      changed = true;
+    }
+
+    if (params.get("upgraded") === "true") {
+      track("checkout-return");
+      params.delete("upgraded");
+      changed = true;
+    }
+
+    if (changed) {
+      const qs = params.toString();
+      const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+      window.history.replaceState({}, "", next);
+    }
   }, []);
 
   useEffect(() => {
@@ -307,10 +326,20 @@ export default function SitesPage() {
 
   async function handleBuild(siteId: string) {
     setBuilding((b) => ({ ...b, [siteId]: true }));
+    const site = sites.find((s) => s.id === siteId);
     const res = await fetch(`/api/sites/${siteId}/build`, { method: "POST" });
     if (res.ok) {
       const updated = await fetchSites();
       setSites(updated);
+      track("rebuild-completed", {
+        subdomain: site?.subdomain ?? "",
+        template: site?.template ?? "",
+      });
+    } else {
+      track("rebuild-failed", {
+        status: res.status,
+        subdomain: site?.subdomain ?? "",
+      });
     }
     setBuilding((b) => ({ ...b, [siteId]: false }));
   }

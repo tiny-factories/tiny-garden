@@ -89,5 +89,5 @@ export async function GET(req: NextRequest) {
     arenaUsername: arenaUser.slug,
   });
 
-  return NextResponse.redirect(new URL("/sites", req.url));
+  return NextResponse.redirect(new URL("/sites?signed_in=1", req.url));
 }

@@ -1,10 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/button";
-import {
-  BetaCtaLink,
-  BetaLandingShell,
-  BetaTryNowButton,
-} from "@/components/beta-landing-shell";
+import { BetaCtaLink, BetaLandingShell } from "@/components/beta-landing-shell";
 import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { prisma } from "@/lib/db";
 import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
@@ -88,19 +83,8 @@ export default async function Home() {
   return (
     <BetaLandingShell isBetaFull={betaFull}>
     <main className="min-h-screen">
-      {/* Nav */}
-      <nav className="max-w-3xl mx-auto px-4 py-6 flex items-center justify-between">
-        <span className="text-sm font-medium">tiny.garden</span>
-        <div className="flex items-center gap-2">
-          <Button href="/about" variant="ghost">
-            About
-          </Button>
-          <BetaTryNowButton />
-        </div>
-      </nav>
-
-      {/* Hero */}
-      <section className="max-w-3xl mx-auto px-4 pt-24 pb-20 text-center">
+      {/* Hero — global Nav + Footer come from root layout */}
+      <section className="max-w-3xl mx-auto px-4 pt-16 pb-20 text-center">
         <h1 className="text-3xl font-medium tracking-tight">
           Turn any Are.na channel
           <br />
@@ -565,7 +549,6 @@ export default async function Home() {
         </BetaCtaLink>
       </section>
 
-      {/* Footer is in the layout */}
     </main>
     </BetaLandingShell>
   );

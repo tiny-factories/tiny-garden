@@ -42,7 +42,7 @@ export default function RootLayout({
         {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ? (
           <Script
             src={process.env.NEXT_PUBLIC_UMAMI_URL || "https://cloud.umami.is/script.js"}
-            strategy="lazyOnload"
+            strategy="afterInteractive"
             data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
           />
         ) : null}

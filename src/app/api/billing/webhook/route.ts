@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { removeDomainFromVercel } from "@/lib/vercel";
+import { sendUmamiServerEvent } from "@/lib/umami-server";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest) {
             },
           });
         }
+        await sendUmamiServerEvent("subscription-activated", {
+          mode: session.mode === "payment" ? "payment" : "subscription",
+        });
       }
     }
   }
@@ -94,6 +98,7 @@ export async function POST(req: NextRequest) {
           data: { customDomain: null, domainVerified: false },
         });
       }
+      await sendUmamiServerEvent("subscription-canceled");
     }
   }
 

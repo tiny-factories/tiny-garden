@@ -27,8 +27,8 @@ export function Nav() {
       });
   }, []);
 
-  // Don't show nav on public pages
-  if (pathname === "/" || pathname === "/login") return null;
+  // Don't show nav on login (full-bleed flow)
+  if (pathname === "/login") return null;
 
   // Don't show nav on serve routes
   if (pathname.startsWith("/api/serve")) return null;

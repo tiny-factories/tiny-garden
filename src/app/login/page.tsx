@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { track } from "@/lib/track";
 
 function LoginContent() {
   const params = useSearchParams();
@@ -21,6 +22,7 @@ function LoginContent() {
         )}
         <a
           href="/api/auth/login"
+          onClick={() => track("oauth-started")}
           className="inline-block px-4 py-2 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
         >
           Log in with Are.na
