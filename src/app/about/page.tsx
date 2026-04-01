@@ -94,7 +94,7 @@ export default function About() {
       </section>
 
       {/* Footer */}
-      <footer className="max-w-3xl mx-auto px-4 py-8 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+      <footer className="max-w-3xl mx-auto px-4 py-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-2">
         <span className="text-xs text-neutral-400 dark:text-neutral-500">tiny.garden</span>
         <div className="flex gap-4">
           <a

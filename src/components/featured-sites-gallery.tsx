@@ -1,15 +1,3 @@
-"use client";
-
-import {
-  Children,
-  cloneElement,
-  Fragment,
-  isValidElement,
-  useEffect,
-  useState,
-  type ReactElement,
-  type ReactNode,
-} from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { templateDisplayNameFallback } from "@/lib/template-display-name-fallback";
@@ -62,44 +50,48 @@ function labelFor(
   );
 }
 
-/** Duplicate column must stay interactive on first copy only. */
-function nonTabbableCopy(node: ReactNode): ReactNode {
-  return Children.map(node, (child) => {
-    if (!isValidElement(child)) return child;
-    if (child.type === Fragment) {
-      return (
-        <Fragment key={child.key}>
-          {nonTabbableCopy(
-            (child.props as { children?: ReactNode }).children,
-          )}
-        </Fragment>
-      );
-    }
-    return cloneElement(child as ReactElement<{ tabIndex?: number }>, {
-      tabIndex: -1,
-    });
-  });
-}
-
-function distributeIntoColumns<T>(items: T[], colCount: number): T[][] {
-  const n = Math.max(1, Math.min(colCount, Math.max(items.length, 1)));
-  const cols: T[][] = Array.from({ length: n }, () => []);
-  items.forEach((item, i) => {
-    cols[i % n].push(item);
-  });
-  return cols;
-}
-
 type Live = FeaturedSiteForGallery;
 type Ph = (typeof PLACEHOLDER_SITES)[number];
+
+function bentoCellClass(index: number, total: number): string {
+  if (total <= 1) {
+    return "md:col-span-4";
+  }
+  if (total === 2) {
+    return index === 0
+      ? "md:col-span-2 md:row-span-2"
+      : "md:col-span-2 md:row-span-2 md:col-start-3";
+  }
+  if (total === 3) {
+    if (index === 0) return "md:col-span-2 md:row-span-2";
+    if (index === 1) return "md:col-span-2 md:col-start-3 md:row-start-1";
+    return "md:col-span-2 md:col-start-3 md:row-start-2";
+  }
+  if (index === 0) return "md:col-span-2 md:row-span-2";
+  if (index === 1) return "md:col-span-1 md:col-start-3 md:row-start-1";
+  if (index === 2) return "md:col-span-1 md:col-start-4 md:row-start-1";
+  if (index === 3) return "md:col-span-2 md:col-start-3 md:row-start-2";
+  return "";
+}
 
 function FeaturedLiveCard({
   site,
   templateLabel,
+  variant,
 }: {
   site: Live;
   templateLabel: string;
+  variant: "hero" | "compact";
 }) {
+  const titleClass =
+    variant === "hero"
+      ? "line-clamp-2 text-sm font-medium leading-snug text-neutral-900 dark:text-neutral-100 sm:text-base"
+      : "line-clamp-2 text-[13px] font-medium leading-snug text-neutral-900 dark:text-neutral-100 sm:text-sm";
+  const metaClass =
+    variant === "hero"
+      ? "mt-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500 sm:text-xs"
+      : "mt-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500";
+
   return (
     <Link
       href={`/api/serve/${site.subdomain}`}
@@ -108,7 +100,7 @@ function FeaturedLiveCard({
       aria-label={`${site.channelTitle}, ${templateLabel} template — open site in a new tab`}
       className="group flex min-h-0 w-full flex-col"
     >
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900">
         <iframe
           src={`/api/serve/${site.subdomain}`}
           className="pointer-events-none absolute inset-0 h-[200%] w-[200%] origin-top-left scale-50"
@@ -120,19 +112,15 @@ function FeaturedLiveCard({
           aria-hidden
         />
         <span
-          className="pointer-events-none absolute right-2 top-2 z-10 inline-flex rounded-md bg-white/90 dark:bg-neutral-900/90 p-1.5 text-neutral-800 dark:text-neutral-200 opacity-0 shadow-sm ring-1 ring-black/[0.06] dark:ring-white/[0.1] transition-opacity duration-200 group-hover:opacity-100"
+          className="pointer-events-none absolute right-2 top-2 z-10 inline-flex rounded-md bg-white/90 p-1.5 text-neutral-800 opacity-0 shadow-sm ring-1 ring-black/[0.06] transition-opacity duration-200 group-hover:opacity-100 dark:bg-neutral-900/90 dark:text-neutral-200 dark:ring-white/[0.1]"
           aria-hidden
         >
           <ArrowUpRight className="size-3.5 shrink-0" strokeWidth={2} />
         </span>
       </div>
       <div className="mt-2.5 min-w-0 pr-1 sm:mt-3">
-        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-neutral-900 dark:text-neutral-100 sm:text-sm">
-          {site.channelTitle}
-        </p>
-        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
-          {templateLabel}
-        </p>
+        <p className={titleClass}>{site.channelTitle}</p>
+        <p className={metaClass}>{templateLabel}</p>
       </div>
     </Link>
   );
@@ -141,14 +129,25 @@ function FeaturedLiveCard({
 function FeaturedPlaceholderCard({
   site,
   templateLabel,
+  variant,
 }: {
   site: Ph;
   templateLabel: string;
+  variant: "hero" | "compact";
 }) {
+  const titleClass =
+    variant === "hero"
+      ? "text-sm font-medium leading-snug text-neutral-900 dark:text-neutral-100 sm:text-base"
+      : "text-[13px] font-medium leading-snug text-neutral-900 dark:text-neutral-100 sm:text-sm";
+  const metaClass =
+    variant === "hero"
+      ? "mt-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500 sm:text-xs"
+      : "mt-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500";
+
   return (
     <div className="flex min-h-0 w-full flex-col">
-      <div className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden bg-neutral-50 dark:bg-neutral-900">
-        <span className="px-3 text-center text-[11px] leading-relaxed text-neutral-300 dark:text-neutral-600">
+      <div className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900">
+        <span className="px-3 text-center text-[11px] leading-relaxed text-neutral-300 dark:text-neutral-600 sm:text-xs">
           {site.subdomain}.tiny.garden
         </span>
         <span
@@ -157,54 +156,17 @@ function FeaturedPlaceholderCard({
         />
       </div>
       <div className="mt-2.5 min-w-0 pr-1 sm:mt-3">
-        <p className="text-[13px] font-medium leading-snug text-neutral-900 dark:text-neutral-100 sm:text-sm">
-          {site.title}
-        </p>
-        <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-neutral-400 dark:text-neutral-500">
+        <p className={titleClass}>{site.title}</p>
+        <p
+          className={
+            variant === "hero"
+              ? "mt-0.5 line-clamp-2 text-xs leading-snug text-neutral-400 dark:text-neutral-500 sm:text-[13px]"
+              : "mt-0.5 line-clamp-2 text-[11px] leading-snug text-neutral-400 dark:text-neutral-500"
+          }
+        >
           {site.desc}
         </p>
-        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
-          {templateLabel}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function MarqueeColumn({
-  direction,
-  durationSec,
-  reduceMotion,
-  children,
-}: {
-  direction: "up" | "down";
-  durationSec: number;
-  reduceMotion: boolean;
-  children: ReactNode;
-}) {
-  if (reduceMotion) {
-    return (
-      <div className="max-h-[min(32rem,58vh)] overflow-y-auto overflow-x-hidden [-webkit-overflow-scrolling:touch]">
-        <div className="flex flex-col gap-3 sm:gap-4">{children}</div>
-      </div>
-    );
-  }
-
-  const trackClass =
-    direction === "up"
-      ? "featured-sites-col-track-up"
-      : "featured-sites-col-track-down";
-
-  return (
-    <div className="relative max-h-[min(32rem,58vh)] min-h-[min(32rem,58vh)] overflow-hidden">
-      <div
-        className={`flex w-full flex-col ${trackClass}`}
-        style={{ animationDuration: `${durationSec}s` }}
-      >
-        <div className="flex flex-col gap-3 sm:gap-4">{children}</div>
-        <div className="flex flex-col gap-3 sm:gap-4" aria-hidden>
-          {nonTabbableCopy(children)}
-        </div>
+        <p className={metaClass}>{templateLabel}</p>
       </div>
     </div>
   );
@@ -219,95 +181,78 @@ export function FeaturedSitesGallery({
 }) {
   const hasLive = sites.length > 0;
   const items: (Live | Ph)[] = hasLive ? sites : PLACEHOLDER_SITES;
+  const total = items.length;
 
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [colCount, setColCount] = useState(2);
+  const bentoItems = items.slice(0, 4);
+  const restItems = items.slice(4);
 
-  useEffect(() => {
-    const mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduceMotion(mqReduce.matches);
-    const onReduce = () => setReduceMotion(mqReduce.matches);
-    mqReduce.addEventListener("change", onReduce);
-
-    const mqMd = window.matchMedia("(min-width: 768px)");
-    const mqXl = window.matchMedia("(min-width: 1280px)");
-    const updateCols = () => {
-      if (mqXl.matches) setColCount(4);
-      else if (mqMd.matches) setColCount(3);
-      else setColCount(2);
-    };
-    updateCols();
-    mqMd.addEventListener("change", updateCols);
-    mqXl.addEventListener("change", updateCols);
-
-    return () => {
-      mqReduce.removeEventListener("change", onReduce);
-      mqMd.removeEventListener("change", updateCols);
-      mqXl.removeEventListener("change", updateCols);
-    };
-  }, []);
-
-  const columns = distributeIntoColumns(items, colCount);
-
-  const renderCell = (item: Live | Ph, key: string) => {
+  const renderCard = (item: Live | Ph, index: number) => {
+    const variant: "hero" | "compact" = index === 0 ? "hero" : "compact";
     if (hasLive && "id" in item) {
       return (
         <FeaturedLiveCard
-          key={key}
           site={item}
           templateLabel={labelFor(item.template, templateNames)}
+          variant={variant}
         />
       );
     }
     const ph = item as Ph;
     return (
       <FeaturedPlaceholderCard
-        key={key}
         site={ph}
         templateLabel={labelFor(ph.template, templateNames)}
+        variant={variant}
       />
     );
   };
 
   return (
-    <section className="border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 py-16">
-      <div className="mx-auto mb-6 max-w-3xl px-4">
+    <section className="border-t border-neutral-100 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="mx-auto mb-8 max-w-3xl px-4">
         <h2 className="text-xs font-medium uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           Featured sites
         </h2>
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-4">
-        <div className="featured-sites-gallery-mask rounded-sm">
-          <div
-            className="grid gap-3 sm:gap-4 md:gap-5"
-            style={{
-              gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
-            }}
-          >
-            {columns.map((colItems, colIndex) => {
-              const duration = 48 + colIndex * 9;
-              const direction = colIndex % 2 === 0 ? "up" : "down";
-              return (
-                <MarqueeColumn
-                  key={colIndex}
-                  direction={direction}
-                  durationSec={duration}
-                  reduceMotion={reduceMotion}
-                >
-                  {colItems.map((item, i) =>
-                    renderCell(
-                      item,
-                      hasLive && "id" in item
-                        ? item.id
-                        : `${(item as Ph).subdomain}-${i}`,
-                    ),
-                  )}
-                </MarqueeColumn>
-              );
-            })}
-          </div>
+      <div className="mx-auto max-w-6xl px-4">
+        <div
+          className={
+            total > 1
+              ? "grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-4 md:grid-rows-2 md:gap-4 lg:gap-5"
+              : "grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-4"
+          }
+        >
+          {bentoItems.map((item, i) => (
+            <div
+              key={
+                hasLive && "id" in item
+                  ? item.id
+                  : `${(item as Ph).subdomain}-${i}`
+              }
+              className={`min-w-0 ${bentoCellClass(i, total)}`}
+            >
+              {renderCard(item, i)}
+            </div>
+          ))}
         </div>
+
+        {restItems.length > 0 ? (
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:mt-5 md:grid-cols-4 md:gap-4 lg:gap-5">
+            {restItems.map((item, i) => (
+              <div
+                key={
+                  hasLive && "id" in item
+                    ? item.id
+                    : `${(item as Ph).subdomain}-more-${i}`
+                }
+                className="min-w-0"
+              >
+                {renderCard(item, i + 4)}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );

@@ -7,31 +7,32 @@ export function Footer() {
   const newsletterHref = `https://buttondown.com/${encodeURIComponent(newsletterSlug)}?tag=${encodeURIComponent(BUTTONDOWN_WAITLIST_TAG)}`;
 
   return (
-    <footer className="w-full px-4 py-8 border-t border-neutral-100 dark:border-neutral-800">
-      <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+    <footer className="flex w-full items-center justify-between gap-2 px-4 py-4 border-t border-neutral-100 dark:border-neutral-800">
+      <div className="flex min-w-0 justify-start">
         <span className="text-xs text-neutral-400 dark:text-neutral-500 shrink-0">tiny.garden</span>
-        <div className="flex items-center gap-4 min-w-0">
-          <Link
-            href="/docs"
-            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
-          >
-            Docs
-          </Link>
-          <a
-            href="https://changelog.tiny.garden"
-            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
-          >
-            Changelog
-          </a>
-          <a
-            href={newsletterHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
-          >
-            Newsletter
-          </a>
-          <div className="flex items-center gap-3 shrink-0">
+      </div>
+      <div className="flex min-w-0 items-center justify-end gap-4">
+        <Link
+          href="/docs"
+          className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
+        >
+          Docs
+        </Link>
+        <a
+          href="https://changelog.tiny.garden"
+          className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
+        >
+          Changelog
+        </a>
+        <a
+          href={newsletterHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
+        >
+          Newsletter
+        </a>
+        <div className="flex items-center gap-3 shrink-0">
             {/* Are.na */}
             <a
               href="https://www.are.na/tiny-factories/channels"
@@ -80,7 +81,6 @@ export function Footer() {
                 <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.785 2.627 3.601 3.497 6.21 3.252-4.34.64-8.14 2.2-3.28 7.7C8.754 26.3 11.18 21.28 12 19.285c.82 1.996 2.634 6.757 8.445 1.914 4.86-5.5 1.06-7.06-3.28-7.7 2.61.245 5.426-.625 6.21-3.252.247-.829.625-5.79.625-6.479 0-.688-.139-1.86-.902-2.203-.66-.3-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8z" />
               </svg>
             </a>
-          </div>
         </div>
       </div>
     </footer>
