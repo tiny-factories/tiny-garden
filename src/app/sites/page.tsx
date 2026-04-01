@@ -66,6 +66,10 @@ const buildingPhrases = [
   "Stitching together...",
 ];
 
+/** Collapsed (md): fixed circle around the dot; expands to pill on card hover/focus. */
+const COMPACT_BADGE_SHELL =
+  "max-md:min-h-[22px] max-md:gap-1.5 max-md:px-2 max-md:justify-start md:size-[22px] md:shrink-0 md:p-0 md:gap-0 md:justify-center md:group-hover/card:h-auto md:group-hover/card:w-auto md:group-hover/card:min-h-[22px] md:group-hover/card:px-2 md:group-hover/card:gap-1.5 md:group-hover/card:justify-start md:group-focus-within/card:h-auto md:group-focus-within/card:w-auto md:group-focus-within/card:min-h-[22px] md:group-focus-within/card:px-2 md:group-focus-within/card:gap-1.5 md:group-focus-within/card:justify-start";
+
 function BuildingBadge({ compact }: { compact?: boolean }) {
   const [phraseIndex, setPhraseIndex] = useState(
     () => Math.floor(Math.random() * buildingPhrases.length)
@@ -78,9 +82,7 @@ function BuildingBadge({ compact }: { compact?: boolean }) {
     return () => clearInterval(interval);
   }, []);
 
-  const shell = compact
-    ? "min-h-[22px] items-center gap-0 px-1.5 py-0 max-md:gap-1.5 max-md:px-2 md:group-hover/card:gap-1.5 md:group-hover/card:px-2 md:group-focus-within/card:gap-1.5 md:group-focus-within/card:px-2"
-    : "px-2 py-0.5 gap-1.5";
+  const shell = compact ? COMPACT_BADGE_SHELL : "px-2 py-0.5 gap-1.5";
 
   const phraseClass = compact
     ? "max-md:inline md:hidden md:group-hover/card:inline md:group-focus-within/card:inline whitespace-nowrap"
@@ -112,9 +114,7 @@ function StatusBadge({
 }) {
   if (isBuilding) return <BuildingBadge compact={compact} />;
 
-  const shell = compact
-    ? "min-h-[22px] items-center gap-0 px-1.5 py-0 max-md:gap-1.5 max-md:px-2 md:group-hover/card:gap-1.5 md:group-hover/card:px-2 md:group-focus-within/card:gap-1.5 md:group-focus-within/card:px-2"
-    : "px-2 py-0.5 gap-1.5";
+  const shell = compact ? COMPACT_BADGE_SHELL : "px-2 py-0.5 gap-1.5";
 
   const labelClass = compact
     ? "max-md:inline md:hidden md:group-hover/card:inline md:group-focus-within/card:inline whitespace-nowrap"
@@ -529,7 +529,7 @@ export default function SitesPage() {
                           <div className="min-w-0 self-center space-y-0.5">
                             <p className="text-sm font-medium truncate">{site.channelTitle}</p>
                             <p
-                              className="text-xs text-neutral-400 truncate max-md:block md:hidden md:group-hover/card:block md:group-focus-within/card:block"
+                              className="text-xs text-neutral-400 truncate"
                               title={`${site.subdomain}.${siteDomain}`}
                             >
                               {site.subdomain}.{siteDomain}
@@ -545,9 +545,7 @@ export default function SitesPage() {
                         </div>
                       </div>
 
-                      <div
-                        className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100 transition-opacity duration-150 max-md:opacity-100 md:opacity-0 md:group-hover/card:opacity-100 md:group-focus-within/card:opacity-100"
-                      >
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
                         <Link
                           href={`/sites/${site.id}`}
                           className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"

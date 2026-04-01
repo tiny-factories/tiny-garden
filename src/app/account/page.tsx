@@ -1,8 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/track";
+import {
+  INDIVIDUAL_STEP_LABELS,
+  PWYC_AMOUNT_STORAGE_KEY,
+  PWYC_DEFAULT_INDIVIDUAL_STEP,
+  PWYC_DEFAULT_STUDIO_LEVEL,
+  PWYC_LEGACY_TIER_STORAGE_KEY,
+  PWYC_SELECTION_KEY,
+  findSelectionForAmountCents,
+  formatUsdPerMonth,
+  getCentsForSelection,
+  isIndividualSliderStep,
+  isPricingPlanId,
+  isSupportLevel,
+  legacyTierIdToAmountCents,
+  normalizePaidAmountCents,
+  type IndividualSliderStep,
+  type PricingPlanId,
+  type SupportLevel,
+} from "@/lib/pricing-tiers";
 
 const DANGER_SUFFIX = ", Will Robinson";
 const TYPE_MS = 72;
@@ -26,6 +46,11 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<PricingPlanId>("individual");
+  const [checkoutIndividualStep, setCheckoutIndividualStep] =
+    useState<IndividualSliderStep>(PWYC_DEFAULT_INDIVIDUAL_STEP);
+  const [checkoutStudioLevel, setCheckoutStudioLevel] =
+    useState<SupportLevel>(PWYC_DEFAULT_STUDIO_LEVEL);
   const [dangerHover, setDangerHover] = useState(false);
   const [dangerTyped, setDangerTyped] = useState(0);
   const [caretVisible, setCaretVisible] = useState(true);
@@ -36,6 +61,92 @@ export default function AccountPage() {
       .then((r) => r.json())
       .then(setAccount)
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    try {
+      const sel = localStorage.getItem(PWYC_SELECTION_KEY);
+      if (sel) {
+        const j = JSON.parse(sel) as {
+          v?: number;
+          plan?: string;
+          level?: string;
+          individualLevel?: string;
+          studioLevel?: string;
+          individualStep?: string;
+        };
+        if (
+          j.v === 4 &&
+          typeof j.plan === "string" &&
+          isPricingPlanId(j.plan) &&
+          typeof j.individualStep === "string" &&
+          isIndividualSliderStep(j.individualStep) &&
+          typeof j.studioLevel === "string" &&
+          isSupportLevel(j.studioLevel)
+        ) {
+          setCheckoutPlan(j.plan);
+          setCheckoutIndividualStep(j.individualStep);
+          setCheckoutStudioLevel(j.studioLevel);
+          return;
+        }
+        if (
+          j.v === 3 &&
+          typeof j.plan === "string" &&
+          isPricingPlanId(j.plan) &&
+          typeof j.individualLevel === "string" &&
+          isSupportLevel(j.individualLevel) &&
+          typeof j.studioLevel === "string" &&
+          isSupportLevel(j.studioLevel)
+        ) {
+          setCheckoutPlan(j.plan);
+          setCheckoutIndividualStep(j.individualLevel);
+          setCheckoutStudioLevel(j.studioLevel);
+          return;
+        }
+        if (
+          j.v === 2 &&
+          typeof j.plan === "string" &&
+          isPricingPlanId(j.plan) &&
+          typeof j.level === "string" &&
+          isSupportLevel(j.level)
+        ) {
+          setCheckoutPlan(j.plan);
+          if (j.plan === "individual") {
+            setCheckoutIndividualStep(j.level);
+            setCheckoutStudioLevel(PWYC_DEFAULT_STUDIO_LEVEL);
+          } else {
+            setCheckoutIndividualStep(PWYC_DEFAULT_INDIVIDUAL_STEP);
+            setCheckoutStudioLevel(j.level);
+          }
+          return;
+        }
+      }
+      const raw = localStorage.getItem(PWYC_AMOUNT_STORAGE_KEY);
+      if (raw != null) {
+        const n = parseInt(raw, 10);
+        if (!Number.isNaN(n)) {
+          const cents = normalizePaidAmountCents(n);
+          const sel = findSelectionForAmountCents(cents);
+          setCheckoutPlan(sel.plan);
+          setCheckoutIndividualStep(sel.individualStep);
+          setCheckoutStudioLevel(sel.studioLevel);
+          return;
+        }
+      }
+      const legacyTier = localStorage.getItem(PWYC_LEGACY_TIER_STORAGE_KEY);
+      if (legacyTier) {
+        const cents = legacyTierIdToAmountCents(legacyTier);
+        if (cents !== undefined) {
+          const normalized = normalizePaidAmountCents(cents);
+          const sel = findSelectionForAmountCents(normalized);
+          setCheckoutPlan(sel.plan);
+          setCheckoutIndividualStep(sel.individualStep);
+          setCheckoutStudioLevel(sel.studioLevel);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
@@ -78,8 +189,24 @@ export default function AccountPage() {
 
   async function handleUpgrade() {
     track("upgrade-started");
+    const amountCents = getCentsForSelection(
+      checkoutPlan,
+      checkoutIndividualStep,
+      checkoutStudioLevel
+    );
+    if (amountCents <= 0) {
+      return;
+    }
     setUpgrading(true);
-    const res = await fetch("/api/billing/checkout", { method: "POST" });
+    const normalized = normalizePaidAmountCents(amountCents);
+    const res = await fetch("/api/billing/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amountCents: normalized,
+        pricingPlan: checkoutPlan,
+      }),
+    });
     if (res.ok) {
       const { url } = await res.json();
       if (url) window.location.href = url;
@@ -186,19 +313,50 @@ export default function AccountPage() {
                 )}
               </p>
               <p className="text-xs text-neutral-400 mt-0.5">
-                {{ free: "3 sites, manual rebuild", pro: "Lifetime access, unlimited sites, daily auto-rebuild", studio: "50 sites, daily auto-rebuild" }[account.plan] || "3 sites"}
+                {
+                  {
+                    free: "3 sites, manual rebuild — or subscribe from Pricing (Individual / Studio)",
+                    pro: "Unlimited sites, daily auto-rebuild",
+                    studio: "50 sites, daily auto-rebuild",
+                  }[account.plan] || "3 sites"
+                }
               </p>
             </div>
-            {account.plan === "free" && (
-              <button
-                type="button"
-                onClick={handleUpgrade}
-                disabled={upgrading}
-                className="text-xs px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
-              >
-                {upgrading ? "Loading..." : "Become a supporter"}
-              </button>
-            )}
+            {account.plan === "free" &&
+              (() => {
+                const cents = getCentsForSelection(
+                  checkoutPlan,
+                  checkoutIndividualStep,
+                  checkoutStudioLevel
+                );
+                if (cents <= 0) {
+                  return (
+                    <p className="text-[11px] text-neutral-400 max-w-[11rem] text-right leading-relaxed">
+                      <Link
+                        href="/#pricing"
+                        className="text-neutral-600 underline underline-offset-2"
+                      >
+                        Pricing
+                      </Link>{" "}
+                      — pick a paid tier to subscribe here.
+                    </p>
+                  );
+                }
+                const subLabel =
+                  checkoutPlan === "studio"
+                    ? `Studio · ${formatUsdPerMonth(cents)}`
+                    : `Individual · ${INDIVIDUAL_STEP_LABELS[checkoutIndividualStep]} · ${formatUsdPerMonth(cents)}`;
+                return (
+                  <button
+                    type="button"
+                    onClick={handleUpgrade}
+                    disabled={upgrading}
+                    className="text-xs px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                  >
+                    {upgrading ? "Loading..." : `Subscribe · ${subLabel}`}
+                  </button>
+                );
+              })()}
             {account.plan === "pro" && (
               <span className="text-xs text-neutral-400">
                 {account.subscriptionStatus}

@@ -5,7 +5,7 @@ import {
   BetaLandingShell,
   BetaTryNowButton,
 } from "@/components/beta-landing-shell";
-import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
+import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { prisma } from "@/lib/db";
 import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
 
@@ -94,9 +94,6 @@ export default async function Home() {
         <div className="flex items-center gap-2">
           <Button href="/about" variant="ghost">
             About
-          </Button>
-          <Button href="/login" variant="ghost">
-            Log in
           </Button>
           <BetaTryNowButton />
         </div>
@@ -460,123 +457,22 @@ export default async function Home() {
         id="pricing"
         className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100"
       >
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-8">
-          Early access
+        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-2">
+          Pricing
         </h2>
+        <p className="text-xs text-neutral-400 mb-10 max-w-xl leading-relaxed">
+          Two shapes: <span className="text-neutral-600">Individual</span> and{" "}
+          <span className="text-neutral-600">Small studio</span> — mostly how you think
+          about scale, not a different app. Each card has a slider to pick a monthly
+          amount. We&apos;re still filling the first {BETA_SPOTS} spots at $0; after that,
+          this is the path for new accounts.
+        </p>
 
-        {/* Beta offer */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-          <div className="border border-neutral-900 rounded p-6">
-            <p className="text-sm font-medium">Free Beta</p>
-            <p className="text-2xl font-medium mt-2">$0</p>
-            <p className="text-xs text-neutral-400 mt-1">free forever for early testers</p>
-            <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>Unlimited sites</li>
-              <li>All templates</li>
-              <li>Custom themes</li>
-              <li>Daily auto-rebuild</li>
-            </ul>
-            <div className="mt-5 pt-4 border-t border-neutral-100">
-              <p className="text-sm font-medium">
-                {spotsRemaining > 0
-                  ? `${spotsRemaining} of ${BETA_SPOTS} spots remaining`
-                  : "All spots claimed"}
-              </p>
-              {spotsRemaining > 0 && (
-                <div className="mt-2 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-neutral-900 rounded-full transition-all"
-                    style={{
-                      width: `${((BETA_SPOTS - spotsRemaining) / BETA_SPOTS) * 100}%`,
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            {betaFull ? (
-              <div className="mt-4 space-y-3">
-                <p className="text-xs text-neutral-500 leading-relaxed">
-                  Beta is full. Get notified when we open more spots.
-                </p>
-                <ButtondownWaitlistForm idPrefix="pricing-waitlist" />
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-block mt-4 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
-              >
-                Claim your spot
-              </Link>
-            )}
-          </div>
-          <div className="border border-neutral-200 rounded p-6">
-            <p className="text-sm font-medium">Supporter</p>
-            <p className="text-2xl font-medium mt-2">$300</p>
-            <p className="text-xs text-neutral-400 mt-1">one-time, lifetime access</p>
-            {betaFull && (
-              <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-100 rounded px-2 py-1.5 mt-2 leading-relaxed">
-                Beta invites are full, but supporters can still get lifetime access — log in and upgrade from Account.
-              </p>
-            )}
-            <ul className="mt-4 space-y-2 text-xs text-neutral-500">
-              <li>Everything in the beta, forever</li>
-              <li>Unlimited sites</li>
-              <li>All future features</li>
-              <li>Support the project directly</li>
-            </ul>
-            <p className="mt-5 pt-4 border-t border-neutral-100 text-xs text-neutral-400">
-              For people who want to see tiny.garden thrive. Your contribution keeps the lights on and development moving.
-            </p>
-            <Link
-              href="/login"
-              className="inline-block mt-4 px-4 py-2 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
-            >
-              Log in to become a supporter
-            </Link>
-            <p className="text-[11px] text-neutral-400 mt-2">
-              After you sign in with Are.na, open Account to complete the one-time purchase.
-            </p>
-          </div>
-        </div>
-
-        {/* Future pricing */}
-        <div className="pt-8 border-t border-neutral-100">
-          <h3 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-4">
-            Future pricing
-          </h3>
-          <p className="text-xs text-neutral-400 mb-6">
-            After beta, tiny.garden will move to these plans. Beta users and supporters keep their access.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="border border-neutral-100 rounded p-4">
-              <p className="text-xs font-medium">Free</p>
-              <p className="text-sm font-medium mt-1">$0</p>
-              <ul className="mt-2 space-y-1 text-[11px] text-neutral-400">
-                <li>3 sites</li>
-                <li>All templates</li>
-                <li>Manual rebuild</li>
-              </ul>
-            </div>
-            <div className="border border-neutral-100 rounded p-4">
-              <p className="text-xs font-medium">Pro</p>
-              <p className="text-sm font-medium mt-1">$8/mo</p>
-              <ul className="mt-2 space-y-1 text-[11px] text-neutral-400">
-                <li>10 sites</li>
-                <li>Custom themes</li>
-                <li>Daily auto-rebuild</li>
-              </ul>
-            </div>
-            <div className="border border-neutral-100 rounded p-4">
-              <p className="text-xs font-medium">Studio</p>
-              <p className="text-sm font-medium mt-1">$25/mo</p>
-              <ul className="mt-2 space-y-1 text-[11px] text-neutral-400">
-                <li>50 sites</li>
-                <li>Custom domains</li>
-                <li>Daily auto-rebuild</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <PayWhatYouCanPricing
+          spotsRemaining={spotsRemaining}
+          betaFull={betaFull}
+          betaSpots={BETA_SPOTS}
+        />
       </section>
 
       {/* Gallery */}
