@@ -30,6 +30,7 @@ export async function GET() {
       published: s.published,
       featured: s.featured,
       lastBuiltAt: s.lastBuiltAt,
+      lastBuildError: s.lastBuildError,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
       arenaUsername: s.user.arenaUsername,

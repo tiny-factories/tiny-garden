@@ -33,15 +33,29 @@ export async function POST(
     await buildSite(id);
     const site = await prisma.site.findUnique({
       where: { id },
-      select: { lastBuiltAt: true },
+      select: { lastBuiltAt: true, published: true, lastBuildError: true },
     });
     return NextResponse.json({
       success: true,
       lastBuiltAt: site?.lastBuiltAt?.toISOString() ?? null,
+      published: site?.published ?? true,
+      lastBuildError: site?.lastBuildError ?? null,
     });
   } catch (error) {
     console.error("Admin rebuild failed:", error);
     const message = error instanceof Error ? error.message : "Build failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const site = await prisma.site.findUnique({
+      where: { id },
+      select: { lastBuiltAt: true, published: true, lastBuildError: true },
+    });
+    return NextResponse.json(
+      {
+        error: message,
+        lastBuiltAt: site?.lastBuiltAt?.toISOString() ?? null,
+        published: site?.published ?? false,
+        lastBuildError: site?.lastBuildError ?? message,
+      },
+      { status: 500 }
+    );
   }
 }

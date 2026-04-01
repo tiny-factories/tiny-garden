@@ -15,6 +15,7 @@ interface Site {
   published: boolean;
   featured: boolean;
   lastBuiltAt: string | null;
+  lastBuildError: string | null;
   createdAt: string;
   updatedAt: string;
   arenaUsername: string;
@@ -50,7 +51,9 @@ export default function AdminSitesPage() {
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
   const [rebuilding, setRebuilding] = useState<Record<string, boolean>>({});
   const [rebuildError, setRebuildError] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<"all" | "published" | "draft">("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "published" | "draft" | "error"
+  >("all");
   const [filterFeatured, setFilterFeatured] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -96,23 +99,60 @@ export default function AdminSitesPage() {
         setRebuildError(
           typeof data.error === "string" ? data.error : "Rebuild failed"
         );
+        setSites((prev) =>
+          prev.map((s) => {
+            if (s.id !== siteId) return s;
+            const err =
+              typeof data.lastBuildError === "string"
+                ? data.lastBuildError
+                : typeof data.error === "string"
+                  ? data.error
+                  : s.lastBuildError;
+            return {
+              ...s,
+              lastBuildError: err ?? s.lastBuildError,
+              ...(typeof data.lastBuiltAt === "string"
+                ? { lastBuiltAt: data.lastBuiltAt }
+                : {}),
+              ...(typeof data.published === "boolean"
+                ? { published: data.published }
+                : {}),
+            };
+          })
+        );
         return;
       }
-      if (typeof data.lastBuiltAt === "string") {
-        setSites((prev) =>
-          prev.map((s) =>
-            s.id === siteId ? { ...s, lastBuiltAt: data.lastBuiltAt } : s
-          )
-        );
-      }
+      setSites((prev) =>
+        prev.map((s) =>
+          s.id === siteId
+            ? {
+                ...s,
+                published:
+                  typeof data.published === "boolean" ? data.published : true,
+                lastBuildError:
+                  data.lastBuildError === null || data.lastBuildError === undefined
+                    ? null
+                    : typeof data.lastBuildError === "string"
+                      ? data.lastBuildError
+                      : s.lastBuildError,
+                ...(typeof data.lastBuiltAt === "string"
+                  ? { lastBuiltAt: data.lastBuiltAt }
+                  : {}),
+              }
+            : s
+        )
+      );
     } finally {
       setRebuilding((r) => ({ ...r, [siteId]: false }));
     }
   }
 
   const filtered = sites.filter((s) => {
-    if (filterStatus === "published" && !s.published) return false;
-    if (filterStatus === "draft" && s.published) return false;
+    if (filterStatus === "published" && (!s.published || s.lastBuildError))
+      return false;
+    if (filterStatus === "draft" && (s.published || s.lastBuildError))
+      return false;
+    if (filterStatus === "error" && !s.lastBuildError) return false;
     if (filterFeatured && !s.featured) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -125,6 +165,11 @@ export default function AdminSitesPage() {
     }
     return true;
   });
+
+  const publishedLiveCount = sites.filter(
+    (s) => s.published && !s.lastBuildError
+  ).length;
+  const buildErrorCount = sites.filter((s) => s.lastBuildError).length;
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
@@ -140,7 +185,11 @@ export default function AdminSitesPage() {
           </div>
           <h1 className="text-lg font-medium mt-1">All Sites</h1>
           <p className="text-xs text-neutral-400 mt-0.5">
-            {sites.length} total &middot; {sites.filter((s) => s.published).length} published &middot; {sites.filter((s) => s.featured).length} featured
+            {sites.length} total &middot; {publishedLiveCount} published
+            {buildErrorCount > 0
+              ? ` · ${buildErrorCount} build error${buildErrorCount === 1 ? "" : "s"}`
+              : ""}{" "}
+            &middot; {sites.filter((s) => s.featured).length} featured
           </p>
         </div>
       </div>
@@ -155,12 +204,17 @@ export default function AdminSitesPage() {
         />
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as "all" | "published" | "draft")}
+          onChange={(e) =>
+            setFilterStatus(
+              e.target.value as "all" | "published" | "draft" | "error"
+            )
+          }
           className="px-2 py-1.5 text-sm border border-neutral-200 rounded text-neutral-600"
         >
           <option value="all">All status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
+          <option value="error">Build error</option>
         </select>
         <label className="flex items-center gap-1.5 text-xs text-neutral-500 cursor-pointer">
           <input
@@ -217,7 +271,14 @@ export default function AdminSitesPage() {
                     {site.template}
                   </td>
                   <td className="px-3 py-2.5">
-                    {site.published ? (
+                    {site.lastBuildError ? (
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-700 rounded block max-w-[140px]"
+                        title={site.lastBuildError}
+                      >
+                        Build error
+                      </span>
+                    ) : site.published ? (
                       <span className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">
                         Published
                       </span>

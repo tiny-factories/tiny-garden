@@ -288,6 +288,24 @@ Handlebars.registerHelper("formatDate", (dateStr: string) => {
 });
 
 export async function buildSite(siteId: string): Promise<string> {
+  try {
+    return await runBuild(siteId);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Build failed";
+    const truncated =
+      message.length > 2000 ? `${message.slice(0, 1997)}...` : message;
+    await prisma.site
+      .update({
+        where: { id: siteId },
+        data: { lastBuildError: truncated },
+      })
+      .catch(() => {});
+    throw error;
+  }
+}
+
+async function runBuild(siteId: string): Promise<string> {
   const site = await prisma.site.findUniqueOrThrow({
     where: { id: siteId },
     include: { user: true },
@@ -435,7 +453,12 @@ export async function buildSite(siteId: string): Promise<string> {
 
     await prisma.site.update({
       where: { id: siteId },
-      data: { lastBuiltAt: new Date(), published: true, blobUrl: blob.url },
+      data: {
+        lastBuiltAt: new Date(),
+        published: true,
+        blobUrl: blob.url,
+        lastBuildError: null,
+      },
     });
 
     return blob.url;
@@ -448,7 +471,11 @@ export async function buildSite(siteId: string): Promise<string> {
 
     await prisma.site.update({
       where: { id: siteId },
-      data: { lastBuiltAt: new Date(), published: true },
+      data: {
+        lastBuiltAt: new Date(),
+        published: true,
+        lastBuildError: null,
+      },
     });
 
     return outputDir;
