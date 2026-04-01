@@ -3,10 +3,11 @@ import type { ComponentProps } from "react";
 
 const variantClasses = {
   primary:
-    "bg-neutral-900 text-white hover:bg-neutral-800 transition-colors",
+    "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors",
   secondary:
-    "border border-neutral-200 hover:bg-neutral-50 transition-colors text-neutral-900",
-  ghost: "text-neutral-500 hover:text-neutral-900 transition-colors",
+    "border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors text-neutral-900 dark:text-neutral-100",
+  ghost:
+    "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors",
 } as const;
 
 const sizeClasses = {

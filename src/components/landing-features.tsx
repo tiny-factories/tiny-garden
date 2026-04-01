@@ -28,23 +28,23 @@ const FEATURE_ROWS: { title: string; desc: string; badge?: string }[] = [
 
 export function LandingFeatures() {
   return (
-    <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100">
-      <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-8">
+    <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 dark:border-neutral-800">
+      <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-8">
         Features
       </h2>
       <div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
         {FEATURE_ROWS.map(({ title, desc, badge }) => (
           <div key={title}>
-            <p className="text-sm font-medium text-neutral-900">
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {title}
               {badge ? (
                 <>
                   {" "}
-                  <span className="font-normal text-neutral-400">{badge}</span>
+                  <span className="font-normal text-neutral-400 dark:text-neutral-500">{badge}</span>
                 </>
               ) : null}
             </p>
-            <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{desc}</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 leading-relaxed">{desc}</p>
           </div>
         ))}
       </div>

@@ -27,12 +27,12 @@ import { LandingCard } from "@/components/landing-card";
 const THUMB_HALF_PX = 8;
 
 const SLIDER_CLASS =
-  "w-full h-2 rounded-full appearance-none cursor-pointer bg-neutral-100 accent-neutral-900 m-0 " +
+  "w-full h-2 rounded-full appearance-none cursor-pointer bg-neutral-100 dark:bg-neutral-800 accent-neutral-900 dark:accent-neutral-100 m-0 " +
   "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 " +
-  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-neutral-900 " +
-  "[&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-sm " +
+  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-neutral-900 dark:[&::-webkit-slider-thumb]:bg-neutral-100 " +
+  "[&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white dark:[&::-webkit-slider-thumb]:border-neutral-950 [&::-webkit-slider-thumb]:shadow-sm " +
   "[&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full " +
-  "[&::-moz-range-thumb]:bg-neutral-900 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white";
+  "[&::-moz-range-thumb]:bg-neutral-900 dark:[&::-moz-range-thumb]:bg-neutral-100 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white dark:[&::-moz-range-thumb]:border-neutral-950";
 
 const SLIDER_DISABLED_CLASS =
   " opacity-60 cursor-not-allowed [&::-webkit-slider-thumb]:cursor-not-allowed [&::-moz-range-thumb]:cursor-not-allowed";
@@ -103,8 +103,9 @@ function AlignedSliderWithTicks({
           const style = tickStyle(i, labels.length);
           const cls = `absolute top-0 tabular-nums text-[11px] sm:text-xs py-1 px-1.5 rounded-md ${
             on
-              ? "text-neutral-900 font-semibold bg-neutral-100 ring-1 ring-neutral-200"
-              : "text-neutral-400" + (disabled ? "" : " hover:text-neutral-600")
+              ? "text-neutral-900 dark:text-neutral-100 font-semibold bg-neutral-100 dark:bg-neutral-800 ring-1 ring-neutral-200 dark:ring-neutral-600"
+              : "text-neutral-400 dark:text-neutral-500" +
+                (disabled ? "" : " hover:text-neutral-600 dark:hover:text-neutral-300")
           }`;
           if (disabled) {
             return (
@@ -140,12 +141,14 @@ function FeatureRow({
   return (
     <li
       className={`text-[11px] sm:text-xs flex items-start gap-3 py-0.5 transition-colors duration-200 ${
-        on ? "text-neutral-600" : "text-neutral-300 line-through decoration-neutral-200"
+        on
+          ? "text-neutral-600 dark:text-neutral-400"
+          : "text-neutral-300 dark:text-neutral-600 line-through decoration-neutral-200 dark:decoration-neutral-600"
       }`}
     >
       <span
         className={`mt-1.5 h-1 w-1 rounded-full shrink-0 ${
-          on ? "bg-emerald-500" : "bg-neutral-200"
+          on ? "bg-emerald-500" : "bg-neutral-200 dark:bg-neutral-600"
         }`}
         aria-hidden
       />
@@ -214,11 +217,11 @@ function ComingSoonOverlay() {
       aria-hidden
     >
       <span
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-16deg] whitespace-nowrap text-[clamp(2rem,11vw,3.25rem)] font-semibold uppercase leading-none tracking-tight text-neutral-300/40 select-none"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-16deg] whitespace-nowrap text-[clamp(2rem,11vw,3.25rem)] font-semibold uppercase leading-none tracking-tight text-neutral-300/40 dark:text-neutral-600/30 select-none"
       >
         Coming soon
       </span>
-      <p className="relative z-[1] text-center text-[10px] font-medium uppercase tracking-wider text-neutral-500/90">
+      <p className="relative z-[1] text-center text-[10px] font-medium uppercase tracking-wider text-neutral-500/90 dark:text-neutral-400/90">
         Preview only
       </p>
     </div>
@@ -271,21 +274,21 @@ function BetaAccessCard({
     <LandingCard variant="accent">
       {betaFull ? (
         <>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80 dark:text-emerald-300/90">
             Rolling invites
           </p>
-          <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
+          <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-lg">
             All {cap} beta spots are full — we&apos;re letting more people in every day.
           </p>
-          <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xl">
             Over the next week we&apos;ll keep pulling from the waitlist. Leave your email and
             we&apos;ll ping you as soon as there&apos;s a spot with your name on it.
           </p>
-          <p className="mt-2 text-xs text-neutral-500 max-w-xl">
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 max-w-xl">
             When you&apos;re in, the free tier stays: publish from your channel at $0. Paid options
             are only for people who want more automation or capacity.
           </p>
-          <p className="mt-2 text-xs text-neutral-500 max-w-xl">
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 max-w-xl">
             One list, one heads-up when you&apos;re up. No newsletter spam.
           </p>
           <div className="mt-5 max-w-md">
@@ -297,27 +300,27 @@ function BetaAccessCard({
         </>
       ) : (
         <>
-          <p className="text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80">
+          <p className="text-base font-medium tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-lg">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80 dark:text-emerald-300/90">
               Beta access
             </span>
             {" — "}
             We&apos;re opening {cap} spots this week. A few more people get in every day.
           </p>
-          <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xl">
             Log in with Are.na to claim a spot. No credit card — pick a channel, pick a template, go
             live.
           </p>
-          <p className="mt-2 text-xs text-neutral-500 max-w-xl">
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 max-w-xl">
             The base stays free: one site from your channel at $0. If we add paid tiers later,
             they&apos;ll be for power users who want more — not a paywall on publishing.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-            <p className="text-sm font-medium text-neutral-800 tabular-nums shrink-0">
+            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 tabular-nums shrink-0">
               {used} of {cap} spots claimed
             </p>
             <div
-              className="h-1.5 flex-1 max-w-full sm:max-w-[200px] bg-neutral-100 overflow-hidden"
+              className="h-1.5 flex-1 max-w-full sm:max-w-[200px] bg-neutral-100 dark:bg-neutral-800 overflow-hidden"
               role="progressbar"
               aria-valuenow={used}
               aria-valuemin={0}
@@ -325,7 +328,7 @@ function BetaAccessCard({
               aria-label={`Beta spots claimed: ${used} of ${cap}`}
             >
               <div
-                className="h-full bg-neutral-900 transition-[width] duration-300"
+                className="h-full bg-neutral-900 dark:bg-neutral-100 transition-[width] duration-300"
                 style={{ width: `${pctFilled}%` }}
               />
             </div>
@@ -333,11 +336,11 @@ function BetaAccessCard({
           <div className="mt-6">
             <BetaCtaLink
               hrefWhenOpen="/login"
-              className="inline-block px-4 py-2 text-sm bg-neutral-900 text-white rounded-none hover:bg-neutral-800 transition-colors"
+              className="inline-block px-4 py-2 text-sm bg-neutral-900 text-white rounded-none hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors"
             >
               Start free
             </BetaCtaLink>
-            <p className="mt-2 text-[11px] text-neutral-500 max-w-md leading-relaxed">
+            <p className="mt-2 text-[11px] text-neutral-500 dark:text-neutral-400 max-w-md leading-relaxed">
               Free to publish. You&apos;ll only see payment if you choose a paid option later.
             </p>
           </div>
@@ -359,16 +362,16 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
       <ComingSoonPricingCard planLabel={def.title}>
         <div className="flex items-start justify-between gap-4 sm:gap-5">
           <div className="text-left min-w-0 flex-1">
-            <p className="text-sm font-medium text-neutral-900">{def.title}</p>
-            <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{def.tagline}</p>
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{def.title}</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 leading-relaxed">{def.tagline}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900">
+            <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900 dark:text-neutral-100">
               {formatUsdPerMonth(individualCents)}
             </p>
           </div>
         </div>
-        <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
+        <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
           {def.highlights.map((h) => (
             <li key={h}>· {h}</li>
           ))}
@@ -376,7 +379,7 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
         <div className="mt-5">
           <label
             id={sliderLabelId}
-            className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
+            className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block mb-3"
           >
             Support (monthly)
           </label>
@@ -396,12 +399,12 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
             disabled
           />
         </div>
-        <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
+        <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 dark:border-neutral-700 pt-6">
           <PricingFeaturesList plan="individual" amountCents={individualCents} />
           <div className="flex-1 min-h-4" aria-hidden />
         </div>
-        <div className="pt-6 border-t border-neutral-200">
-          <span className="block w-full text-center text-sm py-2.5 px-3 rounded-none font-medium border border-neutral-200 bg-neutral-100 text-neutral-400">
+        <div className="pt-6 border-t border-neutral-200 dark:border-neutral-700">
+          <span className="block w-full text-center text-sm py-2.5 px-3 rounded-none font-medium border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500">
             {individualCents > 0
               ? `Checkout opens later · ${formatUsdPerMonth(individualCents)}`
               : "Start free — log in"}
@@ -417,16 +420,16 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
     <ComingSoonPricingCard planLabel={def.title}>
       <div className="flex items-start justify-between gap-4 sm:gap-5">
         <div className="text-left min-w-0 flex-1">
-          <p className="text-sm font-medium text-neutral-900">{def.title}</p>
-          <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{def.tagline}</p>
+          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{def.title}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 leading-relaxed">{def.tagline}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900">
+          <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900 dark:text-neutral-100">
             {formatUsdPerMonth(studioCents)}
           </p>
         </div>
       </div>
-      <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
+      <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
         {def.highlights.map((h) => (
           <li key={h}>· {h}</li>
         ))}
@@ -434,7 +437,7 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
       <div className="mt-5">
         <label
           id={sliderLabelId}
-            className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
+            className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block mb-3"
           >
             Support (monthly)
           </label>
@@ -451,12 +454,12 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
           disabled
         />
       </div>
-      <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
+      <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 dark:border-neutral-700 pt-6">
         <PricingFeaturesList plan="studio" amountCents={studioCents} />
         <div className="flex-1 min-h-4" aria-hidden />
       </div>
-      <div className="pt-6 border-t border-neutral-200">
-        <span className="block w-full text-center text-sm py-2.5 px-3 rounded-none font-medium border border-neutral-200 bg-neutral-100 text-neutral-400">
+      <div className="pt-6 border-t border-neutral-200 dark:border-neutral-700">
+        <span className="block w-full text-center text-sm py-2.5 px-3 rounded-none font-medium border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500">
           Checkout opens later · {formatUsdPerMonth(studioCents)}
         </span>
       </div>

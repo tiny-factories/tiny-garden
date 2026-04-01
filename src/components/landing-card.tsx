@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 type Variant = "default" | "accent";
 
 const variantClass: Record<Variant, string> = {
-  default: "border-neutral-200 bg-white",
-  accent: "border-emerald-200/80 bg-emerald-50/25",
+  default:
+    "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900",
+  accent:
+    "border-emerald-200/80 dark:border-emerald-800/50 bg-emerald-50/25 dark:bg-emerald-950/30",
 };
 
 /**

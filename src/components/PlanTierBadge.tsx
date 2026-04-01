@@ -10,12 +10,14 @@ const TIER_BADGES: Record<
   pro: {
     label: "Supporter",
     Icon: Award,
-    className: "border-amber-200 bg-amber-50 text-amber-900",
+    className:
+      "border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200",
   },
   studio: {
     label: "Studio",
     Icon: Layers,
-    className: "border-violet-200 bg-violet-50 text-violet-900",
+    className:
+      "border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-950/40 text-violet-900 dark:text-violet-200",
   },
 };
 

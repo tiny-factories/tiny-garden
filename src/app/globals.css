@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -454,6 +464,66 @@
 
 @media (prefers-reduced-motion: reduce) {
   .template-ticker-track {
+    animation: none;
+  }
+}
+
+/* Landing — featured sites: vertical column marquees + edge fade (matches template-ticker spirit) */
+@keyframes featured-sites-col-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes featured-sites-col-down {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.featured-sites-col-track-up {
+  animation: featured-sites-col-up linear infinite;
+}
+
+.featured-sites-col-track-down {
+  animation: featured-sites-col-down linear infinite;
+}
+
+.featured-sites-col-track-up:hover,
+.featured-sites-col-track-down:hover {
+  animation-play-state: paused;
+}
+
+.featured-sites-gallery-mask {
+  -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 5%,
+      black 95%,
+      transparent
+    ),
+    linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 5%,
+      black 95%,
+      transparent
+    ),
+    linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  mask-composite: intersect;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-sites-col-track-up,
+  .featured-sites-col-track-down {
     animation: none;
   }
 }

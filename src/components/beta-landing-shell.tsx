@@ -40,7 +40,7 @@ export function BetaCtaLink({
 }
 
 const tryNowClass =
-  "inline-flex items-center justify-center rounded font-normal bg-neutral-900 text-white hover:bg-neutral-800 transition-colors px-3 py-1.5 text-sm";
+  "inline-flex items-center justify-center rounded font-normal bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors px-3 py-1.5 text-sm";
 
 export function BetaTryNowButton() {
   const ctx = useBetaLanding();

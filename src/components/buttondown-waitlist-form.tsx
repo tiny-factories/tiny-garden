@@ -75,12 +75,12 @@ export function ButtondownWaitlistForm({
           autoComplete="email"
           placeholder="you@email.com"
           disabled={status === "loading"}
-          className="flex-1 px-3 py-2 text-sm border border-neutral-200 rounded outline-none focus:border-neutral-400 bg-white"
+          className="flex-1 px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded outline-none focus:border-neutral-400 dark:focus:border-neutral-500 bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50 shrink-0"
+          className="px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50 shrink-0"
         >
           {status === "loading" ? "…" : "Notify me"}
         </button>
@@ -88,7 +88,7 @@ export function ButtondownWaitlistForm({
       {message && (
         <p
           className={`text-xs mt-2 ${
-            status === "ok" ? "text-emerald-700" : "text-red-600"
+            status === "ok" ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
           }`}
         >
           {message}

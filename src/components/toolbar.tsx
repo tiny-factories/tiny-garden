@@ -258,7 +258,7 @@ export function SegmentedControl<T extends string>({
       aria-label={ariaLabel}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className={`relative h-9 touch-none overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 px-0.5 py-0.5 box-border select-none [-webkit-tap-highlight-color:transparent] outline-none transition-colors duration-150 hover:bg-neutral-100/90 focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 ${className}`}
+      className={`relative h-9 touch-none overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-0.5 py-0.5 box-border select-none [-webkit-tap-highlight-color:transparent] outline-none transition-colors duration-150 hover:bg-neutral-100/90 dark:hover:bg-neutral-800/90 focus-visible:ring-2 focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950 ${className}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -266,7 +266,7 @@ export function SegmentedControl<T extends string>({
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded bg-neutral-900 will-change-transform backface-hidden"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded bg-neutral-900 dark:bg-neutral-100 will-change-transform backface-hidden"
         style={{
           width: segmentPx > 0 ? `${segmentPx}px` : thumbWidthFallback,
           transform:
@@ -285,7 +285,9 @@ export function SegmentedControl<T extends string>({
           <span
             key={seg.value}
             className={`flex min-w-0 items-center justify-center transition-colors duration-520 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:duration-200 motion-reduce:ease-out ${
-              previewIndex === i ? "text-white" : "text-neutral-500"
+              previewIndex === i
+                ? "text-white dark:text-neutral-950"
+                : "text-neutral-500 dark:text-neutral-400"
             } ${labelClassName}`}
           >
             {seg.label}

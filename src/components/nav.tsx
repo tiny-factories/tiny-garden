@@ -38,11 +38,11 @@ export function Nav() {
   if (pathname.startsWith("/api/serve")) return null;
 
   return (
-    <nav className="flex w-full items-center justify-between gap-2 px-4 py-4 border-b border-neutral-100">
+    <nav className="flex w-full items-center justify-between gap-2 px-4 py-4 border-b border-neutral-100 dark:border-neutral-800">
       <div className="flex min-w-0 justify-start">
         <Link
           href={isLoggedIn ? "/sites" : "/"}
-          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-900"
+          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-neutral-100"
         >
           <Image
             src={NAV_BRAND_PLANT_SRC}
@@ -50,7 +50,7 @@ export function Nav() {
             width={20}
             height={20}
             unoptimized
-            className="size-5 shrink-0 rounded border border-neutral-200 bg-white object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
+            className="size-5 shrink-0 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
             aria-hidden
           />
           tiny.garden
@@ -61,7 +61,9 @@ export function Nav() {
           <Link
             href="/admin"
             className={`text-sm transition-colors ${
-              pathname.startsWith("/admin") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+              pathname.startsWith("/admin")
+                ? "text-neutral-900 dark:text-neutral-100"
+                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
             }`}
           >
             Admin
@@ -72,7 +74,9 @@ export function Nav() {
             <Link
               href="/sites"
               className={`text-sm transition-colors ${
-                pathname.startsWith("/site") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+                pathname.startsWith("/site")
+                  ? "text-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
               }`}
             >
               Sites
@@ -80,7 +84,9 @@ export function Nav() {
             <Link
               href="/account"
               className={`text-sm transition-colors ${
-                pathname === "/account" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+                pathname === "/account"
+                  ? "text-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
               }`}
             >
               Account
@@ -91,14 +97,16 @@ export function Nav() {
             <Link
               href="/about"
               className={`text-sm transition-colors ${
-                pathname === "/about" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+                pathname === "/about"
+                  ? "text-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
               }`}
             >
               About
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded bg-neutral-900 text-white hover:bg-neutral-800 transition-colors px-3 py-1.5 text-sm"
+              className="inline-flex items-center justify-center rounded bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors px-3 py-1.5 text-sm"
             >
               Try it now
             </Link>

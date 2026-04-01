@@ -32,9 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scheme-light-dark">
       <body
-        className={`${inter.className} antialiased flex min-h-screen w-full min-w-0 flex-col`}
+        className={`${inter.className} flex min-h-screen w-full min-w-0 flex-col`}
       >
         <Nav />
         <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">{children}</div>

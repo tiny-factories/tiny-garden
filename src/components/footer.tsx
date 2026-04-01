@@ -7,19 +7,19 @@ export function Footer() {
   const newsletterHref = `https://buttondown.com/${encodeURIComponent(newsletterSlug)}?tag=${encodeURIComponent(BUTTONDOWN_WAITLIST_TAG)}`;
 
   return (
-    <footer className="w-full px-4 py-8 border-t border-neutral-100">
+    <footer className="w-full px-4 py-8 border-t border-neutral-100 dark:border-neutral-800">
       <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-        <span className="text-xs text-neutral-400 shrink-0">tiny.garden</span>
+        <span className="text-xs text-neutral-400 dark:text-neutral-500 shrink-0">tiny.garden</span>
         <div className="flex items-center gap-4 min-w-0">
           <Link
             href="/docs"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
           >
             Docs
           </Link>
           <a
             href="https://changelog.tiny.garden"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
           >
             Changelog
           </a>
@@ -27,7 +27,7 @@ export function Footer() {
             href={newsletterHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors shrink-0"
           >
             Newsletter
           </a>
@@ -37,7 +37,7 @@ export function Footer() {
               href="https://www.are.na/tiny-factories/channels"
               target="_blank"
               rel="noopener"
-              className="text-neutral-300 hover:text-neutral-600 transition-colors"
+              className="text-neutral-300 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
               aria-label="Are.na"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -49,7 +49,7 @@ export function Footer() {
               href="https://github.com/tiny-factories/tiny-garden"
               target="_blank"
               rel="noopener"
-              className="text-neutral-300 hover:text-neutral-600 transition-colors"
+              className="text-neutral-300 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
               aria-label="GitHub"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -61,7 +61,7 @@ export function Footer() {
               href="https://x.com/tiny_factories"
               target="_blank"
               rel="noopener"
-              className="text-neutral-300 hover:text-neutral-600 transition-colors"
+              className="text-neutral-300 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
               aria-label="X"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
@@ -73,7 +73,7 @@ export function Footer() {
               href="https://bsky.app/profile/tinyfactories.bsky.social"
               target="_blank"
               rel="noopener"
-              className="text-neutral-300 hover:text-neutral-600 transition-colors"
+              className="text-neutral-300 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
               aria-label="Bluesky"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
