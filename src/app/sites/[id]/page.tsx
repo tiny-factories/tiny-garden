@@ -1041,17 +1041,17 @@ export default function SiteSettingsPage() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <div
                   className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    iconLoading ? "bg-emerald-400/70" : "bg-neutral-300"
+                    iconLoading ? "bg-emerald-400/70" : "bg-neutral-300 dark:bg-neutral-600"
                   }`}
                 />
                 <div
                   className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    iconLoading ? "bg-emerald-400/50" : "bg-neutral-300"
+                    iconLoading ? "bg-emerald-400/50" : "bg-neutral-300 dark:bg-neutral-600"
                   }`}
                 />
                 <div
                   className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    iconLoading ? "bg-emerald-300/60" : "bg-neutral-300"
+                    iconLoading ? "bg-emerald-300/60" : "bg-neutral-300 dark:bg-neutral-600"
                   }`}
                 />
               </div>
@@ -1059,7 +1059,7 @@ export default function SiteSettingsPage() {
                 <PlantIconFrame
                   svg={iconSvg}
                   sizeClass="w-4 h-4"
-                  className="p-0.5! rounded-[3px] border-neutral-200/90"
+                  className="p-0.5! rounded-[3px] border-neutral-200/90 dark:border-neutral-600/90"
                   decorative
                   growing={iconLoading}
                   growCycleKey={iconGrowCycle}
@@ -1068,7 +1068,7 @@ export default function SiteSettingsPage() {
                 />
                 <span
                   className={`text-[10px] min-w-0 flex-1 truncate transition-colors duration-300 ${
-                    iconLoading ? "text-emerald-800/80" : "text-neutral-400"
+                    iconLoading ? "text-emerald-800/80 dark:text-emerald-200/80" : "text-neutral-400 dark:text-neutral-500"
                   }`}
                 >
                   {site.subdomain}.tiny.garden

@@ -178,13 +178,13 @@ export default function AdminSitesPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/admin"
-              className="text-xs text-neutral-400 hover:text-neutral-600"
+              className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
             >
               &larr; Admin
             </Link>
           </div>
           <h1 className="text-lg font-medium mt-1">All Sites</h1>
-          <p className="text-xs text-neutral-400 mt-0.5">
+          <p className="text-xs text-neutral-400 mt-0.5 dark:text-neutral-500">
             {sites.length} total &middot; {publishedLiveCount} published
             {buildErrorCount > 0
               ? ` · ${buildErrorCount} build error${buildErrorCount === 1 ? "" : "s"}`
@@ -209,14 +209,14 @@ export default function AdminSitesPage() {
               e.target.value as "all" | "published" | "draft" | "error"
             )
           }
-          className="px-2 py-1.5 text-sm border border-neutral-200 rounded text-neutral-600"
+          className="px-2 py-1.5 text-sm border border-neutral-200 rounded text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
         >
           <option value="all">All status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
           <option value="error">Build error</option>
         </select>
-        <label className="flex items-center gap-1.5 text-xs text-neutral-500 cursor-pointer">
+        <label className="flex items-center gap-1.5 text-xs text-neutral-500 cursor-pointer dark:text-neutral-400">
           <input
             type="checkbox"
             checked={filterFeatured}
@@ -237,14 +237,14 @@ export default function AdminSitesPage() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-12 bg-neutral-50 rounded animate-pulse" />
+            <div key={i} className="h-12 bg-neutral-50 rounded animate-pulse dark:bg-neutral-900" />
           ))}
         </div>
       ) : (
-        <div className="border border-neutral-200 rounded overflow-hidden">
+        <div className="border border-neutral-200 rounded overflow-hidden dark:border-neutral-700">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-neutral-50 text-left text-xs text-neutral-400">
+              <tr className="bg-neutral-50 text-left text-xs text-neutral-400 dark:text-neutral-500 dark:bg-neutral-900">
                 <th className="px-3 py-2 font-medium">Site</th>
                 <th className="px-3 py-2 font-medium">Owner</th>
                 <th className="px-3 py-2 font-medium">Template</th>
@@ -257,17 +257,17 @@ export default function AdminSitesPage() {
             </thead>
             <tbody>
               {filtered.map((site) => (
-                <tr key={site.id} className="border-t border-neutral-100 hover:bg-neutral-50">
+                <tr key={site.id} className="border-t border-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 dark:border-neutral-800">
                   <td className="px-3 py-2.5">
                     <div>
                       <span className="font-medium">{site.channelTitle}</span>
-                      <p className="text-xs text-neutral-400">{site.subdomain}.tiny.garden</p>
+                      <p className="text-xs text-neutral-400 dark:text-neutral-500">{site.subdomain}.tiny.garden</p>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-neutral-500">
+                  <td className="px-3 py-2.5 text-xs text-neutral-500 dark:text-neutral-400">
                     {site.arenaUsername}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-neutral-500">
+                  <td className="px-3 py-2.5 text-xs text-neutral-500 dark:text-neutral-400">
                     {site.template}
                   </td>
                   <td className="px-3 py-2.5">
@@ -283,15 +283,15 @@ export default function AdminSitesPage() {
                         Published
                       </span>
                     ) : (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-400 rounded">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-400 rounded dark:text-neutral-500 dark:bg-neutral-800">
                         Draft
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-neutral-400">
+                  <td className="px-3 py-2.5 text-xs text-neutral-400 dark:text-neutral-500">
                     {formatDate(site.createdAt)}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-neutral-400">
+                  <td className="px-3 py-2.5 text-xs text-neutral-400 dark:text-neutral-500">
                     {site.lastBuiltAt ? timeAgo(site.lastBuiltAt) : "Never"}
                   </td>
                   <td className="px-3 py-2.5 text-right">
@@ -299,7 +299,7 @@ export default function AdminSitesPage() {
                       type="button"
                       onClick={() => rebuildSite(site.id)}
                       disabled={!!rebuilding[site.id]}
-                      className="text-[10px] px-2 py-0.5 rounded transition-colors disabled:opacity-50 bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                      className="text-[10px] px-2 py-0.5 rounded transition-colors disabled:opacity-50 bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:bg-neutral-800"
                     >
                       {rebuilding[site.id] ? "…" : "Rebuild"}
                     </button>
@@ -321,7 +321,7 @@ export default function AdminSitesPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-xs text-neutral-400">
+                  <td colSpan={8} className="px-3 py-8 text-center text-xs text-neutral-400 dark:text-neutral-500">
                     No sites match your filters.
                   </td>
                 </tr>

@@ -47,12 +47,12 @@ interface GroupData {
 
 function ChannelSkeleton() {
   return (
-    <div className="px-3 py-3 border-b border-neutral-100 animate-pulse">
+    <div className="px-3 py-3 border-b border-neutral-100 animate-pulse dark:border-neutral-800">
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="h-3.5 w-40 bg-neutral-100 rounded" />
-        <div className="h-3 w-12 bg-neutral-50 rounded" />
+        <div className="h-3.5 w-40 bg-neutral-100 rounded dark:bg-neutral-800" />
+        <div className="h-3 w-12 bg-neutral-50 rounded dark:bg-neutral-900" />
       </div>
-      <div className="h-3 w-28 bg-neutral-50 rounded" />
+      <div className="h-3 w-28 bg-neutral-50 rounded dark:bg-neutral-900" />
     </div>
   );
 }
@@ -205,7 +205,7 @@ export default function NewSitePage() {
   if (accessGate === "loading") {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16 max-w-md mx-auto text-center">
-        <p className="text-sm text-neutral-500">Checking access…</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Checking access…</p>
       </main>
     );
   }
@@ -214,7 +214,7 @@ export default function NewSitePage() {
     return (
       <main className="min-h-screen flex flex-col px-4 py-16 max-w-md mx-auto">
         <h1 className="text-lg font-medium text-center">Beta is full</h1>
-        <p className="text-sm text-neutral-500 mt-3 text-center leading-relaxed">
+        <p className="text-sm text-neutral-500 mt-3 text-center leading-relaxed dark:text-neutral-400">
           Free beta spots are full. Get notified when we open more, or become a supporter for lifetime access.
         </p>
         <div className="mt-6">
@@ -222,13 +222,13 @@ export default function NewSitePage() {
         </div>
         <Link
           href="/account"
-          className="mt-6 text-center text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+          className="mt-6 text-center text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
         >
           Become a supporter
         </Link>
         <Link
           href="/sites"
-          className="mt-4 text-center text-sm text-neutral-400 hover:text-neutral-600"
+          className="mt-4 text-center text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
         >
           Back to sites
         </Link>
@@ -244,17 +244,17 @@ export default function NewSitePage() {
           <h1 className="text-lg font-medium">Choose a channel</h1>
           <Link
             href="/sites"
-            className="text-sm text-neutral-400 hover:text-neutral-600"
+            className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
           >
             Cancel
           </Link>
         </div>
 
-        <div className="flex items-center border border-neutral-200 rounded mb-4 focus-within:border-neutral-400 transition-colors">
+        <div className="flex items-center border border-neutral-200 rounded mb-4 focus-within:border-neutral-400 transition-colors dark:focus-within:border-neutral-500 dark:border-neutral-700">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-2 py-2 text-sm text-neutral-600 bg-neutral-50 border-r border-neutral-200 rounded-l outline-none"
+            className="px-2 py-2 text-sm text-neutral-600 bg-neutral-50 border-r border-neutral-200 rounded-l outline-none dark:border-neutral-700 dark:text-neutral-400 dark:bg-neutral-900"
           >
             <option value="all">All</option>
             <option value="own">Mine</option>
@@ -282,7 +282,7 @@ export default function NewSitePage() {
             ))}
           </div>
         ) : filtered.length === 0 && !stillLoading ? (
-          <p className="text-sm text-neutral-400 py-8 text-center">
+          <p className="text-sm text-neutral-400 py-8 text-center dark:text-neutral-500">
             {search ? "No channels match your search." : "No channels found."}
           </p>
         ) : (
@@ -291,19 +291,19 @@ export default function NewSitePage() {
               <button
                 key={ch.id}
                 onClick={() => handleChannelSelect(ch)}
-                className="w-full text-left px-3 py-3 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+                className="w-full text-left px-3 py-3 border-b border-neutral-100 hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-800"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium truncate">
                     {ch.title}
                   </span>
                   {ch.visibility === "closed" && (
-                    <span className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-400 rounded shrink-0">
+                    <span className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-400 rounded shrink-0 dark:text-neutral-500 dark:bg-neutral-800">
                       Closed
                     </span>
                   )}
                   {ch.visibility === "private" && (
-                    <span className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-400 rounded shrink-0">
+                    <span className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-400 rounded shrink-0 dark:text-neutral-500 dark:bg-neutral-800">
                       Private
                     </span>
                   )}
@@ -318,14 +318,14 @@ export default function NewSitePage() {
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-neutral-400">
+                <span className="text-xs text-neutral-400 dark:text-neutral-500">
                   {ch.counts?.contents || ch.length || 0} blocks &middot; {timeAgo(ch.updated_at)}
                 </span>
               </button>
             ))}
             {stillLoading && (
               <div className="py-3 text-center">
-                <span className="text-xs text-neutral-400 animate-pulse">
+                <span className="text-xs text-neutral-400 animate-pulse dark:text-neutral-500">
                   Loading more channels...
                 </span>
               </div>
@@ -346,15 +346,15 @@ export default function NewSitePage() {
             setSelectedChannel(null);
             setSubdomain("");
           }}
-          className="text-sm text-neutral-400 hover:text-neutral-600"
+          className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
         >
           Change channel
         </button>
       </div>
 
-      <div className="mb-8 p-3 border border-neutral-900 rounded bg-neutral-50">
+      <div className="mb-8 p-3 border border-neutral-900 rounded bg-neutral-50 dark:bg-neutral-900">
         <p className="text-sm font-medium">{selectedChannel.title}</p>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">
           {selectedChannel.length} blocks &middot;{" "}
           {timeAgo(selectedChannel.updated_at)}
         </p>
@@ -362,7 +362,7 @@ export default function NewSitePage() {
 
       {/* Step 2: Pick template */}
       <section className="mb-8">
-        <h2 className="text-sm font-medium text-neutral-500 mb-3">
+        <h2 className="text-sm font-medium text-neutral-500 mb-3 dark:text-neutral-400">
           Choose a template
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -377,7 +377,7 @@ export default function NewSitePage() {
               }`}
             >
               <p className="font-medium">{t.name}</p>
-              <p className="text-xs text-neutral-400 mt-1">{t.description}</p>
+              <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500">{t.description}</p>
             </button>
           ))}
         </div>
@@ -385,7 +385,7 @@ export default function NewSitePage() {
 
       {/* Step 3: Subdomain */}
       <section className="mb-8">
-        <h2 className="text-sm font-medium text-neutral-500 mb-3">
+        <h2 className="text-sm font-medium text-neutral-500 mb-3 dark:text-neutral-400">
           Choose a subdomain
         </h2>
         <div className="flex items-center gap-2">
@@ -393,10 +393,10 @@ export default function NewSitePage() {
             type="text"
             value={subdomain}
             onChange={(e) => setSubdomain(e.target.value)}
-            className="px-3 py-2 border border-neutral-200 rounded text-sm flex-1 outline-none focus:border-neutral-400 transition-colors"
+            className="px-3 py-2 border border-neutral-200 rounded text-sm flex-1 outline-none focus:border-neutral-400 transition-colors dark:focus:border-neutral-500 dark:border-neutral-700"
             placeholder="my-site"
           />
-          <span className="text-sm text-neutral-400">.tiny.garden</span>
+          <span className="text-sm text-neutral-400 dark:text-neutral-500">.tiny.garden</span>
         </div>
       </section>
 

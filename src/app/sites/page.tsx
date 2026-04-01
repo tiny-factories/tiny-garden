@@ -46,10 +46,10 @@ function Toggle({
       disabled={loading}
       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
         loading ? "opacity-50 cursor-wait" : "cursor-pointer"
-      } ${checked ? "bg-neutral-900" : "bg-neutral-200"}`}
+      } ${checked ? "bg-neutral-900 dark:bg-neutral-100" : "bg-neutral-200 dark:bg-neutral-700"}`}
     >
       <span
-        className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+        className={`inline-block h-3.5 w-3.5 rounded-full bg-white dark:bg-neutral-950 transition-transform ${
           checked ? "translate-x-[18px]" : "translate-x-[3px]"
         }`}
       />
@@ -94,7 +94,7 @@ function BuildingBadge({ compact }: { compact?: boolean }) {
 
   return (
     <span
-      className={`inline-flex items-center text-[11px] rounded-full bg-amber-50/90 backdrop-blur-sm text-amber-600 border border-amber-200 ${shell}`}
+      className={`inline-flex items-center text-[11px] rounded-full bg-amber-50/90 dark:bg-amber-950/50 backdrop-blur-sm text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 ${shell}`}
     >
       <span className="relative flex h-1.5 w-1.5 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
@@ -127,7 +127,7 @@ function StatusBadge({
   if (site.published) {
     return (
       <span
-        className={`inline-flex items-center text-[11px] rounded-full bg-emerald-50/90 backdrop-blur-sm text-emerald-600 border border-emerald-200 ${shell}`}
+        className={`inline-flex items-center text-[11px] rounded-full bg-emerald-50/90 dark:bg-emerald-950/50 backdrop-blur-sm text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 ${shell}`}
       >
         <span className="relative flex h-1.5 w-1.5 shrink-0">
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -139,10 +139,10 @@ function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center text-[11px] rounded-full bg-neutral-50/90 backdrop-blur-sm text-neutral-400 border border-neutral-200 ${shell}`}
+      className={`inline-flex items-center text-[11px] rounded-full bg-neutral-50/90 dark:bg-neutral-900/90 backdrop-blur-sm text-neutral-400 dark:text-neutral-500 border border-neutral-200 dark:border-neutral-700 ${shell}`}
     >
       <span className="relative flex h-1.5 w-1.5 shrink-0">
-        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neutral-300" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neutral-300 dark:bg-neutral-600" />
       </span>
       <span className={labelClass}>Offline</span>
     </span>
@@ -165,7 +165,7 @@ function SitePlantThumb({
       width={size}
       height={size}
       unoptimized
-      className={`rounded border border-neutral-200 bg-white object-contain pointer-events-none select-none [image-rendering:crisp-edges] ${className}`}
+      className={`rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 object-contain pointer-events-none select-none [image-rendering:crisp-edges] ${className}`}
     />
   );
 }
@@ -395,14 +395,14 @@ export default function SitesPage() {
             {account && <PlanTierBadge plan={account.plan} />}
           </div>
           {account && (
-            <p className="text-xs text-neutral-400 mt-1">
+            <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500">
               {sites.length} / {siteLimitLabel}
             </p>
           )}
         </div>
         {account?.betaGated ? (
           <span
-            className="text-sm px-3 py-1.5 border border-neutral-100 rounded text-neutral-400 cursor-not-allowed"
+            className="text-sm px-3 py-1.5 border border-neutral-100 rounded text-neutral-400 cursor-not-allowed dark:border-neutral-800 dark:text-neutral-500"
             title="Free beta is full. Become a supporter from Account, or join the waitlist on the homepage."
           >
             New site
@@ -410,7 +410,7 @@ export default function SitesPage() {
         ) : (
           <Link
             href="/site/new"
-            className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+            className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
           >
             New site
           </Link>
@@ -419,24 +419,24 @@ export default function SitesPage() {
 
       {sites.length === 0 && account?.betaGated ? (
         <div className="text-center py-16 space-y-5 max-w-md mx-auto">
-          <p className="text-sm text-neutral-600 leading-relaxed">
+          <p className="text-sm text-neutral-600 leading-relaxed dark:text-neutral-400">
             Free beta spots are full. Join the waitlist and we&apos;ll email you when there&apos;s room, or
             become a supporter for lifetime access.
           </p>
           <ButtondownWaitlistForm idPrefix="sites-dashboard-waitlist" className="text-left" />
           <Link
             href="/account"
-            className="inline-block text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+            className="inline-block text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
           >
             Become a supporter
           </Link>
         </div>
       ) : sites.length === 0 ? (
         <div className="text-center py-16 space-y-3">
-          <p className="text-sm text-neutral-500">No sites yet.</p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">No sites yet.</p>
           <Link
             href="/site/new"
-            className="inline-block text-sm text-neutral-600 underline underline-offset-2"
+            className="inline-block text-sm text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
           >
             Create your first site
           </Link>
@@ -452,25 +452,27 @@ export default function SitesPage() {
           />
 
           {filtered.length === 0 ? (
-            <p className="text-sm text-neutral-400 py-8 text-center">
+            <p className="text-sm text-neutral-400 py-8 text-center dark:text-neutral-500">
               No sites match &ldquo;{search}&rdquo;
             </p>
           ) : viewMode === "list" ? (
             /* ── List view ── */
-            <div className="border border-neutral-200 rounded overflow-hidden divide-y divide-neutral-100">
+            <div className="border border-neutral-200 rounded overflow-hidden divide-y divide-neutral-100 dark:border-neutral-700 dark:divide-neutral-800">
               {filtered.map((site) => {
                 const isBuilding = !!building[site.id];
                 return (
                   <div
                     key={site.id}
                     className={`flex items-center gap-4 px-4 py-3 transition-colors ${
-                      isBuilding ? "bg-amber-50/30" : "hover:bg-neutral-50"
+                      isBuilding
+                        ? "bg-amber-50/30 dark:bg-amber-950/20"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-900"
                     }`}
                   >
                     <SitePlantThumb siteId={site.id} size={36} className="shrink-0 size-9 p-1" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{site.channelTitle}</p>
-                      <p className="text-xs text-neutral-400">
+                      <p className="text-sm font-medium truncate text-neutral-950 dark:text-neutral-50">{site.channelTitle}</p>
+                      <p className="text-xs text-neutral-400 dark:text-neutral-500">
                         {site.subdomain}.{siteDomain} &middot; {site.template}
                       </p>
                     </div>
@@ -482,13 +484,13 @@ export default function SitesPage() {
                     />
                     <Link
                       href={`/sites/${site.id}`}
-                      className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors shrink-0"
+                      className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors shrink-0 dark:hover:bg-neutral-800/80 dark:border-neutral-700"
                     >
                       Settings
                     </Link>
                     <button
                       onClick={() => handleDelete(site.id)}
-                      className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors shrink-0"
+                      className="text-xs px-2.5 py-1 text-red-500 border border-red-100 dark:border-red-900/40 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0"
                     >
                       Delete
                     </button>
@@ -508,8 +510,8 @@ export default function SitesPage() {
                     key={site.id}
                     className={`group/card border rounded overflow-hidden transition-colors ${
                       isBuilding
-                        ? "border-amber-200 bg-amber-50/30"
-                        : "border-neutral-200"
+                        ? "border-amber-200 bg-amber-50/30 dark:border-amber-800/50 dark:bg-amber-950/20"
+                        : "border-neutral-200 dark:border-neutral-700"
                     }`}
                   >
                     {/* Preview area with status badge overlay */}
@@ -519,7 +521,7 @@ export default function SitesPage() {
                           href={`https://${site.subdomain}.${siteDomain}`}
                           target="_blank"
                           rel="noopener"
-                          className="block bg-neutral-50 group/preview cursor-pointer"
+                          className="block bg-neutral-50 group/preview cursor-pointer dark:bg-neutral-900"
                         >
                           <div className="aspect-[16/9] overflow-hidden relative">
                             <iframe
@@ -529,7 +531,7 @@ export default function SitesPage() {
                               title={`Preview of ${site.channelTitle}`}
                             />
                             <div className="absolute inset-0 z-10 bg-transparent group-hover/preview:bg-black/5 transition-colors pointer-events-none">
-                              <span className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 bg-white/90 backdrop-blur px-2 py-1 rounded-md opacity-0 group-hover/preview:opacity-100 transition-opacity shadow-sm border border-neutral-200/80">
+                              <span className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white/90 dark:bg-neutral-900/90 backdrop-blur px-2 py-1 rounded-md opacity-0 group-hover/preview:opacity-100 transition-opacity shadow-sm border border-neutral-200/80 dark:border-neutral-700/80">
                                 Open preview
                                 <ArrowUpRight className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
                               </span>
@@ -537,10 +539,10 @@ export default function SitesPage() {
                           </div>
                         </a>
                       ) : isBuilding ? (
-                        <div className="aspect-[16/9] relative bg-gradient-to-r from-amber-50 via-white to-amber-50 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
+                        <div className="aspect-[16/9] relative bg-gradient-to-r from-amber-50 via-white to-amber-50 dark:from-amber-950/40 dark:via-neutral-900 dark:to-amber-950/40 bg-[length:200%_100%] animate-[shimmer_2s_ease-in-out_infinite]" />
                       ) : (
-                        <div className="aspect-[16/9] relative bg-neutral-50 flex items-center justify-center">
-                          <span className="text-xs text-neutral-400">No preview</span>
+                        <div className="aspect-[16/9] relative bg-neutral-50 flex items-center justify-center dark:bg-neutral-900">
+                          <span className="text-xs text-neutral-400 dark:text-neutral-500">No preview</span>
                         </div>
                       )}
 
@@ -558,9 +560,9 @@ export default function SitesPage() {
                             className="shrink-0 size-9 p-1 mt-0.5"
                           />
                           <div className="min-w-0 self-center space-y-0.5">
-                            <p className="text-sm font-medium truncate">{site.channelTitle}</p>
+                            <p className="text-sm font-medium truncate text-neutral-950 dark:text-neutral-50">{site.channelTitle}</p>
                             <p
-                              className="text-xs text-neutral-400 truncate"
+                              className="text-xs text-neutral-400 truncate dark:text-neutral-500"
                               title={`${site.subdomain}.${siteDomain}`}
                             >
                               {site.subdomain}.{siteDomain}
@@ -576,17 +578,17 @@ export default function SitesPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
                         <Link
                           href={`/sites/${site.id}`}
-                          className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                          className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
                         >
                           Settings
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(site.id)}
-                          className="text-xs px-2.5 py-1 text-red-500 border border-red-100 rounded hover:bg-red-50 transition-colors ml-auto"
+                          className="text-xs px-2.5 py-1 text-red-500 border border-red-100 dark:border-red-900/40 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors ml-auto"
                         >
                           Delete
                         </button>

@@ -240,9 +240,9 @@ export default function AccountPage() {
     return (
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 w-32 bg-neutral-100 rounded" />
-          <div className="h-3 w-48 bg-neutral-50 rounded" />
-          <div className="h-24 bg-neutral-50 rounded" />
+          <div className="h-4 w-32 bg-neutral-100 rounded dark:bg-neutral-800" />
+          <div className="h-3 w-48 bg-neutral-50 rounded dark:bg-neutral-900" />
+          <div className="h-24 bg-neutral-50 rounded dark:bg-neutral-900" />
         </div>
       </main>
     );
@@ -257,14 +257,14 @@ export default function AccountPage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="shrink-0 text-sm text-neutral-500 hover:text-neutral-900 transition-colors"
+          className="shrink-0 text-sm text-neutral-500 hover:text-neutral-900 transition-colors dark:text-neutral-400"
         >
           Log out
         </button>
       </div>
 
       {/* Profile */}
-      <section className="mb-8 p-4 border border-neutral-100 rounded">
+      <section className="mb-8 p-4 border border-neutral-100 rounded dark:border-neutral-800">
         <div className="flex items-center gap-3 mb-4">
           {account.avatarUrl && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -276,7 +276,7 @@ export default function AccountPage() {
           )}
           <div>
             <p className="text-sm font-medium">{account.arenaUsername}</p>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">
               {account.siteCount} site{account.siteCount !== 1 ? "s" : ""}
             </p>
           </div>
@@ -285,7 +285,7 @@ export default function AccountPage() {
           href={`https://www.are.na/${account.arenaUsername}`}
           target="_blank"
           rel="noopener"
-          className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+          className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors dark:hover:text-neutral-300 dark:text-neutral-500"
         >
           View Are.na profile
         </a>
@@ -293,10 +293,10 @@ export default function AccountPage() {
 
       {/* Subscription */}
       <section className="mb-8">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-400 mb-3">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-400 mb-3 dark:text-neutral-500">
           Subscription
         </h2>
-        <div className="p-4 border border-neutral-100 rounded">
+        <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">
@@ -312,7 +312,7 @@ export default function AccountPage() {
                   </span>
                 )}
               </p>
-              <p className="text-xs text-neutral-400 mt-0.5">
+              <p className="text-xs text-neutral-400 mt-0.5 dark:text-neutral-500">
                 {
                   {
                     free: "3 sites, manual rebuild — or subscribe from Pricing (Individual / Studio)",
@@ -331,10 +331,10 @@ export default function AccountPage() {
                 );
                 if (cents <= 0) {
                   return (
-                    <p className="text-[11px] text-neutral-400 max-w-[11rem] text-right leading-relaxed">
+                    <p className="text-[11px] text-neutral-400 max-w-[11rem] text-right leading-relaxed dark:text-neutral-500">
                       <Link
                         href="/#pricing"
-                        className="text-neutral-600 underline underline-offset-2"
+                        className="text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
                       >
                         Pricing
                       </Link>{" "}
@@ -358,7 +358,7 @@ export default function AccountPage() {
                 );
               })()}
             {account.plan === "pro" && (
-              <span className="text-xs text-neutral-400">
+              <span className="text-xs text-neutral-400 dark:text-neutral-500">
                 {account.subscriptionStatus}
               </span>
             )}

@@ -32,90 +32,45 @@ export default async function TemplatesPage() {
   const templates = await getTemplates();
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <header
-        style={{
-          padding: "2rem 2rem 1.5rem",
-          borderBottom: "1px solid #e5e5e5",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
+    <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 font-sans">
+      <header className="flex flex-col gap-4 border-b border-neutral-200 px-8 pb-6 pt-8 sm:flex-row sm:items-start sm:justify-between dark:border-neutral-800">
         <div>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>
-            Templates
-          </h1>
-          <p style={{ fontSize: "0.875rem", color: "#666", margin: 0 }}>
+          <h1 className="text-xl font-semibold text-neutral-950 dark:text-neutral-50">Templates</h1>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             Preview each template with sample Are.na content. Click to view full-screen.
           </p>
         </div>
         <Link
           href="/#templates"
-          style={{
-            fontSize: "0.75rem",
-            color: "#666",
-            textDecoration: "none",
-            padding: "0.375rem 0.75rem",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            whiteSpace: "nowrap",
-          }}
+          className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900"
         >
           Back to home
         </Link>
       </header>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(560px, 1fr))",
-          gap: "2rem",
-          padding: "2rem",
-        }}
-      >
+      <div className="grid grid-cols-1 gap-8 p-8 [grid-template-columns:repeat(auto-fill,minmax(560px,1fr))]">
         {templates.map((t) => (
-          <div key={t.slug} style={{ border: "1px solid #e5e5e5", borderRadius: "8px", overflow: "hidden" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "0.75rem 1rem",
-                borderBottom: "1px solid #e5e5e5",
-                background: "#fafafa",
-              }}
-            >
-              <div>
-                <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t.name}</span>
-                <span style={{ color: "#999", fontSize: "0.75rem", marginLeft: "0.5rem" }}>
-                  {t.description}
-                </span>
+          <div
+            key={t.slug}
+            className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="min-w-0">
+                <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t.name}</span>
+                <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">{t.description}</span>
               </div>
               <a
                 href={`/api/templates/preview?template=${t.slug}`}
                 target="_blank"
                 rel="noopener"
-                style={{
-                  fontSize: "0.75rem",
-                  color: "#666",
-                  textDecoration: "none",
-                  padding: "0.25rem 0.5rem",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                }}
+                className="inline-flex shrink-0 items-center rounded border border-neutral-200 px-2 py-1 text-xs text-neutral-600 transition-colors hover:bg-white dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-950"
               >
                 Open
               </a>
             </div>
             <iframe
               src={`/api/templates/preview?template=${t.slug}`}
-              style={{
-                width: "100%",
-                height: "500px",
-                border: "none",
-                display: "block",
-              }}
+              className="block h-[500px] w-full border-0 bg-white dark:bg-neutral-950"
               title={`${t.name} preview`}
             />
           </div>

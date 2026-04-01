@@ -143,7 +143,7 @@ function PlanDonut({ free, pro }: { free: number; pro: number }) {
               }
         }
       />
-      <div className="absolute inset-[22%] rounded-full bg-white" />
+      <div className="absolute inset-[22%] rounded-full bg-white dark:bg-neutral-900" />
     </div>
   );
 }
@@ -160,11 +160,11 @@ function StatCard({
   chart?: React.ReactNode;
 }) {
   return (
-    <div className="p-4 border border-neutral-100 rounded">
-      <p className="text-xs text-neutral-400">{label}</p>
+    <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+      <p className="text-xs text-neutral-400 dark:text-neutral-500">{label}</p>
       <div className="flex items-baseline gap-2">
         <p className="text-2xl font-medium mt-1">{value}</p>
-        {sub && <span className="text-xs text-neutral-400">{sub}</span>}
+        {sub && <span className="text-xs text-neutral-400 dark:text-neutral-500">{sub}</span>}
       </div>
       {chart && <div className="mt-3">{chart}</div>}
     </div>
@@ -218,10 +218,10 @@ export default function AdminPage() {
     return (
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 w-32 bg-neutral-100 rounded" />
+          <div className="h-4 w-32 bg-neutral-100 rounded dark:bg-neutral-800" />
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-neutral-50 rounded" />
+              <div key={i} className="h-32 bg-neutral-50 rounded dark:bg-neutral-900" />
             ))}
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function AdminPage() {
         <h1 className="text-lg font-medium">Admin</h1>
         <Link
           href="/admin/sites"
-          className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+          className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
         >
           All sites
         </Link>
@@ -274,7 +274,7 @@ export default function AdminPage() {
                 free={stats.planBreakdown.free}
                 pro={stats.planBreakdown.pro}
               />
-              <div className="flex min-w-0 flex-col gap-1.5 text-[10px] leading-tight text-neutral-500">
+              <div className="flex min-w-0 flex-col gap-1.5 text-[10px] leading-tight text-neutral-500 dark:text-neutral-400">
                 <div className="flex items-center gap-1.5">
                   <span
                     className="h-2 w-2 shrink-0 rounded-full bg-neutral-200"
@@ -290,7 +290,7 @@ export default function AdminPage() {
                     aria-hidden
                   />
                   <span className="truncate">
-                    Pro <span className="font-medium text-neutral-800">{stats.planBreakdown.pro}</span>
+                    Pro <span className="font-medium text-neutral-800 dark:text-neutral-200">{stats.planBreakdown.pro}</span>
                   </span>
                 </div>
               </div>
@@ -311,26 +311,26 @@ export default function AdminPage() {
 
       {/* Stripe subscriptions */}
       {billing && (
-        <section className="mb-8 p-4 border border-neutral-100 rounded">
-          <p className="text-xs text-neutral-400 uppercase tracking-wider mb-3">
+        <section className="mb-8 p-4 border border-neutral-100 rounded dark:border-neutral-800">
+          <p className="text-xs text-neutral-400 uppercase tracking-wider mb-3 dark:text-neutral-500">
             Subscriptions
           </p>
           <div className="flex items-center gap-6">
             <div>
               <p className="text-sm font-medium text-emerald-600">{billing.subscriptions.active}</p>
-              <p className="text-xs text-neutral-400">Active</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">Active</p>
             </div>
             <div>
               <p className="text-sm font-medium text-amber-600">{billing.subscriptions.pastDue}</p>
-              <p className="text-xs text-neutral-400">Past due</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">Past due</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-neutral-400">{billing.subscriptions.canceled}</p>
-              <p className="text-xs text-neutral-400">Canceled</p>
+              <p className="text-sm font-medium text-neutral-400 dark:text-neutral-500">{billing.subscriptions.canceled}</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">Canceled</p>
             </div>
             <div className="ml-auto text-right">
               <p className="text-sm font-medium">{billing.subscriptions.total}</p>
-              <p className="text-xs text-neutral-400">Total</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">Total</p>
             </div>
           </div>
         </section>
@@ -338,9 +338,9 @@ export default function AdminPage() {
 
       {/* Revenue chart — larger view */}
       {billing && revenueData.some((d) => d > 0) && (
-        <section className="mb-8 p-4 border border-neutral-100 rounded">
+        <section className="mb-8 p-4 border border-neutral-100 rounded dark:border-neutral-800">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-neutral-400 uppercase tracking-wider">
+            <p className="text-xs text-neutral-400 uppercase tracking-wider dark:text-neutral-500">
               Revenue (30 days)
             </p>
             <p className="text-sm font-medium">${billing.totalRevenue30d.toFixed(2)}</p>
@@ -359,28 +359,28 @@ export default function AdminPage() {
 
       {/* Recent sites table */}
       <section className="mb-8">
-        <h2 className="text-xs text-neutral-400 uppercase tracking-wider mb-4">
+        <h2 className="text-xs text-neutral-400 uppercase tracking-wider mb-4 dark:text-neutral-500">
           Recent Sites
         </h2>
-        <div className="border border-neutral-100 rounded overflow-hidden">
+        <div className="border border-neutral-100 rounded overflow-hidden dark:border-neutral-800">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-neutral-100 bg-neutral-50">
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">Subdomain</th>
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">Channel</th>
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">Template</th>
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">Status</th>
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">User</th>
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">Created</th>
-                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2">Feature</th>
+              <tr className="border-b border-neutral-100 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Subdomain</th>
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Channel</th>
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Template</th>
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Status</th>
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">User</th>
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Created</th>
+                <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Feature</th>
               </tr>
             </thead>
             <tbody>
               {stats.recentSites.map((site) => (
                 <tr key={site.id} className="border-b border-neutral-50 last:border-0">
                   <td className="px-3 py-2 text-xs font-medium">{site.subdomain}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-500">{site.channelTitle}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-400">{site.template}</td>
+                  <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">{site.channelTitle}</td>
+                  <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.template}</td>
                   <td className="px-3 py-2">
                     <span className={`text-xs px-1.5 py-0.5 rounded ${
                       site.published ? "bg-green-50 text-green-600" : "bg-neutral-50 text-neutral-400"
@@ -388,8 +388,8 @@ export default function AdminPage() {
                       {site.published ? "published" : "draft"}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-xs text-neutral-400">{site.arenaUsername}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-400">
+                  <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.arenaUsername}</td>
+                  <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">
                     {new Date(site.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-3 py-2">
@@ -416,21 +416,21 @@ export default function AdminPage() {
 
       {/* Featured sites */}
       <section>
-        <h2 className="text-xs text-neutral-400 uppercase tracking-wider mb-4">
+        <h2 className="text-xs text-neutral-400 uppercase tracking-wider mb-4 dark:text-neutral-500">
           Currently Featured
         </h2>
         {featuredSites.length === 0 ? (
-          <p className="text-sm text-neutral-400">No featured sites yet.</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500">No featured sites yet.</p>
         ) : (
           <div className="space-y-2">
             {featuredSites.map((site) => (
               <div
                 key={site.id}
-                className="flex items-center justify-between p-3 border border-neutral-100 rounded"
+                className="flex items-center justify-between p-3 border border-neutral-100 rounded dark:border-neutral-800"
               >
                 <div>
                   <p className="text-sm font-medium">{site.channelTitle}</p>
-                  <p className="text-xs text-neutral-400">
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500">
                     {site.subdomain}.tiny.garden &middot; by {site.arenaUsername}
                   </p>
                 </div>
