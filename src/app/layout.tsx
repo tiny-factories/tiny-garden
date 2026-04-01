@@ -33,9 +33,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased flex flex-col min-h-screen`}>
+      <body
+        className={`${inter.className} antialiased flex min-h-screen w-full min-w-0 flex-col`}
+      >
         <Nav />
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">{children}</div>
         <Footer />
         {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ? (
           <Script

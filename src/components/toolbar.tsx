@@ -349,8 +349,8 @@ export function Toolbar({
 
   if (hasSearch && hasViewSwitch && !hasChildren && viewMode && onViewModeChange) {
     return (
-      <div className="mb-4 flex items-center gap-2">
-        {searchInput}
+      <div className="mb-4 flex min-w-0 items-center gap-2">
+        <div className="min-w-0 flex-1">{searchInput}</div>
         <LayoutModeSwitch viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </div>
     );

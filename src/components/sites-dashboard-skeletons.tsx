@@ -18,10 +18,12 @@ function HeaderSkeleton() {
 
 function ToolbarSkeleton() {
   return (
-    <div className="mb-4 flex items-center gap-2">
-      <div
-        className={`${searchInputClassName} bg-neutral-50 animate-pulse pointer-events-none border-neutral-200`}
-      />
+    <div className="mb-4 flex min-w-0 items-center gap-2">
+      <div className="min-w-0 flex-1">
+        <div
+          className={`${searchInputClassName} bg-neutral-50 animate-pulse pointer-events-none border-neutral-200`}
+        />
+      </div>
       <div className="h-9 min-w-23 shrink-0 rounded-md border border-neutral-200 bg-neutral-100/80 animate-pulse" />
     </div>
   );
@@ -80,7 +82,7 @@ function CardBodySkeleton({ count }: { count: number }) {
 
 export function SitesPageSkeleton({ viewMode }: { viewMode: ViewMode }) {
   return (
-    <main className="min-h-screen max-w-4xl mx-auto px-4 py-16" aria-busy="true" aria-label="Loading sites">
+    <main className="min-h-screen w-full min-w-0 max-w-4xl mx-auto px-4 py-16" aria-busy="true" aria-label="Loading sites">
       <HeaderSkeleton />
       <ToolbarSkeleton />
       {viewMode === "list" ? (

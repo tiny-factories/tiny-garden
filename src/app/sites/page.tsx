@@ -354,7 +354,7 @@ export default function SitesPage() {
             : "3";
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto px-4 py-16">
+    <main className="min-h-screen w-full min-w-0 max-w-4xl mx-auto px-4 py-16">
       <div className="flex items-center justify-between mb-12">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
