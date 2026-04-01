@@ -457,28 +457,3 @@
     animation: none;
   }
 }
-
-/* Nav — flower patch sways on hover */
-@keyframes nav-patch-sway {
-  0%,
-  100% {
-    transform: rotate(calc(-1 * var(--patch-amp, 6deg)));
-  }
-  50% {
-    transform: rotate(var(--patch-amp, 6deg));
-  }
-}
-
-.nav-garden-patch .nav-patch-sway {
-  transform-origin: center bottom;
-}
-
-.nav-garden-patch:hover .nav-patch-sway {
-  animation: nav-patch-sway 0.48s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nav-garden-patch:hover .nav-patch-sway {
-    animation: none;
-  }
-}

@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { NavGardenPatch } from "@/components/nav-garden-patch";
 import { generatePlantDataURI, seedFromSubdomain } from "@/lib/garden-icon";
 
 const NAV_BRAND_PLANT_SRC = generatePlantDataURI(seedFromSubdomain("tiny.garden"));
@@ -39,7 +38,7 @@ export function Nav() {
   if (pathname.startsWith("/api/serve")) return null;
 
   return (
-    <nav className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-4 border-b border-neutral-100">
+    <nav className="flex w-full items-center justify-between gap-2 px-4 py-4 border-b border-neutral-100">
       <div className="flex min-w-0 justify-start">
         <Link
           href={isLoggedIn ? "/sites" : "/"}
@@ -56,11 +55,6 @@ export function Nav() {
           />
           tiny.garden
         </Link>
-      </div>
-      <div className="flex min-w-0 justify-center pointer-events-auto">
-        <div className="max-md:origin-bottom max-md:scale-[0.82]">
-          <NavGardenPatch />
-        </div>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-4">
         {isAdmin && (
