@@ -728,7 +728,7 @@ export default function SiteSettingsPage() {
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                      className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50"
                     >
                       {saving ? "Saving..." : saved ? "Saved" : "Save theme"}
                     </button>
@@ -801,8 +801,8 @@ export default function SiteSettingsPage() {
                         onClick={() => setSelectedTemplate(t.id)}
                         className={`text-left p-3 border rounded text-sm transition-colors ${
                           selectedTemplate === t.id
-                            ? "border-neutral-900 bg-neutral-50"
-                            : "border-neutral-100 hover:border-neutral-300"
+                            ? "border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-800"
+                            : "border-neutral-100 hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-600"
                         }`}
                       >
                         <p className="font-medium text-xs">{t.name}</p>
@@ -816,7 +816,7 @@ export default function SiteSettingsPage() {
                     <button
                       onClick={handleTemplateChange}
                       disabled={savingTemplate}
-                      className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                      className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50"
                     >
                       {savingTemplate ? "Saving..." : templateSaved ? "Saved" : "Change template"}
                     </button>
@@ -865,7 +865,7 @@ export default function SiteSettingsPage() {
                       <button
                         onClick={handleAddDomain}
                         disabled={domainLoading || !domainInput.trim()}
-                        className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50"
                       >
                         {domainLoading ? "Adding..." : "Add"}
                       </button>
@@ -1025,17 +1025,17 @@ export default function SiteSettingsPage() {
             </div>
           </div>
           <div
-            className={`border rounded-lg overflow-hidden bg-white transition-[border-color,box-shadow] duration-300 md:sticky md:top-8 ${
+            className={`border rounded-lg overflow-hidden bg-white dark:bg-neutral-900 transition-[border-color,box-shadow] duration-300 md:sticky md:top-8 ${
               iconLoading
-                ? "border-emerald-200/80 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]"
-                : "border-neutral-200"
+                ? "border-emerald-200/80 dark:border-emerald-800/50 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]"
+                : "border-neutral-200 dark:border-neutral-700"
             }`}
           >
             <div
               className={`flex items-center gap-2 px-3 py-2 border-b transition-colors duration-300 ${
                 iconLoading
-                  ? "border-emerald-100/90 bg-linear-to-r from-emerald-50/90 via-neutral-50 to-emerald-50/70"
-                  : "border-neutral-100 bg-neutral-50"
+                  ? "border-emerald-100/90 dark:border-emerald-900/40 bg-linear-to-r from-emerald-50/90 via-neutral-50 to-emerald-50/70 dark:from-emerald-950/50 dark:via-neutral-900 dark:to-emerald-950/40"
+                  : "border-neutral-100 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"
               }`}
             >
               <div className="flex items-center gap-1.5 shrink-0">
