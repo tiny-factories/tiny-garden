@@ -7,25 +7,20 @@ import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
 import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
-import {
-  getTemplateDisplayNames,
-  templateDisplayNameFallback,
-} from "@/lib/template-display-names";
-import { TemplateBadge } from "@/components/template-badge";
+import { getTemplateDisplayNames } from "@/lib/template-display-names";
+import { FeaturedSitesGallery } from "@/components/featured-sites-gallery";
 
 interface FeaturedSite {
   id: string;
   subdomain: string;
   channelTitle: string;
   template: string;
-  arenaUsername: string;
 }
 
 async function getFeaturedSites(): Promise<FeaturedSite[]> {
   try {
     const sites = await prisma.site.findMany({
       where: { featured: true, published: true },
-      include: { user: { select: { arenaUsername: true } } },
       orderBy: { createdAt: "desc" },
     });
     return sites.map((s) => ({
@@ -33,7 +28,6 @@ async function getFeaturedSites(): Promise<FeaturedSite[]> {
       subdomain: s.subdomain,
       channelTitle: s.channelTitle,
       template: s.template,
-      arenaUsername: s.user.arenaUsername,
     }));
   } catch {
     return [];
@@ -423,100 +417,10 @@ export default async function Home() {
         />
       </section>
 
-      {/* Gallery */}
-      <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100">
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-8">
-          Featured sites
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {featuredSites.length > 0
-            ? featuredSites.map((site) => {
-                const templateLabel =
-                  templateNames[site.template] ??
-                  templateDisplayNameFallback(site.template);
-                return (
-                  <a
-                    key={site.id}
-                    href={`/api/serve/${site.subdomain}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${site.channelTitle}, ${templateLabel} template — open site in a new tab`}
-                    className="border border-neutral-200 rounded-lg overflow-hidden group hover:border-neutral-400 transition-colors block"
-                  >
-                    <div className="relative bg-neutral-50 aspect-[16/10] overflow-hidden">
-                      <span className="absolute top-3 left-3 z-10 pointer-events-none">
-                        <TemplateBadge label={templateLabel} />
-                      </span>
-                      <span
-                        className="absolute top-3 right-3 z-10 inline-flex rounded-md bg-white/95 p-1.5 text-neutral-700 opacity-0 shadow-sm ring-1 ring-neutral-200/90 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none"
-                        aria-hidden
-                      >
-                        <ArrowUpRight className="size-3.5 sm:size-4 shrink-0" strokeWidth={2} />
-                      </span>
-                      <iframe
-                        src={`/api/serve/${site.subdomain}`}
-                        className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
-                        tabIndex={-1}
-                        title={`Preview of ${site.channelTitle}`}
-                      />
-                    </div>
-                    <div className="px-5 py-4 sm:px-6 sm:py-5">
-                      <p className="text-sm font-medium text-neutral-900">{site.channelTitle}</p>
-                    </div>
-                  </a>
-                );
-              })
-            : [
-                {
-                  title: "Field Notes",
-                  desc: "Research and observations",
-                  subdomain: "field-notes",
-                  template: "blog",
-                },
-                {
-                  title: "Visual References",
-                  desc: "Collected imagery and inspiration",
-                  subdomain: "visual-refs",
-                  template: "feed",
-                },
-                {
-                  title: "Reading List",
-                  desc: "Articles, essays, and books",
-                  subdomain: "reading-list",
-                  template: "document",
-                },
-                {
-                  title: "Studio Archive",
-                  desc: "Work in progress and documentation",
-                  subdomain: "studio-archive",
-                  template: "portfolio",
-                },
-              ].map((site) => {
-                const templateLabel =
-                  templateNames[site.template] ??
-                  templateDisplayNameFallback(site.template);
-                return (
-                  <div
-                    key={site.subdomain}
-                    className="border border-neutral-200 rounded overflow-hidden group"
-                  >
-                    <div className="relative bg-neutral-50 aspect-[16/10] flex items-center justify-center overflow-hidden">
-                      <span className="absolute top-3 left-3 z-10">
-                        <TemplateBadge label={templateLabel} />
-                      </span>
-                      <span className="text-xs text-neutral-300">
-                        {site.subdomain}.tiny.garden
-                      </span>
-                    </div>
-                    <div className="px-5 py-4 sm:px-6 sm:py-5">
-                      <p className="text-sm font-medium text-neutral-900">{site.title}</p>
-                      <p className="text-xs text-neutral-400 mt-1">{site.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-        </div>
-      </section>
+      <FeaturedSitesGallery
+        sites={featuredSites}
+        templateNames={templateNames}
+      />
 
       {/* CTA */}
       <section className="max-w-3xl mx-auto px-4 py-20 border-t border-neutral-100 text-center">
