@@ -297,11 +297,12 @@ function BetaAccessCard({
         </>
       ) : (
         <>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80">
-            Beta access
-          </p>
-          <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
-            We&apos;re opening {cap} spots — a few more people get in every day this week.
+          <p className="text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80">
+              Beta access
+            </span>
+            {" — "}
+            We&apos;re opening {cap} spots this week. A few more people get in every day.
           </p>
           <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
             Log in with Are.na to claim a spot. No credit card — pick a channel, pick a template, go
