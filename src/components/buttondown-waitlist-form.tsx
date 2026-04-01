@@ -2,8 +2,6 @@
 
 import { useState, type FormEvent } from "react";
 
-const TAG = "tiny-garden";
-
 export function ButtondownWaitlistForm({
   className = "",
   idPrefix = "waitlist",
@@ -14,19 +12,8 @@ export function ButtondownWaitlistForm({
   /** Shown after a successful subscribe (e.g. launch vs. beta capacity). */
   successMessage?: string;
 }) {
-  const pub = process.env.NEXT_PUBLIC_BUTTONDOWN_USER?.trim();
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
   const [message, setMessage] = useState("");
-
-  if (!pub) {
-    return (
-      <p className={`text-xs text-amber-700 ${className}`}>
-        Waitlist isn&apos;t configured yet (set NEXT_PUBLIC_BUTTONDOWN_USER).
-      </p>
-    );
-  }
-
-  const publication = pub;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,28 +28,31 @@ export function ButtondownWaitlistForm({
     }
 
     try {
-      const body = new URLSearchParams();
-      body.set("email", email);
-      body.append("tag", TAG);
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-      const res = await fetch(
-        `https://buttondown.com/api/emails/embed-subscribe/${encodeURIComponent(publication)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: body.toString(),
-        }
-      );
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
 
-      if (res.ok) {
+      if (res.ok && data.ok) {
         setStatus("ok");
         setMessage(successMessage);
         e.currentTarget.reset();
-      } else {
-        const text = await res.text();
-        setStatus("err");
-        setMessage(text || "Something went wrong. Try again.");
+        return;
       }
+
+      setStatus("err");
+      setMessage(
+        data.error ||
+          (res.status === 503
+            ? "Waitlist isn’t configured yet."
+            : "Something went wrong. Try again.")
+      );
     } catch {
       setStatus("err");
       setMessage("Network error. Try again.");

@@ -4,9 +4,10 @@ export const BETA_SPOTS = 50;
 
 /** Users who count toward closed-beta capacity (matches OAuth friend-grant logic). */
 export async function getBetaAccessCount(): Promise<number> {
-  return prisma.user.count({
+  const n = await prisma.user.count({
     where: { OR: [{ isFriend: true }, { isAdmin: true }] },
   });
+  return typeof n === "bigint" ? Number(n) : n;
 }
 
 export async function getBetaSpotsRemaining(): Promise<number> {
