@@ -6,7 +6,7 @@ import { LandingHeroAnimation } from "@/components/landing-hero-animation";
 import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
-import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
+import { isBetaFull } from "@/lib/beta";
 
 interface FeaturedSite {
   id: string;
@@ -71,9 +71,11 @@ function TemplatePreview({
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+/** Flip to true to show the Are.na → site diagram under the hero headline. */
+const SHOW_LANDING_HERO_ANIMATION = false;
+
 export default async function Home() {
   const featuredSites = await getFeaturedSites();
-  const spotsRemaining = await getBetaSpotsRemaining();
   const betaFull = await isBetaFull();
   return (
     <BetaLandingShell isBetaFull={betaFull}>
@@ -85,7 +87,7 @@ export default async function Home() {
           <br />
           into a website.
         </h1>
-        <LandingHeroAnimation />
+        {SHOW_LANDING_HERO_ANIMATION ? <LandingHeroAnimation /> : null}
         <p className="text-sm text-neutral-500 mt-4 max-w-md mx-auto leading-relaxed">
           Pick a channel, choose a template, get a site. No code, no hosting
           setup. Your Are.na content, published in seconds.
@@ -397,17 +399,14 @@ export default async function Home() {
           Pricing
         </h2>
         <p className="text-xs text-neutral-400 mb-10 max-w-xl leading-relaxed">
-          Use everything free while we test. Below is a peek at two future tiers —{" "}
+          Below is a peek at two future tiers —{" "}
           <span className="text-neutral-600">Individual</span> and{" "}
           <span className="text-neutral-600">Small studio</span> — with pay-what-you-can
-          sliders. Checkout isn&apos;t open yet; join via beta to publish today.
+          sliders. Checkout isn&apos;t open yet. Sign up above the preview to get notified when open
+          beta starts.
         </p>
 
-        <PayWhatYouCanPricing
-          spotsRemaining={spotsRemaining}
-          betaFull={betaFull}
-          betaSpots={BETA_SPOTS}
-        />
+        <PayWhatYouCanPricing />
       </section>
 
       {/* Gallery */}

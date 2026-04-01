@@ -7,9 +7,12 @@ const TAG = "tiny-garden";
 export function ButtondownWaitlistForm({
   className = "",
   idPrefix = "waitlist",
+  successMessage = "You’re on the list. We’ll email you when there’s room.",
 }: {
   className?: string;
   idPrefix?: string;
+  /** Shown after a successful subscribe (e.g. launch vs. beta capacity). */
+  successMessage?: string;
 }) {
   const pub = process.env.NEXT_PUBLIC_BUTTONDOWN_USER?.trim();
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
@@ -43,7 +46,7 @@ export function ButtondownWaitlistForm({
       body.append("tag", TAG);
 
       const res = await fetch(
-        `https://buttondown.email/api/emails/embed-subscribe/${encodeURIComponent(publication)}`,
+        `https://buttondown.com/api/emails/embed-subscribe/${encodeURIComponent(publication)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -53,7 +56,7 @@ export function ButtondownWaitlistForm({
 
       if (res.ok) {
         setStatus("ok");
-        setMessage("You’re on the list. We’ll email you when there’s room.");
+        setMessage(successMessage);
         e.currentTarget.reset();
       } else {
         const text = await res.text();

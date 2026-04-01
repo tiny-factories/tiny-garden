@@ -15,7 +15,6 @@ import {
   indexForSupportLevel,
   marketingSiteCap,
 } from "@/lib/pricing-tiers";
-import { BetaCtaLink } from "@/components/beta-landing-shell";
 import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 
 /**
@@ -238,17 +237,7 @@ function ComingSoonCardShell({
   );
 }
 
-type Props = {
-  spotsRemaining: number;
-  betaFull: boolean;
-  betaSpots: number;
-};
-
-export function PayWhatYouCanPricing({
-  spotsRemaining,
-  betaFull,
-  betaSpots,
-}: Props) {
+export function PayWhatYouCanPricing() {
   const individualCents = getCentsForIndividualStep(PREVIEW_INDIVIDUAL_STEP);
   const studioCents = getCentsForStudioLevel(PREVIEW_STUDIO_LEVEL);
   const individualIdx = indexForIndividualStep(PREVIEW_INDIVIDUAL_STEP);
@@ -256,14 +245,18 @@ export function PayWhatYouCanPricing({
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 px-4 py-4 sm:px-5 sm:py-5">
-        <p className="text-sm font-medium text-neutral-900">Free for testing</p>
+      <div className="rounded-lg border border-neutral-200 bg-neutral-50/40 px-4 py-4 sm:px-5 sm:py-5">
+        <p className="text-sm font-medium text-neutral-900">Closed beta</p>
         <p className="text-xs text-neutral-600 mt-1.5 leading-relaxed max-w-xl">
-          Everything in tiny.garden is <span className="font-medium text-neutral-800">free to use</span>{" "}
-          while we ship and learn. No card required — log in with Are.na and publish. The paid tiers
-          below are a <span className="font-medium text-neutral-800">preview</span> of where
-          pricing is headed; they&apos;re not available yet.
+          tiny.garden is in closed beta right now. Leave your email and we&apos;ll notify you when
+          open beta starts — no spam, one list.
         </p>
+        <div className="mt-4 max-w-md">
+          <ButtondownWaitlistForm
+            idPrefix="pricing-open-beta"
+            successMessage="You’re on the list. We’ll email you when open beta starts."
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 md:items-stretch">
@@ -383,47 +376,6 @@ export function PayWhatYouCanPricing({
             );
           })()}
         </ComingSoonCardShell>
-      </div>
-
-      <div className="border border-dashed border-neutral-200 rounded-lg p-6 sm:p-8 bg-neutral-50/30">
-        <p className="text-sm font-medium text-neutral-900">Beta access</p>
-        <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
-          We&apos;re still welcoming the first {betaSpots} accounts at no cost while we ship. After
-          that, new signups may wait for a spot or choose a paid tier once checkout goes live.
-        </p>
-        <div className="flex items-center justify-between gap-4 mt-6 mb-6">
-          <p className="text-sm font-medium text-neutral-700">
-            {spotsRemaining > 0
-              ? `${spotsRemaining} of ${betaSpots} free spots left`
-              : "All free spots claimed"}
-          </p>
-          {spotsRemaining > 0 && (
-            <div className="flex-1 max-w-[120px] h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-neutral-900 rounded-full transition-all"
-                style={{
-                  width: `${((betaSpots - spotsRemaining) / betaSpots) * 100}%`,
-                }}
-              />
-            </div>
-          )}
-        </div>
-        {betaFull ? (
-          <div className="space-y-4">
-            <p className="text-xs text-neutral-500 leading-relaxed">
-              Free spots are full for now. Join the waitlist and we&apos;ll email you when there&apos;s
-              room — paid checkout will open here when those plans launch.
-            </p>
-            <ButtondownWaitlistForm idPrefix="pwyc-waitlist" />
-          </div>
-        ) : (
-          <BetaCtaLink
-            hrefWhenOpen="/login"
-            className="inline-block px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
-          >
-            Start at $0
-          </BetaCtaLink>
-        )}
       </div>
     </div>
   );
