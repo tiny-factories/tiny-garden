@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BUTTONDOWN_WAITLIST_TAG } from "@/lib/buttondown-waitlist";
 
 export function Footer() {
@@ -10,6 +11,12 @@ export function Footer() {
       <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
         <span className="text-xs text-neutral-400 shrink-0">tiny.garden</span>
         <div className="flex items-center gap-4 min-w-0">
+          <Link
+            href="/docs"
+            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+          >
+            Docs
+          </Link>
           <a
             href="https://changelog.tiny.garden"
             className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"

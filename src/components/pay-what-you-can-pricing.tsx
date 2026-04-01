@@ -385,7 +385,7 @@ function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
             value={individualIdx}
             onChange={noopSliderChange}
             labels={INDIVIDUAL_SLIDER_STEPS.map((step) => {
-              const cents = def.presets[step];
+              const cents = getCentsForIndividualStep(step);
               return cents === 0 ? "$0" : `$${cents / 100}`;
             })}
             activeIndex={individualIdx}
