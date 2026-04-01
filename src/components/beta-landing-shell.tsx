@@ -1,14 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef } from "react";
+import { createContext, useContext } from "react";
 import Link from "next/link";
-import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 
-const SESSION_KEY = "tinygarden_beta_waitlist_modal_once";
+const PRICING_WAITLIST_HASH = "/#pricing";
 
 type Ctx = {
   isBetaFull: boolean;
-  openWaitlist: () => void;
 };
 
 const BetaLandingContext = createContext<Ctx | null>(null);
@@ -29,9 +27,9 @@ export function BetaCtaLink({
   const ctx = useBetaLanding();
   if (ctx?.isBetaFull) {
     return (
-      <button type="button" onClick={ctx.openWaitlist} className={className}>
+      <Link href={PRICING_WAITLIST_HASH} className={className} scroll>
         {children}
-      </button>
+      </Link>
     );
   }
   return (
@@ -48,9 +46,9 @@ export function BetaTryNowButton() {
   const ctx = useBetaLanding();
   if (ctx?.isBetaFull) {
     return (
-      <button type="button" onClick={ctx.openWaitlist} className={tryNowClass}>
+      <Link href={PRICING_WAITLIST_HASH} className={tryNowClass} scroll>
         Join waitlist
-      </button>
+      </Link>
     );
   }
   return (
@@ -67,60 +65,9 @@ export function BetaLandingShell({
   children: React.ReactNode;
   isBetaFull: boolean;
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  const openWaitlist = useCallback(() => {
-    dialogRef.current?.showModal();
-  }, []);
-
-  const close = useCallback(() => {
-    dialogRef.current?.close();
-  }, []);
-
-  useEffect(() => {
-    if (!isBetaFull) return;
-    if (typeof window === "undefined") return;
-    if (sessionStorage.getItem(SESSION_KEY)) return;
-    sessionStorage.setItem(SESSION_KEY, "1");
-    dialogRef.current?.showModal();
-  }, [isBetaFull]);
-
   return (
-    <BetaLandingContext.Provider value={{ isBetaFull, openWaitlist }}>
+    <BetaLandingContext.Provider value={{ isBetaFull }}>
       {children}
-      {isBetaFull && (
-        <dialog
-          ref={dialogRef}
-          className="backdrop:bg-black/40 rounded-lg border border-neutral-200 shadow-xl max-w-md w-[calc(100%-2rem)] p-0 open:flex open:flex-col bg-white"
-        >
-          <div className="p-6">
-            <h2 className="text-lg font-medium">Beta is full</h2>
-            <p className="text-sm text-neutral-500 mt-2 leading-relaxed">
-              All free beta spots are taken. Join the list and we&apos;ll notify you when we
-              open more. Supporters can still get lifetime access anytime — log in and choose
-              Become a supporter on your account.
-            </p>
-            <div className="mt-5">
-              <ButtondownWaitlistForm idPrefix="modal-waitlist" />
-            </div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-              <Link
-                href="/login"
-                className="text-sm text-neutral-600 underline underline-offset-2"
-              >
-                Log in (supporters)
-              </Link>
-              <button
-                type="button"
-                onClick={close}
-                className="text-sm text-neutral-400 hover:text-neutral-600"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </dialog>
-      )}
     </BetaLandingContext.Provider>
   );
 }

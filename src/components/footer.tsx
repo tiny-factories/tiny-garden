@@ -1,18 +1,30 @@
-import Link from "next/link";
+import { BUTTONDOWN_WAITLIST_TAG } from "@/lib/buttondown-waitlist";
 
 export function Footer() {
+  const pub = process.env.NEXT_PUBLIC_BUTTONDOWN_USER?.trim();
+  const newsletterSlug = pub || "TinyFactories";
+  const newsletterHref = `https://buttondown.com/${encodeURIComponent(newsletterSlug)}?tag=${encodeURIComponent(BUTTONDOWN_WAITLIST_TAG)}`;
+
   return (
     <footer className="w-full px-4 py-8 border-t border-neutral-100">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-neutral-400">tiny.garden</span>
-        <div className="flex items-center gap-4">
+      <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+        <span className="text-xs text-neutral-400 shrink-0">tiny.garden</span>
+        <div className="flex items-center gap-4 min-w-0">
           <a
             href="https://changelog.tiny.garden"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
           >
             Changelog
           </a>
-          <div className="flex items-center gap-3">
+          <a
+            href={newsletterHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+          >
+            Newsletter
+          </a>
+          <div className="flex items-center gap-3 shrink-0">
             {/* Are.na */}
             <a
               href="https://www.are.na/tiny-factories/channels"

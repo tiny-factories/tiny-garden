@@ -39,7 +39,7 @@ export const PRICING_PLANS = {
   individual: {
     id: "individual" as const,
     title: "Individual",
-    tagline: "Personal sites, portfolios, and side projects.",
+    tagline: "Personal sites and portfolios — a free base, with optional support if you want more.",
     presets: {
       free: 0,
       low: 300,
@@ -47,21 +47,21 @@ export const PRICING_PLANS = {
       high: 1500,
     } satisfies Record<IndividualSliderStep, number>,
     highlights: [
-      "Start at $0 — slide up when you want auto-rebuilds and more sites",
+      "$0 for essentials — only pay if you want daily rebuilds and higher limits",
     ],
   },
   studio: {
     id: "studio" as const,
     title: "Small studio",
-    tagline: "A few sites, client work, or a tiny team.",
+    tagline: "Teams, client work, or several sites at once.",
     presets: {
       low: 1500,
       medium: 2800,
       high: 5000,
     } satisfies Record<SupportLevel, number>,
     highlights: [
-      "For collectives, freelancers, or light client work",
-      "Higher default caps for multiple sites",
+      "Built for collectives, freelancers, and small studios",
+      "Higher caps for multiple sites by default",
     ],
   },
 } as const;

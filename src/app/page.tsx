@@ -400,11 +400,12 @@ export default async function Home() {
           Pricing
         </h2>
         <p className="text-xs text-neutral-400 mb-10 max-w-xl leading-relaxed">
-          Below is a peek at two future tiers —{" "}
-          <span className="text-neutral-600">Individual</span> and{" "}
-          <span className="text-neutral-600">Small studio</span> — with pay-what-you-can
-          sliders. Checkout isn&apos;t open yet. We&apos;re growing the beta to {BETA_SPOTS} spots —
-          the card above shows how full we are; when it&apos;s full, join the list to get in next.
+          <span className="text-neutral-600">Individual</span> always includes a real{" "}
+          <span className="text-neutral-600">$0</span> tier — publish from Are.na for free; pay only
+          if you want extras like daily rebuilds and more sites.{" "}
+          <span className="text-neutral-600">Small studio</span> is for heavier use. The cards below
+          are a preview (checkout isn&apos;t live yet). Beta is limited to {BETA_SPOTS} spots; the
+          card above shows availability, or join the waitlist when we&apos;re full.
         </p>
 
         <PayWhatYouCanPricing

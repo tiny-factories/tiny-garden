@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { NavGardenPatch } from "@/components/nav-garden-patch";
 import { generatePlantDataURI, seedFromSubdomain } from "@/lib/garden-icon";
 
 const NAV_BRAND_PLANT_SRC = generatePlantDataURI(seedFromSubdomain("tiny.garden"));
@@ -38,23 +39,30 @@ export function Nav() {
   if (pathname.startsWith("/api/serve")) return null;
 
   return (
-    <nav className="w-full px-4 py-4 flex items-center justify-between border-b border-neutral-100">
-      <Link
-        href={isLoggedIn ? "/sites" : "/"}
-        className="inline-flex items-center gap-2 text-sm font-medium text-neutral-900"
-      >
-        tiny.garden
-        <Image
-          src={NAV_BRAND_PLANT_SRC}
-          alt=""
-          width={20}
-          height={20}
-          unoptimized
-          className="size-5 shrink-0 rounded border border-neutral-200 bg-white object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
-          aria-hidden
-        />
-      </Link>
-      <div className="flex items-center gap-4">
+    <nav className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-4 border-b border-neutral-100">
+      <div className="flex min-w-0 justify-start">
+        <Link
+          href={isLoggedIn ? "/sites" : "/"}
+          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-900"
+        >
+          <Image
+            src={NAV_BRAND_PLANT_SRC}
+            alt=""
+            width={20}
+            height={20}
+            unoptimized
+            className="size-5 shrink-0 rounded border border-neutral-200 bg-white object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
+            aria-hidden
+          />
+          tiny.garden
+        </Link>
+      </div>
+      <div className="flex min-w-0 justify-center pointer-events-auto">
+        <div className="max-md:origin-bottom max-md:scale-[0.82]">
+          <NavGardenPatch />
+        </div>
+      </div>
+      <div className="flex min-w-0 items-center justify-end gap-4">
         {isAdmin && (
           <Link
             href="/admin"
