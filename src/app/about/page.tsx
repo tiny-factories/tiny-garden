@@ -4,13 +4,13 @@ export default function About() {
   return (
     <main className="min-h-screen">
       <section className="max-w-3xl mx-auto px-4 pt-16 pb-16">
-        <h1 className="text-2xl font-medium tracking-tight">About</h1>
+        <h1 className="text-2xl font-medium tracking-tight text-neutral-950 dark:text-neutral-50">About</h1>
 
-        <p className="text-sm text-neutral-500 mt-6 max-w-lg leading-relaxed">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-6 max-w-lg leading-relaxed">
           tiny.garden turns{" "}
           <a
             href="https://are.na"
-            className="underline underline-offset-2 hover:text-neutral-900 transition-colors"
+            className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             Are.na
           </a>{" "}
@@ -18,31 +18,31 @@ export default function About() {
           links in Are.na, tiny.garden lets you publish that collection as a
           clean, static site on its own subdomain — no code, no hosting setup.
           It&apos;s inspired by{" "}
-          <span className="text-neutral-700">Small Victories</span>, which did
+          <span className="text-neutral-700 dark:text-neutral-300">Small Victories</span>, which did
           the same for Dropbox.
         </p>
       </section>
 
       {/* How it works */}
-      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100">
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-6">
+      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100 dark:border-neutral-800">
+        <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-6">
           How it works
         </h2>
-        <ol className="space-y-4 text-sm text-neutral-500 leading-relaxed max-w-lg">
+        <ol className="space-y-4 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-lg">
           <li>
-            <span className="text-neutral-900 font-medium">1. Log in with Are.na</span>{" "}
+            <span className="text-neutral-900 dark:text-neutral-100 font-medium">1. Log in with Are.na</span>{" "}
             — connect your account in one click.
           </li>
           <li>
-            <span className="text-neutral-900 font-medium">2. Pick a channel</span>{" "}
+            <span className="text-neutral-900 dark:text-neutral-100 font-medium">2. Pick a channel</span>{" "}
             — any channel from your account becomes your content source.
           </li>
           <li>
-            <span className="text-neutral-900 font-medium">3. Choose a template</span>{" "}
+            <span className="text-neutral-900 dark:text-neutral-100 font-medium">3. Choose a template</span>{" "}
             — blog, portfolio, feed, slideshow, and more.
           </li>
           <li>
-            <span className="text-neutral-900 font-medium">4. Publish</span>{" "}
+            <span className="text-neutral-900 dark:text-neutral-100 font-medium">4. Publish</span>{" "}
             — your site is live at your-name.tiny.garden. Update the channel,
             rebuild the site.
           </li>
@@ -50,15 +50,15 @@ export default function About() {
       </section>
 
       {/* Built by */}
-      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100">
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-6">
+      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100 dark:border-neutral-800">
+        <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-6">
           Built by
         </h2>
-        <p className="text-sm text-neutral-500 leading-relaxed max-w-lg">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-lg">
           tiny.garden is made by{" "}
           <a
             href="https://tinyfactories.space"
-            className="underline underline-offset-2 hover:text-neutral-900 transition-colors"
+            className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             Tiny Factories
           </a>
@@ -67,13 +67,13 @@ export default function About() {
         <div className="mt-6 flex items-center gap-4">
           <a
             href="https://are.na"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors underline underline-offset-2"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors underline underline-offset-2"
           >
             Are.na
           </a>
           <a
             href="https://github.com/tiny-factories/tiny-garden"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors underline underline-offset-2"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors underline underline-offset-2"
           >
             GitHub
           </a>
@@ -81,37 +81,37 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 text-center">
-        <p className="text-sm text-neutral-500">
+      <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 dark:border-neutral-800 text-center">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           Ready to turn a channel into a site?
         </p>
         <Link
           href="/login"
-          className="inline-block mt-4 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors"
+          className="inline-block mt-4 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors"
         >
           Get started
         </Link>
       </section>
 
       {/* Footer */}
-      <footer className="max-w-3xl mx-auto px-4 py-8 border-t border-neutral-100 flex items-center justify-between">
-        <span className="text-xs text-neutral-400">tiny.garden</span>
+      <footer className="max-w-3xl mx-auto px-4 py-8 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+        <span className="text-xs text-neutral-400 dark:text-neutral-500">tiny.garden</span>
         <div className="flex gap-4">
           <a
             href="https://are.na"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
           >
             Are.na
           </a>
           <Link
             href="/about"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
           >
             About
           </Link>
           <Link
             href="/login"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
           >
             Log in
           </Link>

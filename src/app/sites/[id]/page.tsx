@@ -115,34 +115,34 @@ function FontPicker({
 
   return (
     <div ref={ref} className="relative">
-      <span className="text-xs text-neutral-500">{label}</span>
+      <span className="text-xs text-neutral-500 dark:text-neutral-400">{label}</span>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="mt-1 w-full text-left text-sm border border-neutral-200 rounded px-2 py-1.5 flex items-center justify-between hover:border-neutral-300 transition-colors"
+        className="mt-1 w-full text-left text-sm border border-neutral-200 rounded px-2 py-1.5 flex items-center justify-between hover:border-neutral-300 transition-colors dark:hover:border-neutral-600 dark:border-neutral-700"
       >
         <span className="truncate">{displayName}</span>
-        <svg className="w-3 h-3 text-neutral-400 shrink-0 ml-2" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="w-3 h-3 text-neutral-400 shrink-0 ml-2 dark:text-neutral-500" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3 5l3 3 3-3" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-neutral-200 rounded shadow-lg max-h-64 overflow-hidden flex flex-col">
-          <div className="p-2 border-b border-neutral-100">
+        <div className="absolute z-50 mt-1 w-full bg-white border border-neutral-200 rounded shadow-lg max-h-64 overflow-hidden flex flex-col dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search fonts..."
-              className="w-full text-sm px-2 py-1 border border-neutral-200 rounded outline-none focus:border-neutral-400"
+              className="w-full text-sm px-2 py-1 border border-neutral-200 rounded outline-none focus:border-neutral-400 dark:focus:border-neutral-500 dark:border-neutral-700"
               autoFocus
             />
           </div>
           <div className="overflow-y-auto flex-1">
             {builtinOptions.length > 0 && (
               <>
-                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider">
+                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider dark:text-neutral-500">
                   System
                 </div>
                 {builtinOptions.map((key) => (
@@ -150,8 +150,8 @@ function FontPicker({
                     key={key}
                     type="button"
                     onClick={() => { onChange(key); setOpen(false); setSearch(""); }}
-                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors ${
-                      value === key ? "bg-neutral-50 font-medium" : ""
+                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors ${
+                      value === key ? "bg-neutral-50 dark:bg-neutral-800 font-medium" : ""
                     }`}
                   >
                     {key === "system" ? "System (default)" : key.charAt(0).toUpperCase() + key.slice(1)}
@@ -161,7 +161,7 @@ function FontPicker({
             )}
             {googleOptions.length > 0 && (
               <>
-                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1">
+                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1 dark:border-neutral-800 dark:text-neutral-500">
                   Google Fonts
                 </div>
                 {googleOptions.map((name) => (
@@ -169,8 +169,8 @@ function FontPicker({
                     key={name}
                     type="button"
                     onClick={() => { onChange(`gf:${name}`); setOpen(false); setSearch(""); }}
-                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors ${
-                      value === `gf:${name}` ? "bg-neutral-50 font-medium" : ""
+                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors ${
+                      value === `gf:${name}` ? "bg-neutral-50 dark:bg-neutral-800 font-medium" : ""
                     }`}
                   >
                     {name}
@@ -180,13 +180,13 @@ function FontPicker({
             )}
             {search.trim() && !hasExactMatch && (
               <>
-                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1">
+                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1 dark:border-neutral-800 dark:text-neutral-500">
                   Custom
                 </div>
                 <button
                   type="button"
                   onClick={() => { onChange(`gf:${search.trim()}`); setOpen(false); setSearch(""); }}
-                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80"
                 >
                   Use &ldquo;{search.trim()}&rdquo; from Google Fonts
                 </button>
@@ -225,8 +225,8 @@ function ColorInput({
 
   return (
     <div className="min-w-0">
-      <span className="text-xs text-neutral-500 capitalize">{label}</span>
-      <div className="mt-1 flex h-9 w-full min-w-0 rounded border border-neutral-200 bg-white overflow-hidden transition-colors focus-within:border-neutral-400">
+      <span className="text-xs text-neutral-500 capitalize dark:text-neutral-400">{label}</span>
+      <div className="mt-1 flex h-9 w-full min-w-0 rounded border border-neutral-200 bg-white overflow-hidden transition-colors focus-within:border-neutral-400 dark:focus-within:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
         <input
           type="color"
           value={value}
@@ -240,7 +240,7 @@ function ColorInput({
           onChange={(e) => setHex(e.target.value)}
           onBlur={(e) => commitHex(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") commitHex(hex); }}
-          className="min-w-0 flex-1 border-0 border-l border-neutral-200 bg-transparent px-3 text-sm font-mono outline-none"
+          className="min-w-0 flex-1 border-0 border-l border-neutral-200 bg-transparent px-3 text-sm font-mono outline-none dark:border-neutral-700"
           placeholder="#000000"
           spellCheck={false}
           autoComplete="off"
@@ -305,7 +305,7 @@ function PlantIconFrame({
   if (!svg) {
     return (
       <div
-        className={`relative shrink-0 aspect-square ${sizeClass} overflow-visible border border-neutral-200 rounded bg-neutral-50 animate-pulse${growing ? " border-emerald-200/80" : ""}${extra}`}
+        className={`relative shrink-0 aspect-square ${sizeClass} overflow-visible border border-neutral-200 dark:border-neutral-700 rounded bg-neutral-50 dark:bg-neutral-900 animate-pulse${growing ? " border-emerald-200/80 dark:border-emerald-800/50" : ""}${extra}`}
         {...a11y}
       >
         {showPollinator && !growing && (
@@ -317,7 +317,7 @@ function PlantIconFrame({
 
   return (
     <div
-      className={`relative shrink-0 aspect-square ${sizeClass} border border-neutral-200 rounded bg-white flex items-center justify-center p-1 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full transition-[border-color,box-shadow] duration-300 overflow-visible${growingCls} ${plantMotionCls}${extra}`}
+      className={`relative shrink-0 aspect-square ${sizeClass} border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 flex items-center justify-center p-1 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full transition-[border-color,box-shadow] duration-300 overflow-visible${growingCls} ${plantMotionCls}${extra}`}
       {...a11y}
     >
       <div
@@ -586,7 +586,7 @@ export default function SiteSettingsPage() {
   if (!site) {
     return (
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <p className="text-sm text-neutral-400">Site not found.</p>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">Site not found.</p>
       </main>
     );
   }
@@ -599,14 +599,14 @@ export default function SiteSettingsPage() {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg font-medium">
             <Link
               href="/sites"
-              className="text-neutral-400 hover:text-neutral-600 shrink-0 inline-flex"
+              className="text-neutral-400 hover:text-neutral-600 shrink-0 inline-flex dark:hover:text-neutral-300 dark:text-neutral-500"
               aria-label="Back to sites"
             >
               <ArrowBigLeft className="size-7" strokeWidth={1.75} aria-hidden />
             </Link>
-            <h1 className="text-lg font-medium">{site.channelTitle}</h1>
+            <h1 className="text-lg font-medium text-neutral-950 dark:text-neutral-50">{site.channelTitle}</h1>
           </div>
-          <p className="text-xs text-neutral-400 mt-1">{site.subdomain}.tiny.garden &middot; {site.template}</p>
+          <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500">{site.subdomain}.tiny.garden &middot; {site.template}</p>
         </div>
       </div>
 
@@ -634,8 +634,8 @@ export default function SiteSettingsPage() {
             <div className="space-y-4">
               {/* Site Icon — available on all plans */}
               <div>
-                <h3 className="text-xs font-medium text-neutral-500 mb-3">Site Icon</h3>
-                <div className="p-4 border border-neutral-100 rounded">
+                <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Site Icon</h3>
+                <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
                   <div className="flex items-center gap-4">
                     <PlantIconFrame
                       svg={iconSvg}
@@ -647,9 +647,9 @@ export default function SiteSettingsPage() {
                       showPollinator={showPollinator}
                     />
                     <div>
-                      <p className="text-xs text-neutral-500 mb-2 leading-relaxed">
+                      <p className="text-xs text-neutral-500 mb-2 leading-relaxed dark:text-neutral-400">
                         Your site&apos;s unique plant icon, used as favicon and in the footer.
-                        <span className="text-neutral-400"> Rebuild your site to update the favicon.</span>
+                        <span className="text-neutral-400 dark:text-neutral-500"> Rebuild your site to update the favicon.</span>
                       </p>
                       <button
                         type="button"
@@ -668,7 +668,7 @@ export default function SiteSettingsPage() {
                           setIconLoading(false);
                         }}
                         disabled={iconLoading}
-                        className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50 dark:hover:bg-neutral-800/80 dark:border-neutral-700"
                       >
                         {iconLoading ? "Growing..." : "Grow new plant"}
                       </button>
@@ -678,13 +678,13 @@ export default function SiteSettingsPage() {
               </div>
 
               {!canCustomize ? (
-                <div className="p-4 border border-neutral-100 rounded">
-                  <p className="text-sm text-neutral-500">
+                <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     Custom themes are available on Pro and Studio plans.
                   </p>
                   <Link
                     href="/account"
-                    className="text-xs text-neutral-400 underline underline-offset-2 mt-2 inline-block"
+                    className="text-xs text-neutral-400 underline underline-offset-2 mt-2 inline-block dark:text-neutral-500"
                   >
                     Upgrade
                   </Link>
@@ -692,8 +692,8 @@ export default function SiteSettingsPage() {
               ) : (
                 <>
                   {/* Colors */}
-                  <div className="p-4 border border-neutral-100 rounded">
-                    <h3 className="text-xs font-medium text-neutral-500 mb-3">Colors</h3>
+                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                    <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Colors</h3>
                     <div className="grid grid-cols-2 gap-3">
                       {(Object.keys(DEFAULT_COLORS) as (keyof ThemeColors)[]).map((key) => (
                         <ColorInput
@@ -707,8 +707,8 @@ export default function SiteSettingsPage() {
                   </div>
 
                   {/* Fonts */}
-                  <div className="p-4 border border-neutral-100 rounded">
-                    <h3 className="text-xs font-medium text-neutral-500 mb-3">Fonts</h3>
+                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                    <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Fonts</h3>
                     <div className="space-y-3">
                       <FontPicker
                         label="Headings"
@@ -734,12 +734,12 @@ export default function SiteSettingsPage() {
                     </button>
                     <button
                       onClick={handleReset}
-                      className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                      className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
                     >
                       Reset
                     </button>
                   </div>
-                  <p className="text-xs text-neutral-400">
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500">
                     Rebuild your site to apply changes.
                   </p>
                 </>
@@ -752,7 +752,7 @@ export default function SiteSettingsPage() {
             <div className="space-y-4">
               {/* Template Picker */}
               <div>
-                <h3 className="text-xs font-medium text-neutral-500 mb-3">Template</h3>
+                <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Template</h3>
                 <SearchInput
                   value={configSearch}
                   onChange={(e) => setConfigSearch(e.target.value)}
@@ -763,13 +763,13 @@ export default function SiteSettingsPage() {
                 {/* Narrow screens: compact dropdown */}
                 <div className="md:hidden space-y-2">
                   {templateSelectOptions.length === 0 ? (
-                    <p className="text-xs text-neutral-400">No templates match your search.</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">No templates match your search.</p>
                   ) : (
                     <>
                       <select
                         value={selectedTemplate}
                         onChange={(e) => setSelectedTemplate(e.target.value)}
-                        className="w-full text-sm border border-neutral-200 rounded px-2 py-2 outline-none focus:border-neutral-400 bg-white"
+                        className="w-full text-sm border border-neutral-200 rounded px-2 py-2 outline-none focus:border-neutral-400 bg-white dark:focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-900"
                         aria-label="Choose template"
                       >
                         {templateSelectOptions.map((t) => (
@@ -781,7 +781,7 @@ export default function SiteSettingsPage() {
                       {(() => {
                         const meta = templates.find((t) => t.id === selectedTemplate);
                         return meta?.description ? (
-                          <p className="text-xs text-neutral-400 leading-snug">{meta.description}</p>
+                          <p className="text-xs text-neutral-400 leading-snug dark:text-neutral-500">{meta.description}</p>
                         ) : null;
                       })()}
                     </>
@@ -789,7 +789,7 @@ export default function SiteSettingsPage() {
                 </div>
                 {/* md+: card grid */}
                 {filteredTemplates.length === 0 ? (
-                  <p className="hidden md:block text-xs text-neutral-400 py-1">
+                  <p className="hidden md:block text-xs text-neutral-400 py-1 dark:text-neutral-500">
                     No templates match your search.
                   </p>
                 ) : (
@@ -806,7 +806,7 @@ export default function SiteSettingsPage() {
                         }`}
                       >
                         <p className="font-medium text-xs">{t.name}</p>
-                        <p className="text-xs text-neutral-400 mt-0.5 line-clamp-2">{t.description}</p>
+                        <p className="text-xs text-neutral-400 mt-0.5 line-clamp-2 dark:text-neutral-500">{t.description}</p>
                       </button>
                     ))}
                   </div>
@@ -822,7 +822,7 @@ export default function SiteSettingsPage() {
                     </button>
                     <button
                       onClick={() => setSelectedTemplate(site.template)}
-                      className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                      className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
                     >
                       Cancel
                     </button>
@@ -832,25 +832,25 @@ export default function SiteSettingsPage() {
 
               {/* Custom Domain */}
               <div>
-                <h3 className="text-xs font-medium text-neutral-500 mb-3">
+                <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">
                   Custom Domain{" "}
-                  <span className="font-normal text-neutral-400">[beta]</span>
+                  <span className="font-normal text-neutral-400 dark:text-neutral-500">[beta]</span>
                 </h3>
                 {!canCustomize ? (
-                  <div className="p-4 border border-neutral-100 rounded">
-                    <p className="text-sm text-neutral-500">
+                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
                       Custom domains are available on Pro and Studio plans.
                     </p>
                     <Link
                       href="/account"
-                      className="text-xs text-neutral-400 underline underline-offset-2 mt-2 inline-block"
+                      className="text-xs text-neutral-400 underline underline-offset-2 mt-2 inline-block dark:text-neutral-500"
                     >
                       Upgrade
                     </Link>
                   </div>
                 ) : !domainStatus?.domain ? (
-                  <div className="p-4 border border-neutral-100 rounded">
-                    <p className="text-xs text-neutral-400 mb-3">
+                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                    <p className="text-xs text-neutral-400 mb-3 dark:text-neutral-500">
                       Point your own domain to this site.
                     </p>
                     <div className="flex gap-2">
@@ -860,7 +860,7 @@ export default function SiteSettingsPage() {
                         onChange={(e) => setDomainInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleAddDomain()}
                         placeholder="blog.example.com"
-                        className="flex-1 text-sm px-3 py-1.5 border border-neutral-200 rounded outline-none focus:border-neutral-400 transition-colors"
+                        className="flex-1 text-sm px-3 py-1.5 border border-neutral-200 rounded outline-none focus:border-neutral-400 transition-colors dark:focus:border-neutral-500 dark:border-neutral-700"
                       />
                       <button
                         onClick={handleAddDomain}
@@ -875,7 +875,7 @@ export default function SiteSettingsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 border border-neutral-100 rounded space-y-3">
+                  <div className="p-4 border border-neutral-100 rounded space-y-3 dark:border-neutral-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{domainStatus.domain}</span>
@@ -902,16 +902,16 @@ export default function SiteSettingsPage() {
 
                     {!domainStatus.verified && (
                       <div className="space-y-2">
-                        <p className="text-xs text-neutral-500">
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
                           Add this DNS record with your provider:
                         </p>
-                        <div className="bg-neutral-50 rounded p-3 text-xs font-mono space-y-2">
+                        <div className="bg-neutral-50 rounded p-3 text-xs font-mono space-y-2 dark:bg-neutral-900">
                           {domainStatus.domain && !domainStatus.domain.split(".").slice(0, -2).length ? (
                             <>
                               <div className="grid grid-cols-3 gap-2">
-                                <span className="text-neutral-400">Type</span>
-                                <span className="text-neutral-400">Name</span>
-                                <span className="text-neutral-400">Value</span>
+                                <span className="text-neutral-400 dark:text-neutral-500">Type</span>
+                                <span className="text-neutral-400 dark:text-neutral-500">Name</span>
+                                <span className="text-neutral-400 dark:text-neutral-500">Value</span>
                               </div>
                               <div className="grid grid-cols-3 gap-2">
                                 <span>A</span>
@@ -922,9 +922,9 @@ export default function SiteSettingsPage() {
                           ) : (
                             <>
                               <div className="grid grid-cols-3 gap-2">
-                                <span className="text-neutral-400">Type</span>
-                                <span className="text-neutral-400">Name</span>
-                                <span className="text-neutral-400">Value</span>
+                                <span className="text-neutral-400 dark:text-neutral-500">Type</span>
+                                <span className="text-neutral-400 dark:text-neutral-500">Name</span>
+                                <span className="text-neutral-400 dark:text-neutral-500">Value</span>
                               </div>
                               <div className="grid grid-cols-3 gap-2">
                                 <span>CNAME</span>
@@ -935,7 +935,7 @@ export default function SiteSettingsPage() {
                           )}
                           {domainStatus.verification && domainStatus.verification.length > 0 && (
                             <>
-                              <div className="border-t border-neutral-200 my-2" />
+                              <div className="border-t border-neutral-200 my-2 dark:border-neutral-700" />
                               {domainStatus.verification.map((v, i) => (
                                 <div key={i} className="grid grid-cols-3 gap-2">
                                   <span>{v.type}</span>
@@ -950,11 +950,11 @@ export default function SiteSettingsPage() {
                           <button
                             onClick={handleCheckDomain}
                             disabled={domainLoading}
-                            className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50"
+                            className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50 dark:hover:bg-neutral-800/80 dark:border-neutral-700"
                           >
                             {domainLoading ? "Checking..." : "Check status"}
                           </button>
-                          <p className="text-xs text-neutral-400">
+                          <p className="text-xs text-neutral-400 dark:text-neutral-500">
                             DNS can take a few minutes.
                           </p>
                         </div>
@@ -962,13 +962,13 @@ export default function SiteSettingsPage() {
                     )}
 
                     {domainStatus.verified && (
-                      <p className="text-xs text-neutral-400">
+                      <p className="text-xs text-neutral-400 dark:text-neutral-500">
                         Live at{" "}
                         <a
                           href={`https://${domainStatus.domain}`}
                           target="_blank"
                           rel="noopener"
-                          className="underline underline-offset-2 hover:text-neutral-600"
+                          className="underline underline-offset-2 hover:text-neutral-600 dark:hover:text-neutral-300"
                         >
                           https://{domainStatus.domain}
                         </a>
@@ -979,14 +979,14 @@ export default function SiteSettingsPage() {
               </div>
 
               {/* Channel info */}
-              <div className="p-4 border border-neutral-100 rounded">
-                <h3 className="text-xs font-medium text-neutral-500 mb-2">Channel</h3>
+              <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                <h3 className="text-xs font-medium text-neutral-500 mb-2 dark:text-neutral-400">Channel</h3>
                 <p className="text-sm">{site.channelTitle}</p>
                 <a
                   href={`https://www.are.na/channel/${site.channelSlug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-neutral-400 underline underline-offset-2 mt-1 inline-block"
+                  className="text-xs text-neutral-400 underline underline-offset-2 mt-1 inline-block dark:text-neutral-500"
                 >
                   View on Are.na
                 </a>
@@ -997,8 +997,8 @@ export default function SiteSettingsPage() {
 
         {/* Right panel — Live Preview (stacked under controls on small screens) */}
         <div className="w-full min-w-0 flex-1 space-y-3">
-          <div className="border border-neutral-200 rounded-lg p-3 bg-white">
-            <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider mb-2">
+          <div className="border border-neutral-200 rounded-lg p-3 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+            <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider mb-2 dark:text-neutral-500">
               Share preview
             </p>
             <div className="flex gap-3">
@@ -1012,13 +1012,13 @@ export default function SiteSettingsPage() {
                 showPollinator={showPollinator}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-neutral-400 truncate">
+                <p className="text-[11px] text-neutral-400 truncate dark:text-neutral-500">
                   {site.subdomain}.tiny.garden
                 </p>
-                <p className="text-sm font-medium text-neutral-800 truncate">
+                <p className="text-sm font-medium text-neutral-800 truncate dark:text-neutral-200">
                   {site.channelTitle}
                 </p>
-                <p className="text-xs text-neutral-500 mt-1 leading-snug">
+                <p className="text-xs text-neutral-500 mt-1 leading-snug dark:text-neutral-400">
                   Same square icon attached to this site in the preview page&apos;s social metadata.
                 </p>
               </div>
@@ -1107,7 +1107,7 @@ export default function SiteSettingsPage() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-96 text-sm text-neutral-400">
+              <div className="flex items-center justify-center h-96 text-sm text-neutral-400 dark:text-neutral-500">
                 Select a template to preview
               </div>
             )}

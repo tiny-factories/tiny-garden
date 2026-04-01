@@ -23,11 +23,3 @@ export async function getTemplateDisplayNames(): Promise<Record<string, string>>
   }
   return map;
 }
-
-export function templateDisplayNameFallback(slug: string): string {
-  if (!slug) return "Template";
-  return slug
-    .split(/[-_]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}

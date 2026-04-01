@@ -190,20 +190,20 @@ export default function DocsPage() {
   return (
     <main className="min-h-screen">
       <section className="max-w-3xl mx-auto px-4 pt-16 pb-8">
-        <p className="text-xs text-neutral-400 uppercase tracking-wider mb-3">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-3">
           Documentation
         </p>
-        <h1 className="text-2xl font-medium tracking-tight">Blocks and templates</h1>
-        <p className="text-sm text-neutral-500 mt-6 max-w-lg leading-relaxed">
+        <h1 className="text-2xl font-medium tracking-tight text-neutral-950 dark:text-neutral-50">Blocks and templates</h1>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-6 max-w-lg leading-relaxed">
           When you publish a site, tiny.garden pulls every block from your Are.na channel,
           normalizes it into one of five types, and your chosen template decides how that
           data is laid out on the page. Block order follows your channel on Are.na.
         </p>
-        <p className="text-sm text-neutral-500 mt-4 max-w-lg leading-relaxed">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-4 max-w-lg leading-relaxed">
           Templates are{" "}
           <a
             href="https://github.com/tiny-factories/tiny-garden/tree/main/templates"
-            className="underline underline-offset-2 hover:text-neutral-900 transition-colors"
+            className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -213,24 +213,24 @@ export default function DocsPage() {
         </p>
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100">
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-6">
+      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100 dark:border-neutral-800">
+        <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-6">
           From Are.na to block types
         </h2>
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
           <table className="w-full text-sm text-left border-collapse min-w-lg">
             <thead>
-              <tr className="border-b border-neutral-200 text-neutral-400 text-xs uppercase tracking-wider">
+              <tr className="border-b border-neutral-200 dark:border-neutral-700 text-neutral-400 dark:text-neutral-500 text-xs uppercase tracking-wider">
                 <th className="py-2 pr-4 font-medium align-bottom">Are.na block</th>
                 <th className="py-2 pr-4 font-medium align-bottom">Site type</th>
                 <th className="py-2 font-medium align-bottom">What the template reads</th>
               </tr>
             </thead>
-            <tbody className="text-neutral-600">
+            <tbody className="text-neutral-600 dark:text-neutral-400">
               {blockTypes.map((row) => (
-                <tr key={row.type} className="border-b border-neutral-100">
-                  <td className="py-3 pr-4 align-top text-neutral-900">{row.arena}</td>
-                  <td className="py-3 pr-4 align-top font-mono text-xs text-neutral-500">
+                <tr key={row.type} className="border-b border-neutral-100 dark:border-neutral-800">
+                  <td className="py-3 pr-4 align-top text-neutral-900 dark:text-neutral-100">{row.arena}</td>
+                  <td className="py-3 pr-4 align-top font-mono text-xs text-neutral-500 dark:text-neutral-400">
                     {row.type}
                   </td>
                   <td className="py-3 align-top leading-relaxed">{row.fields}</td>
@@ -239,28 +239,28 @@ export default function DocsPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-neutral-400 mt-6 leading-relaxed max-w-lg">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-6 leading-relaxed max-w-lg">
           Every block also carries metadata such as{" "}
-          <span className="font-mono text-neutral-500">id</span>,{" "}
-          <span className="font-mono text-neutral-500">position</span>,{" "}
-          <span className="font-mono text-neutral-500">created_at</span>, and a link back to
+          <span className="font-mono text-neutral-500 dark:text-neutral-400">id</span>,{" "}
+          <span className="font-mono text-neutral-500 dark:text-neutral-400">position</span>,{" "}
+          <span className="font-mono text-neutral-500 dark:text-neutral-400">created_at</span>, and a link back to
           Are.na. Templates use these fields only when they need them (for example, dates on
           Timeline, or comment count on Feature Requests).
         </p>
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100">
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-6">
+      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100 dark:border-neutral-800">
+        <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-6">
           By template
         </h2>
         <ul className="space-y-12">
           {templates.map((t) => (
             <li key={t.id}>
-              <h3 className="text-sm font-medium text-neutral-900">{t.name}</h3>
-              <p className="text-sm text-neutral-500 mt-2 leading-relaxed max-w-lg">
+              <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{t.name}</h3>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 leading-relaxed max-w-lg">
                 {t.summary}
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-neutral-600 leading-relaxed max-w-lg list-disc pl-5">
+              <ul className="mt-4 space-y-2 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-lg list-disc pl-5">
                 {t.notes.map((note) => (
                   <li key={note}>{note}</li>
                 ))}
@@ -270,18 +270,18 @@ export default function DocsPage() {
         </ul>
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100 pb-20">
-        <p className="text-sm text-neutral-500 leading-relaxed">
+      <section className="max-w-3xl mx-auto px-4 py-12 border-t border-neutral-100 dark:border-neutral-800 pb-20">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
           <Link
             href="/"
-            className="underline underline-offset-2 hover:text-neutral-900 transition-colors"
+            className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             Home
           </Link>
           {" · "}
           <Link
             href="/about"
-            className="underline underline-offset-2 hover:text-neutral-900 transition-colors"
+            className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             About
           </Link>

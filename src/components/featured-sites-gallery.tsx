@@ -12,7 +12,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { templateDisplayNameFallback } from "@/lib/template-display-names";
+import { templateDisplayNameFallback } from "@/lib/template-display-name-fallback";
 
 export type FeaturedSiteForGallery = {
   id: string;
