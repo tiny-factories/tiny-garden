@@ -15,7 +15,9 @@ import {
   indexForSupportLevel,
   marketingSiteCap,
 } from "@/lib/pricing-tiers";
+import { BetaCtaLink } from "@/components/beta-landing-shell";
 import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
+import { LandingCard } from "@/components/landing-card";
 
 /**
  * Match native range thumb centers: stops sit at i/(n-1) along the track.
@@ -204,7 +206,25 @@ function noopSliderPick(_i: number) {
   /* tick labels non-interactive when disabled */
 }
 
-function ComingSoonCardShell({
+function ComingSoonOverlay() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end overflow-hidden p-4 pb-5"
+      aria-hidden
+    >
+      <span
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-16deg] whitespace-nowrap text-[clamp(2rem,11vw,3.25rem)] font-semibold uppercase leading-none tracking-tight text-neutral-300/40 select-none"
+      >
+        Coming soon
+      </span>
+      <p className="relative z-[1] text-center text-[10px] font-medium uppercase tracking-wider text-neutral-500/90">
+        Preview only
+      </p>
+    </div>
+  );
+}
+
+function ComingSoonPricingCard({
   planLabel,
   children,
 }: {
@@ -212,182 +232,242 @@ function ComingSoonCardShell({
   children: ReactNode;
 }) {
   return (
-    <div className="relative">
-      <div
-        className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 flex flex-col h-full md:min-h-[36rem] opacity-[0.48] saturate-[0.72] pointer-events-none select-none"
+    <div
+      className="relative"
+      role="group"
+      aria-label={`${planLabel} — preview only, coming soon`}
+    >
+      <LandingCard
         inert
-        aria-label={`${planLabel} — preview only, coming soon`}
+        className="flex flex-col h-full md:min-h-[36rem] opacity-[0.48] saturate-[0.72] pointer-events-none select-none"
+        variant="default"
       >
         {children}
-      </div>
-      <div
-        className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end overflow-hidden rounded-xl p-4 pb-5"
-        aria-hidden
-      >
-        <span
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-16deg] whitespace-nowrap text-[clamp(2rem,11vw,3.25rem)] font-semibold uppercase leading-none tracking-tight text-neutral-300/40 select-none"
-        >
-          Coming soon
-        </span>
-        <p className="relative z-[1] text-center text-[10px] font-medium uppercase tracking-wider text-neutral-500/90">
-          Preview only
-        </p>
-      </div>
+      </LandingCard>
+      <ComingSoonOverlay />
     </div>
   );
 }
 
-export function PayWhatYouCanPricing() {
-  const individualCents = getCentsForIndividualStep(PREVIEW_INDIVIDUAL_STEP);
-  const studioCents = getCentsForStudioLevel(PREVIEW_STUDIO_LEVEL);
-  const individualIdx = indexForIndividualStep(PREVIEW_INDIVIDUAL_STEP);
-  const studioIdx = indexForSupportLevel(PREVIEW_STUDIO_LEVEL);
+function BetaAccessCard({
+  spotsRemaining,
+  betaFull,
+  betaSpots,
+}: {
+  spotsRemaining: number;
+  betaFull: boolean;
+  betaSpots: number;
+}) {
+  const used = betaSpots - spotsRemaining;
+  const pctFilled = betaSpots > 0 ? Math.min(100, (used / betaSpots) * 100) : 0;
 
   return (
-    <div className="space-y-10 sm:space-y-12">
-      <div className="relative overflow-hidden rounded-xl border border-emerald-200/60 bg-linear-to-br from-white via-emerald-50/35 to-teal-50/50 px-4 py-5 sm:px-6 sm:py-6 shadow-sm ring-1 ring-emerald-500/10">
-        <div
-          className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-emerald-400/15 blur-2xl"
-          aria-hidden
-        />
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-800/80">
-          Rolling invites
-        </p>
-        <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
-          Beta is closed right now — we&apos;re letting more people in every day.
-        </p>
-        <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
-          Over the next week we&apos;ll keep adding folks from the waitlist. Leave your email and
-          we&apos;ll ping you as soon as there&apos;s a spot with your name on it.
-        </p>
-        <p className="mt-2 text-xs text-neutral-500 max-w-xl">
-          One list, one heads-up when you&apos;re up. No newsletter spam.
-        </p>
-        <div className="mt-5 max-w-md">
-          <ButtondownWaitlistForm
-            idPrefix="pricing-open-beta"
-            successMessage="You’re on the list — we’ll email you as we open more spots this week."
+    <LandingCard variant="accent">
+      {betaFull ? (
+        <>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80">
+            Rolling invites
+          </p>
+          <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
+            All {betaSpots} beta spots are full — we&apos;re letting more people in every day.
+          </p>
+          <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
+            Over the next week we&apos;ll keep pulling from the waitlist. Leave your email and
+            we&apos;ll ping you as soon as there&apos;s a spot with your name on it.
+          </p>
+          <p className="mt-2 text-xs text-neutral-500 max-w-xl">
+            One list, one heads-up when you&apos;re up. No newsletter spam.
+          </p>
+          <div className="mt-5 max-w-md">
+            <ButtondownWaitlistForm
+              idPrefix="pricing-open-beta"
+              successMessage="You’re on the list — we’ll email you as we open more spots this week."
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-900/80">
+            Beta access
+          </p>
+          <p className="mt-2 text-base font-medium tracking-tight text-neutral-900 sm:text-lg">
+            We&apos;re opening {betaSpots} spots — a few more people get in every day this week.
+          </p>
+          <p className="mt-2 text-sm text-neutral-600 leading-relaxed max-w-xl">
+            Log in with Are.na to grab a free seat while they last. No card — just your channel and
+            a template.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <p className="text-sm font-medium text-neutral-800 tabular-nums shrink-0">
+              {used} of {betaSpots} spots claimed
+            </p>
+            <div
+              className="h-1.5 flex-1 max-w-full sm:max-w-[200px] bg-neutral-100 overflow-hidden"
+              role="progressbar"
+              aria-valuenow={used}
+              aria-valuemin={0}
+              aria-valuemax={betaSpots}
+              aria-label={`Beta spots claimed: ${used} of ${betaSpots}`}
+            >
+              <div
+                className="h-full bg-neutral-900 transition-[width] duration-300"
+                style={{ width: `${pctFilled}%` }}
+              />
+            </div>
+          </div>
+          <div className="mt-6">
+            <BetaCtaLink
+              hrefWhenOpen="/login"
+              className="inline-block px-4 py-2 text-sm bg-neutral-900 text-white rounded-none hover:bg-neutral-800 transition-colors"
+            >
+              Start free
+            </BetaCtaLink>
+          </div>
+        </>
+      )}
+    </LandingCard>
+  );
+}
+
+function PricingTierPreview({ plan }: { plan: PricingPlanId }) {
+  const def = PRICING_PLANS[plan];
+  const sliderLabelId =
+    plan === "individual" ? "pwyc-slider-individual" : "pwyc-slider-studio";
+
+  if (plan === "individual") {
+    const individualCents = getCentsForIndividualStep(PREVIEW_INDIVIDUAL_STEP);
+    const individualIdx = indexForIndividualStep(PREVIEW_INDIVIDUAL_STEP);
+    return (
+      <ComingSoonPricingCard planLabel={def.title}>
+        <div className="flex items-start justify-between gap-4 sm:gap-5">
+          <div className="text-left min-w-0 flex-1">
+            <p className="text-sm font-medium text-neutral-900">{def.title}</p>
+            <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{def.tagline}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900">
+              {formatUsdPerMonth(individualCents)}
+            </p>
+          </div>
+        </div>
+        <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
+          {def.highlights.map((h) => (
+            <li key={h}>· {h}</li>
+          ))}
+        </ul>
+        <div className="mt-5">
+          <label
+            id={sliderLabelId}
+            className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
+          >
+            Monthly amount
+          </label>
+          <AlignedSliderWithTicks
+            min={0}
+            max={3}
+            value={individualIdx}
+            onChange={noopSliderChange}
+            labels={INDIVIDUAL_SLIDER_STEPS.map((step) => {
+              const cents = def.presets[step];
+              return cents === 0 ? "$0" : `$${cents / 100}`;
+            })}
+            activeIndex={individualIdx}
+            onPick={noopSliderPick}
+            ariaLabelledBy={sliderLabelId}
+            ariaValueText={formatUsdPerMonth(individualCents)}
+            disabled
           />
         </div>
+        <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
+          <PricingFeaturesList plan="individual" amountCents={individualCents} />
+          <div className="flex-1 min-h-4" aria-hidden />
+        </div>
+        <div className="pt-6 border-t border-neutral-200">
+          <span className="block w-full text-center text-sm py-2.5 px-3 rounded-none font-medium border border-neutral-200 bg-neutral-100 text-neutral-400">
+            {individualCents > 0
+              ? `Continue to payment · ${formatUsdPerMonth(individualCents)}`
+              : "Continue free — log in"}
+          </span>
+        </div>
+      </ComingSoonPricingCard>
+    );
+  }
+
+  const studioCents = getCentsForStudioLevel(PREVIEW_STUDIO_LEVEL);
+  const studioIdx = indexForSupportLevel(PREVIEW_STUDIO_LEVEL);
+  return (
+    <ComingSoonPricingCard planLabel={def.title}>
+      <div className="flex items-start justify-between gap-4 sm:gap-5">
+        <div className="text-left min-w-0 flex-1">
+          <p className="text-sm font-medium text-neutral-900">{def.title}</p>
+          <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{def.tagline}</p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900">
+            {formatUsdPerMonth(studioCents)}
+          </p>
+        </div>
       </div>
+      <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
+        {def.highlights.map((h) => (
+          <li key={h}>· {h}</li>
+        ))}
+      </ul>
+      <div className="mt-5">
+        <label
+          id={sliderLabelId}
+          className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
+        >
+          Monthly amount
+        </label>
+        <AlignedSliderWithTicks
+          min={0}
+          max={2}
+          value={studioIdx}
+          onChange={noopSliderChange}
+          labels={SUPPORT_LEVELS.map((lv) => `$${def.presets[lv] / 100}`)}
+          activeIndex={studioIdx}
+          onPick={noopSliderPick}
+          ariaLabelledBy={sliderLabelId}
+          ariaValueText={formatUsdPerMonth(studioCents)}
+          disabled
+        />
+      </div>
+      <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
+        <PricingFeaturesList plan="studio" amountCents={studioCents} />
+        <div className="flex-1 min-h-4" aria-hidden />
+      </div>
+      <div className="pt-6 border-t border-neutral-200">
+        <span className="block w-full text-center text-sm py-2.5 px-3 rounded-none font-medium border border-neutral-200 bg-neutral-100 text-neutral-400">
+          Continue to payment · {formatUsdPerMonth(studioCents)}
+        </span>
+      </div>
+    </ComingSoonPricingCard>
+  );
+}
+
+type Props = {
+  spotsRemaining: number;
+  betaFull: boolean;
+  betaSpots: number;
+};
+
+export function PayWhatYouCanPricing({
+  spotsRemaining,
+  betaFull,
+  betaSpots,
+}: Props) {
+  return (
+    <div className="space-y-10 sm:space-y-12">
+      <BetaAccessCard
+        spotsRemaining={spotsRemaining}
+        betaFull={betaFull}
+        betaSpots={betaSpots}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 md:items-stretch">
-        <ComingSoonCardShell planLabel={PRICING_PLANS.individual.title}>
-          {(() => {
-            const def = PRICING_PLANS.individual;
-            const sliderLabelId = "pwyc-slider-individual";
-            return (
-              <>
-                <div className="flex items-start justify-between gap-4 sm:gap-5">
-                  <div className="text-left min-w-0 flex-1">
-                    <p className="text-sm font-medium text-neutral-900">{def.title}</p>
-                    <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{def.tagline}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900">
-                      {formatUsdPerMonth(individualCents)}
-                    </p>
-                  </div>
-                </div>
-                <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
-                  {def.highlights.map((h) => (
-                    <li key={h}>· {h}</li>
-                  ))}
-                </ul>
-                <div className="mt-5">
-                  <label
-                    id={sliderLabelId}
-                    className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
-                  >
-                    Monthly amount
-                  </label>
-                  <AlignedSliderWithTicks
-                    min={0}
-                    max={3}
-                    value={individualIdx}
-                    onChange={noopSliderChange}
-                    labels={INDIVIDUAL_SLIDER_STEPS.map((step) => {
-                      const cents = def.presets[step];
-                      return cents === 0 ? "$0" : `$${cents / 100}`;
-                    })}
-                    activeIndex={individualIdx}
-                    onPick={noopSliderPick}
-                    ariaLabelledBy={sliderLabelId}
-                    ariaValueText={formatUsdPerMonth(individualCents)}
-                    disabled
-                  />
-                </div>
-                <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
-                  <PricingFeaturesList plan="individual" amountCents={individualCents} />
-                  <div className="flex-1 min-h-4" aria-hidden />
-                </div>
-                <div className="pt-6 border-t border-neutral-200">
-                  <span className="block w-full text-center text-sm py-2.5 px-3 rounded-md font-medium border border-neutral-200 bg-neutral-100 text-neutral-400">
-                    {individualCents > 0
-                      ? `Continue to payment · ${formatUsdPerMonth(individualCents)}`
-                      : "Continue free — log in"}
-                  </span>
-                </div>
-              </>
-            );
-          })()}
-        </ComingSoonCardShell>
-
-        <ComingSoonCardShell planLabel={PRICING_PLANS.studio.title}>
-          {(() => {
-            const def = PRICING_PLANS.studio;
-            const sliderLabelId = "pwyc-slider-studio";
-            return (
-              <>
-                <div className="flex items-start justify-between gap-4 sm:gap-5">
-                  <div className="text-left min-w-0 flex-1">
-                    <p className="text-sm font-medium text-neutral-900">{def.title}</p>
-                    <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{def.tagline}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xl sm:text-2xl font-medium tabular-nums leading-none text-neutral-900">
-                      {formatUsdPerMonth(studioCents)}
-                    </p>
-                  </div>
-                </div>
-                <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
-                  {def.highlights.map((h) => (
-                    <li key={h}>· {h}</li>
-                  ))}
-                </ul>
-                <div className="mt-5">
-                  <label
-                    id={sliderLabelId}
-                    className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
-                  >
-                    Monthly amount
-                  </label>
-                  <AlignedSliderWithTicks
-                    min={0}
-                    max={2}
-                    value={studioIdx}
-                    onChange={noopSliderChange}
-                    labels={SUPPORT_LEVELS.map((lv) => `$${def.presets[lv] / 100}`)}
-                    activeIndex={studioIdx}
-                    onPick={noopSliderPick}
-                    ariaLabelledBy={sliderLabelId}
-                    ariaValueText={formatUsdPerMonth(studioCents)}
-                    disabled
-                  />
-                </div>
-                <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
-                  <PricingFeaturesList plan="studio" amountCents={studioCents} />
-                  <div className="flex-1 min-h-4" aria-hidden />
-                </div>
-                <div className="pt-6 border-t border-neutral-200">
-                  <span className="block w-full text-center text-sm py-2.5 px-3 rounded-md font-medium border border-neutral-200 bg-neutral-100 text-neutral-400">
-                    Continue to payment · {formatUsdPerMonth(studioCents)}
-                  </span>
-                </div>
-              </>
-            );
-          })()}
-        </ComingSoonCardShell>
+        <PricingTierPreview plan="individual" />
+        <PricingTierPreview plan="studio" />
       </div>
     </div>
   );

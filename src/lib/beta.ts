@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 
-export const BETA_SPOTS = 33;
+export const BETA_SPOTS = 50;
 
 /** Users who count toward closed-beta capacity (matches OAuth friend-grant logic). */
 export async function getBetaAccessCount(): Promise<number> {

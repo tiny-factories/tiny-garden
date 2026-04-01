@@ -6,7 +6,7 @@ import { LandingHeroAnimation } from "@/components/landing-hero-animation";
 import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
-import { isBetaFull } from "@/lib/beta";
+import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
 
 interface FeaturedSite {
   id: string;
@@ -77,6 +77,7 @@ const SHOW_LANDING_HERO_ANIMATION = false;
 export default async function Home() {
   const featuredSites = await getFeaturedSites();
   const betaFull = await isBetaFull();
+  const spotsRemaining = await getBetaSpotsRemaining();
   return (
     <BetaLandingShell isBetaFull={betaFull}>
     <main className="min-h-screen">
@@ -402,11 +403,15 @@ export default async function Home() {
           Below is a peek at two future tiers —{" "}
           <span className="text-neutral-600">Individual</span> and{" "}
           <span className="text-neutral-600">Small studio</span> — with pay-what-you-can
-          sliders. Checkout isn&apos;t open yet. Beta is invite-only for the moment — sign up above
-          the preview to get a spot as we roll out more access this week.
+          sliders. Checkout isn&apos;t open yet. We&apos;re growing the beta to {BETA_SPOTS} spots —
+          the card above shows how full we are; when it&apos;s full, join the list to get in next.
         </p>
 
-        <PayWhatYouCanPricing />
+        <PayWhatYouCanPricing
+          spotsRemaining={spotsRemaining}
+          betaFull={betaFull}
+          betaSpots={BETA_SPOTS}
+        />
       </section>
 
       {/* Gallery */}
