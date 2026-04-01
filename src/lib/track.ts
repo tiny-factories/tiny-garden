@@ -1,5 +1,4 @@
-// Umami event tracking helper
-// Usage: track("site-published", { template: "blog", channel: "my-channel" })
+// Umami event tracking (browser). Server events: src/lib/umami-server.ts
 
 declare global {
   interface Window {

@@ -1,8 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { generatePlantDataURI, seedFromSubdomain } from "@/lib/garden-icon";
+
+const NAV_BRAND_PLANT_SRC = generatePlantDataURI(seedFromSubdomain("tiny.garden"));
 
 export function Nav() {
   const pathname = usePathname();
@@ -35,8 +39,20 @@ export function Nav() {
 
   return (
     <nav className="w-full px-4 py-4 flex items-center justify-between border-b border-neutral-100">
-      <Link href="/sites" className="text-sm font-medium">
+      <Link
+        href={isLoggedIn ? "/sites" : "/"}
+        className="inline-flex items-center gap-2 text-sm font-medium text-neutral-900"
+      >
         tiny.garden
+        <Image
+          src={NAV_BRAND_PLANT_SRC}
+          alt=""
+          width={20}
+          height={20}
+          unoptimized
+          className="size-5 shrink-0 rounded border border-neutral-200 bg-white object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
+          aria-hidden
+        />
       </Link>
       <div className="flex items-center gap-4">
         {isAdmin && (
@@ -49,32 +65,43 @@ export function Nav() {
             Admin
           </Link>
         )}
-        <Link
-          href="/sites"
-          className={`text-sm transition-colors ${
-            pathname.startsWith("/site") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
-          }`}
-        >
-          Sites
-        </Link>
-        {!isLoggedIn && (
-          <Link
-            href="/about"
-            className={`text-sm transition-colors ${
-              pathname === "/about" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
-            }`}
-          >
-            About
-          </Link>
+        {isLoggedIn ? (
+          <>
+            <Link
+              href="/sites"
+              className={`text-sm transition-colors ${
+                pathname.startsWith("/site") ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+              }`}
+            >
+              Sites
+            </Link>
+            <Link
+              href="/account"
+              className={`text-sm transition-colors ${
+                pathname === "/account" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+              }`}
+            >
+              Account
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/about"
+              className={`text-sm transition-colors ${
+                pathname === "/about" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
+              }`}
+            >
+              About
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded bg-neutral-900 text-white hover:bg-neutral-800 transition-colors px-3 py-1.5 text-sm"
+            >
+              Try it now
+            </Link>
+          </>
         )}
-        <Link
-          href="/account"
-          className={`text-sm transition-colors ${
-            pathname === "/account" ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
-          }`}
-        >
-          Account
-        </Link>
       </div>
     </nav>
   );

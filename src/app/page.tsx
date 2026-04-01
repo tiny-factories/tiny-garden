@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { BetaCtaLink, BetaLandingShell } from "@/components/beta-landing-shell";
+import { LandingFeatures } from "@/components/landing-features";
+import { LandingHeroAnimation } from "@/components/landing-hero-animation";
 import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
+import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
 import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
 
@@ -34,42 +38,33 @@ async function getFeaturedSites(): Promise<FeaturedSite[]> {
 function TemplatePreview({
   name,
   slug,
-  description,
   children,
 }: {
   name: string;
   slug: string;
-  description: string;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={`/api/templates/preview?template=${slug}`}
       target="_blank"
-      className="border border-neutral-200 rounded overflow-hidden block group hover:border-neutral-400 transition-colors"
+      rel="noopener noreferrer"
+      aria-label={`${name} — open template preview in a new tab`}
+      className="border border-neutral-200 rounded-lg overflow-hidden block group hover:border-neutral-400 transition-colors"
     >
-      <div className="bg-neutral-50 border-b border-neutral-100 aspect-[4/3] overflow-hidden p-4">
+      <div className="relative bg-neutral-50 border-b border-neutral-100 aspect-[4/3] overflow-hidden p-5 sm:p-6">
+        <span
+          className="absolute top-3 right-3 z-10 inline-flex rounded-md bg-white/95 p-1.5 text-neutral-700 opacity-0 shadow-sm ring-1 ring-neutral-200/90 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none"
+          aria-hidden
+        >
+          <ArrowUpRight className="size-3.5 sm:size-4 shrink-0" strokeWidth={2} />
+        </span>
         {children}
       </div>
-      <div className="p-3 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium">{name}</p>
-          <p className="text-xs text-neutral-400 mt-0.5">{description}</p>
-        </div>
-        <span className="text-xs text-neutral-300 group-hover:text-neutral-500 transition-colors">
-          Preview &rarr;
-        </span>
+      <div className="px-5 py-4 sm:px-6 sm:py-5">
+        <p className="text-sm font-medium text-neutral-900">{name}</p>
       </div>
     </Link>
-  );
-}
-
-function FeatureItem({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div>
-      <p className="text-sm font-medium">{title}</p>
-      <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{desc}</p>
-    </div>
   );
 }
 
@@ -90,6 +85,7 @@ export default async function Home() {
           <br />
           into a website.
         </h1>
+        <LandingHeroAnimation />
         <p className="text-sm text-neutral-500 mt-4 max-w-md mx-auto leading-relaxed">
           Pick a channel, choose a template, get a site. No code, no hosting
           setup. Your Are.na content, published in seconds.
@@ -139,19 +135,18 @@ export default async function Home() {
       </section>
 
       {/* Templates */}
-      <section
-        id="templates"
-        className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100"
-      >
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-8">
-          Templates
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <section id="templates" className="py-16 border-t border-neutral-100">
+        <div className="max-w-3xl mx-auto px-4 mb-6">
+          <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
+            Templates
+          </h2>
+        </div>
+        <TemplateTicker>
+          <>
           {/* Blog preview */}
           <TemplatePreview
             name="Blog"
             slug="blog"
-            description="Vertical stream of content blocks"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="font-medium text-sm mb-2">Channel Title</div>
@@ -178,7 +173,6 @@ export default async function Home() {
           <TemplatePreview
             name="Feed"
             slug="feed"
-            description="Responsive grid of blocks"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="font-medium text-sm mb-3">Channel Title</div>
@@ -197,7 +191,6 @@ export default async function Home() {
           <TemplatePreview
             name="Portfolio"
             slug="portfolio"
-            description="Full-width image showcase"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="font-medium text-sm mb-3">Channel Title</div>
@@ -216,14 +209,11 @@ export default async function Home() {
           <TemplatePreview
             name="Slideshow"
             slug="slideshow"
-            description="Full-screen slides with keyboard nav"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="bg-neutral-800 rounded p-3 aspect-[4/3] flex items-center justify-center relative">
                 <div className="bg-neutral-600 rounded w-3/4 h-3/4" />
                 <div className="absolute bottom-2 left-3 text-[8px] text-neutral-500">1 / 8</div>
-                <div className="absolute left-1 top-1/2 text-neutral-600 text-[10px]">&larr;</div>
-                <div className="absolute right-1 top-1/2 text-neutral-600 text-[10px]">&rarr;</div>
               </div>
             </div>
           </TemplatePreview>
@@ -232,7 +222,6 @@ export default async function Home() {
           <TemplatePreview
             name="Blank"
             slug="blank"
-            description="Minimal starting point for custom CSS"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="space-y-3 pt-2">
@@ -250,7 +239,6 @@ export default async function Home() {
           <TemplatePreview
             name="Campaign"
             slug="campaign"
-            description="Full-screen landing page"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="bg-neutral-800 rounded aspect-[4/3] flex items-center justify-center relative">
@@ -267,7 +255,6 @@ export default async function Home() {
           <TemplatePreview
             name="Document"
             slug="document"
-            description="Sidebar nav, doc-style layout"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="flex gap-2">
@@ -293,7 +280,6 @@ export default async function Home() {
           <TemplatePreview
             name="Homepage"
             slug="homepage"
-            description="Full-screen hero with links"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="bg-neutral-700 rounded aspect-[4/3] flex items-center justify-center">
@@ -314,7 +300,6 @@ export default async function Home() {
           <TemplatePreview
             name="Presentation"
             slug="presentation"
-            description="Keynote-style full-screen slides"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="bg-neutral-100 rounded aspect-[4/3] flex items-center justify-center relative border border-neutral-200">
@@ -333,7 +318,6 @@ export default async function Home() {
           <TemplatePreview
             name="Shop"
             slug="ecommerce"
-            description="Product showcase with gallery"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="flex gap-2">
@@ -354,7 +338,6 @@ export default async function Home() {
           <TemplatePreview
             name="Feature Requests"
             slug="feature-requests"
-            description="Voteable cards via Are.na comments"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="space-y-2">
@@ -375,7 +358,6 @@ export default async function Home() {
           <TemplatePreview
             name="Timeline"
             slug="timeline"
-            description="Vertical timeline with dated entries"
           >
             <div className="scale-[0.6] origin-top-left w-[166%]">
               <div className="font-medium text-sm mb-3">Channel Title</div>
@@ -391,9 +373,10 @@ export default async function Home() {
               </div>
             </div>
           </TemplatePreview>
-        </div>
+          </>
+        </TemplateTicker>
 
-        <div className="mt-6 text-center">
+        <div className="max-w-3xl mx-auto px-4 mt-8 text-center">
           <Link
             href="/templates"
             className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors underline underline-offset-2"
@@ -403,38 +386,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100">
-        <h2 className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-8">
-          Features
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6">
-          <FeatureItem
-            title="Are.na-native"
-            desc="Your channel is your CMS. Add a block in Are.na, rebuild your site — images, text, links, embeds, and attachments all supported."
-          />
-          <FeatureItem
-            title="Custom subdomains"
-            desc="Every site gets its own subdomain at your-name.tiny.garden. Clean, memorable URLs."
-          />
-          <FeatureItem
-            title="Static & fast"
-            desc="Sites are pre-built HTML and CSS. No JavaScript, no loading spinners. Just content."
-          />
-          <FeatureItem
-            title="Multiple templates"
-            desc="Blog for writing, portfolio for images, feed for quick updates. Pick the layout that fits."
-          />
-          <FeatureItem
-            title="One-click rebuild"
-            desc="Updated your channel? Hit rebuild and your site is current in seconds."
-          />
-          <FeatureItem
-            title="No lock-in"
-            desc="Your content stays in Are.na. If you leave, nothing is lost."
-          />
-        </div>
-      </section>
+      <LandingFeatures />
 
       {/* Pricing */}
       <section
@@ -471,10 +423,17 @@ export default async function Home() {
                   key={site.id}
                   href={`/api/serve/${site.subdomain}`}
                   target="_blank"
-                  rel="noopener"
-                  className="border border-neutral-200 rounded overflow-hidden group hover:border-neutral-400 transition-colors block"
+                  rel="noopener noreferrer"
+                  aria-label={`${site.channelTitle} — open site in a new tab`}
+                  className="border border-neutral-200 rounded-lg overflow-hidden group hover:border-neutral-400 transition-colors block"
                 >
-                  <div className="bg-neutral-50 aspect-[16/10] overflow-hidden">
+                  <div className="relative bg-neutral-50 aspect-[16/10] overflow-hidden">
+                    <span
+                      className="absolute top-3 right-3 z-10 inline-flex rounded-md bg-white/95 p-1.5 text-neutral-700 opacity-0 shadow-sm ring-1 ring-neutral-200/90 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none"
+                      aria-hidden
+                    >
+                      <ArrowUpRight className="size-3.5 sm:size-4 shrink-0" strokeWidth={2} />
+                    </span>
                     <iframe
                       src={`/api/serve/${site.subdomain}`}
                       className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
@@ -482,12 +441,8 @@ export default async function Home() {
                       title={`Preview of ${site.channelTitle}`}
                     />
                   </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium">{site.channelTitle}</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">
-                      {site.subdomain}.tiny.garden &middot; by{" "}
-                      {site.arenaUsername}
-                    </p>
+                  <div className="px-5 py-4 sm:px-6 sm:py-5">
+                    <p className="text-sm font-medium text-neutral-900">{site.channelTitle}</p>
                   </div>
                 </a>
               ))
@@ -522,11 +477,9 @@ export default async function Home() {
                       {site.subdomain}.tiny.garden
                     </span>
                   </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium">{site.title}</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">
-                      {site.desc}
-                    </p>
+                  <div className="px-5 py-4 sm:px-6 sm:py-5">
+                    <p className="text-sm font-medium text-neutral-900">{site.title}</p>
+                    <p className="text-xs text-neutral-400 mt-1">{site.desc}</p>
                   </div>
                 </div>
               ))}

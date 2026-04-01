@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
         where: { stripeCustomerId: customerId },
       });
       if (user) {
+        let activated = false;
         if (session.mode === "payment") {
           await prisma.subscription.upsert({
             where: { userId: user.id },
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
               status: "active",
             },
           });
+          activated = true;
         } else if (session.mode === "subscription" && session.subscription) {
           await prisma.subscription.upsert({
             where: { userId: user.id },
@@ -62,10 +64,13 @@ export async function POST(req: NextRequest) {
               status: "active",
             },
           });
+          activated = true;
         }
-        await sendUmamiServerEvent("subscription-activated", {
-          mode: session.mode === "payment" ? "payment" : "subscription",
-        });
+        if (activated) {
+          await sendUmamiServerEvent("subscription-activated", {
+            mode: session.mode === "payment" ? "payment" : "subscription",
+          });
+        }
       }
     }
   }

@@ -74,3 +74,140 @@
     opacity: 0.65;
   }
 }
+
+/* Landing hero — Are.na channel → webpage illustration */
+@keyframes landing-hero-arena-layer {
+  0%,
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  26%,
+  88% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  96%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes landing-hero-web-layer {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  26%,
+  88% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@keyframes landing-hero-block-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes landing-hero-scroll-content {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.landing-hero-arena-layer {
+  animation: landing-hero-arena-layer 14s ease-in-out infinite;
+}
+
+.landing-hero-web-layer {
+  animation: landing-hero-web-layer 14s ease-in-out infinite;
+}
+
+.landing-hero-block-drift {
+  animation: landing-hero-block-drift 3.2s ease-in-out infinite;
+}
+
+.landing-hero-scroll-content {
+  animation: landing-hero-scroll-content 18s linear infinite;
+}
+
+/* Landing features — slow ring on rebuild icon */
+@keyframes landing-feature-rebuild-ring {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.landing-feature-rebuild-ring {
+  animation: landing-feature-rebuild-ring 14s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-arena-layer,
+  .landing-hero-web-layer,
+  .landing-hero-block-drift,
+  .landing-hero-scroll-content,
+  .landing-feature-rebuild-ring {
+    animation: none;
+  }
+}
+
+/* Landing — template marquee (logo-ticker style) */
+@keyframes template-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.template-ticker-track {
+  animation: template-ticker 65s linear infinite;
+}
+
+.template-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.template-ticker-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 6%,
+    black 94%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 6%,
+    black 94%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .template-ticker-track {
+    animation: none;
+  }
+}

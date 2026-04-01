@@ -96,7 +96,7 @@ function AlignedSliderWithTicks({
         aria-valuetext={ariaValueText}
         className={SLIDER_CLASS}
       />
-      <div className="relative w-full h-7 mt-2" aria-hidden>
+      <div className="relative w-full h-8 mt-2.5" aria-hidden>
         {labels.map((label, i) => {
           const on = activeIndex === i;
           return (
@@ -105,9 +105,9 @@ function AlignedSliderWithTicks({
               type="button"
               onClick={() => onPick(i)}
               style={tickStyle(i, labels.length)}
-              className={`absolute top-0 tabular-nums text-[11px] sm:text-xs py-0.5 px-1 rounded-sm transition-colors whitespace-nowrap ${
+              className={`absolute top-0 tabular-nums text-[11px] sm:text-xs py-1 px-1.5 rounded-md transition-colors ${
                 on
-                  ? "text-neutral-900 font-semibold ring-1 ring-neutral-900/15 bg-neutral-100/80"
+                  ? "text-neutral-900 font-semibold bg-neutral-100 ring-1 ring-neutral-200"
                   : "text-neutral-400 hover:text-neutral-600"
               }`}
             >
@@ -158,32 +158,30 @@ function PricingFeaturesList({
   const individualFree = plan === "individual" && !paid;
 
   return (
-    <div className="pt-6 border-t border-neutral-100/80">
-      <ul
-        key={`${plan}-${amountCents}`}
-        className="space-y-3.5 sm:space-y-4"
-        aria-live="polite"
-      >
-        <FeatureRow on>All templates</FeatureRow>
-        {individualFree ? (
-          <FeatureRow on={false}>Daily automatic rebuild</FeatureRow>
-        ) : (
+    <ul
+      key={`${plan}-${amountCents}`}
+      className="space-y-3 sm:space-y-3.5"
+      aria-live="polite"
+    >
+      <FeatureRow on>All templates</FeatureRow>
+      {individualFree ? (
+        <FeatureRow on={false}>Daily automatic rebuild</FeatureRow>
+      ) : (
+        <>
+          <FeatureRow on>Manual rebuild anytime</FeatureRow>
+          <FeatureRow on={gatedOn}>Daily automatic rebuild</FeatureRow>
+        </>
+      )}
+      <FeatureRow on={gatedOn}>
+        {gatedOn ? (
           <>
-            <FeatureRow on>Manual rebuild anytime</FeatureRow>
-            <FeatureRow on={gatedOn}>Daily automatic rebuild</FeatureRow>
+            Up to <span className="tabular-nums font-medium">{cap}</span> sites
           </>
+        ) : (
+          <>Higher site limits with a paid tier</>
         )}
-        <FeatureRow on={gatedOn}>
-          {gatedOn ? (
-            <>
-              Up to <span className="tabular-nums font-medium">{cap}</span> sites
-            </>
-          ) : (
-            <>Higher site limits with a paid tier</>
-          )}
-        </FeatureRow>
-      </ul>
-    </div>
+      </FeatureRow>
+    </ul>
   );
 }
 
@@ -258,10 +256,10 @@ export function PayWhatYouCanPricing({
 
           return (
             <div
-              className={`rounded-lg border p-5 sm:p-6 transition-colors flex flex-col h-full md:min-h-[36rem] ${
+              className={`rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 transition duration-200 flex flex-col h-full md:min-h-[36rem] ${
                 selected
-                  ? "border-neutral-900 bg-neutral-50/40"
-                  : "border-neutral-200 bg-white hover:border-neutral-300"
+                  ? "ring-1 ring-neutral-900/10 shadow-sm bg-neutral-50/70"
+                  : "hover:border-neutral-300 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
               }`}
             >
               <div className="flex items-start justify-between gap-4 sm:gap-5">
@@ -286,13 +284,13 @@ export function PayWhatYouCanPricing({
                 </div>
               </div>
 
-              <ul className="mt-4 space-y-2 text-[11px] text-neutral-500 leading-relaxed">
+              <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
                 {def.highlights.map((h) => (
                   <li key={h}>· {h}</li>
                 ))}
               </ul>
 
-              <div className="mt-6">
+              <div className="mt-5">
                 <label
                   id={sliderLabelId}
                   className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
@@ -321,11 +319,12 @@ export function PayWhatYouCanPricing({
                 />
               </div>
 
-              <div className="flex-1 min-h-0 mt-7 flex flex-col justify-end">
+              <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
                 <PricingFeaturesList plan={pid} amountCents={cardCents} />
+                <div className="flex-1 min-h-4" aria-hidden />
               </div>
 
-              <div className="mt-auto pt-6 border-t border-neutral-200">
+              <div className="pt-6 border-t border-neutral-200">
                 <Link
                   href="/login"
                   onClick={persistIndividualAndGo}
@@ -355,10 +354,10 @@ export function PayWhatYouCanPricing({
 
           return (
             <div
-              className={`rounded-lg border p-5 sm:p-6 transition-colors flex flex-col h-full md:min-h-[36rem] ${
+              className={`rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 transition duration-200 flex flex-col h-full md:min-h-[36rem] ${
                 selected
-                  ? "border-neutral-900 bg-neutral-50/40"
-                  : "border-neutral-200 bg-white hover:border-neutral-300"
+                  ? "ring-1 ring-neutral-900/10 shadow-sm bg-neutral-50/70"
+                  : "hover:border-neutral-300 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
               }`}
             >
               <div className="flex items-start justify-between gap-4 sm:gap-5">
@@ -383,13 +382,13 @@ export function PayWhatYouCanPricing({
                 </div>
               </div>
 
-              <ul className="mt-4 space-y-2 text-[11px] text-neutral-500 leading-relaxed">
+              <ul className="mt-4 min-h-[4.75rem] space-y-2 text-[11px] text-neutral-500 leading-relaxed">
                 {def.highlights.map((h) => (
                   <li key={h}>· {h}</li>
                 ))}
               </ul>
 
-              <div className="mt-6">
+              <div className="mt-5">
                 <label
                   id={sliderLabelId}
                   className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-3"
@@ -417,11 +416,12 @@ export function PayWhatYouCanPricing({
                 />
               </div>
 
-              <div className="flex-1 min-h-0 mt-7 flex flex-col justify-end">
+              <div className="mt-6 flex flex-1 flex-col min-h-0 border-t border-neutral-200 pt-6">
                 <PricingFeaturesList plan={pid} amountCents={cardCents} />
+                <div className="flex-1 min-h-4" aria-hidden />
               </div>
 
-              <div className="mt-auto pt-6 border-t border-neutral-200">
+              <div className="pt-6 border-t border-neutral-200">
                 <Link
                   href="/login"
                   onClick={persistStudioAndGo}
