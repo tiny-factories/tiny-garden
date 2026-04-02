@@ -10,6 +10,14 @@
   }
 }
 
+:root { --featured-progress: rgb(245 245 245); }
+.dark { --featured-progress: rgba(23 23 23 / 0.7); }
+
+@keyframes progress-fill-bg {
+  from { background-size: 0% 100%; }
+  to { background-size: 100% 100%; }
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -405,6 +413,83 @@
   animation: landing-hero-scroll-content 16s linear infinite;
 }
 
+/* How it works — slow vertical scroll on duplicated mini “pages” */
+@keyframes landing-how-works-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.landing-how-works-scroll {
+  animation: landing-how-works-scroll 26s linear infinite;
+}
+
+/* Landing — how it works: template cards cycling selection */
+.how-it-works-tpl-scope {
+  --how-tpl-strong: rgb(23 23 23);
+}
+
+.dark .how-it-works-tpl-scope {
+  --how-tpl-strong: rgb(250 250 250);
+}
+
+/* Selected = outer ring only; unselected = no ring (avoids “soft outline” reading as the pick). */
+@keyframes landing-how-tpl-select-0 {
+  0%,
+  26% {
+    box-shadow: 0 0 0 2px var(--how-tpl-strong);
+  }
+  29%,
+  100% {
+    box-shadow: none;
+  }
+}
+
+@keyframes landing-how-tpl-select-1 {
+  0%,
+  32% {
+    box-shadow: none;
+  }
+  33%,
+  59% {
+    box-shadow: 0 0 0 2px var(--how-tpl-strong);
+  }
+  62%,
+  100% {
+    box-shadow: none;
+  }
+}
+
+@keyframes landing-how-tpl-select-2 {
+  0%,
+  65% {
+    box-shadow: none;
+  }
+  66%,
+  92% {
+    box-shadow: 0 0 0 2px var(--how-tpl-strong);
+  }
+  95%,
+  100% {
+    box-shadow: none;
+  }
+}
+
+.landing-how-tpl-card-0 {
+  animation: landing-how-tpl-select-0 7.5s linear infinite;
+}
+
+.landing-how-tpl-card-1 {
+  animation: landing-how-tpl-select-1 7.5s linear infinite;
+}
+
+.landing-how-tpl-card-2 {
+  animation: landing-how-tpl-select-2 7.5s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-hero-arena-layer,
   .landing-hero-web-layer,
@@ -422,7 +507,11 @@
   .landing-hero-b-row-3,
   .landing-hero-b-row-4,
   .landing-hero-block-drift,
-  .landing-hero-scroll-content {
+  .landing-hero-scroll-content,
+  .landing-how-works-scroll,
+  .landing-how-tpl-card-0,
+  .landing-how-tpl-card-1,
+  .landing-how-tpl-card-2 {
     animation: none;
   }
 }

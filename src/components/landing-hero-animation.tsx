@@ -1,5 +1,8 @@
 "use client";
 
+/** Shared outer frame so connect / template / publish read as one row. */
+const HOW_IT_WORKS_ARTIFACT_BOX = "mx-auto mb-5 h-[180px] w-full max-w-[220px]";
+
 /** Same gradients on channel tiles and site sections so it reads as one dataset, new layout. */
 const blk = {
   hero: "bg-linear-to-br from-amber-200/90 via-amber-50/80 to-stone-400/70 border-amber-300/35",
@@ -13,14 +16,14 @@ const blk = {
 function ChannelToolbar() {
   return (
     <div className="mb-2 flex items-center gap-1">
-      <span className="truncate text-[9px] font-medium tracking-tight text-neutral-600">
+      <span className="truncate text-[9px] font-medium tracking-tight text-neutral-600 dark:text-neutral-300">
         reference library
       </span>
       <div className="ml-auto flex items-center gap-0.5">
         <button
           type="button"
           tabIndex={-1}
-          className="flex size-5 items-center justify-center rounded border border-neutral-200 bg-white"
+          className="flex size-5 items-center justify-center rounded border border-neutral-200 bg-white dark:border-neutral-600 dark:bg-neutral-800"
           aria-hidden
         >
           <span className="grid grid-cols-2 gap-px">
@@ -33,61 +36,124 @@ function ChannelToolbar() {
         <button
           type="button"
           tabIndex={-1}
-          className="flex size-5 items-center justify-center rounded border border-neutral-200 bg-white"
+          className="flex size-5 items-center justify-center rounded border border-neutral-200 bg-white dark:border-neutral-600 dark:bg-neutral-800"
           aria-hidden
         >
-          <span className="text-[10px] font-semibold leading-none text-neutral-500">↗</span>
+          <span className="text-[10px] font-semibold leading-none text-neutral-500 dark:text-neutral-400">
+            ↗
+          </span>
         </button>
       </div>
     </div>
   );
 }
 
-function ArenaChannel({ className }: { className?: string }) {
+/** Three mini layout thumbnails with a cycling “selected” ring (how it works — step 2). */
+function TemplateChoiceIllustration() {
   return (
-    <div className={`rounded-lg border border-neutral-200 bg-neutral-50 p-2 ${className ?? ""}`}>
-      <div className="flex items-center gap-1 border-b border-neutral-200/80 pb-1.5">
-        <span className="size-1.5 rounded-full bg-neutral-300" />
-        <span className="size-1.5 rounded-full bg-neutral-200" />
-        <span className="ml-1 text-[9px] font-medium tracking-wide text-neutral-400">are.na</span>
+    <div className="flex h-full min-h-0 w-full gap-1.5 rounded-md" aria-hidden>
+      <div className="landing-how-tpl-card-0 flex min-h-0 flex-1 flex-col gap-1 rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className={`h-3 shrink-0 rounded-sm border ${blk.hero}`} />
+        <div className={`mt-auto min-h-0 flex-1 rounded-sm border ${blk.note}`} />
+      </div>
+      <div className="landing-how-tpl-card-1 flex min-h-0 flex-1 flex-col gap-1 rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className={`h-2 w-full shrink-0 rounded-sm border ${blk.wide}`} />
+        <div className={`h-2 w-4/5 shrink-0 rounded-sm border ${blk.thumb}`} />
+        <div className={`mt-auto min-h-0 flex-1 rounded-sm border ${blk.pairA}`} />
+      </div>
+      <div className="landing-how-tpl-card-2 flex min-h-0 flex-1 flex-col gap-1 rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="flex shrink-0 gap-0.5">
+          <div className={`h-9 flex-1 rounded-sm border ${blk.pairA}`} />
+          <div className={`h-9 flex-1 rounded-sm border ${blk.pairB}`} />
+        </div>
+        <div className={`min-h-0 flex-1 rounded-sm border ${blk.hero}`} />
+      </div>
+    </div>
+  );
+}
+
+function ArenaChannelGrid() {
+  return (
+    <div className="grid grid-cols-3 grid-rows-3 gap-1.5 [grid-template-rows:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.85fr)]">
+      <div
+        className={`landing-hero-block-drift row-span-2 rounded border ${blk.hero}`}
+        style={{ animationDelay: "0ms" }}
+      />
+      <div
+        className={`landing-hero-block-drift space-y-1 rounded border p-1.5 ${blk.note}`}
+        style={{ animationDelay: "100ms" }}
+      >
+        <div className="h-1 w-full rounded-sm bg-white/50" />
+        <div className="h-1 w-[85%] rounded-sm bg-white/35" />
+      </div>
+      <div
+        className={`landing-hero-block-drift rounded border ${blk.thumb}`}
+        style={{ animationDelay: "200ms" }}
+      >
+        <div className="aspect-square rounded-sm bg-white/15" />
+      </div>
+      <div
+        className={`landing-hero-block-drift col-span-2 space-y-1 rounded border p-1.5 ${blk.wide}`}
+        style={{ animationDelay: "280ms" }}
+      >
+        <div className="h-1 w-full rounded-sm bg-white/45" />
+        <div className="h-1 w-[92%] rounded-sm bg-white/35" />
+        <div className="h-1 w-[55%] rounded-sm bg-white/30" />
+      </div>
+      <div
+        className={`landing-hero-block-drift rounded border ${blk.pairA}`}
+        style={{ animationDelay: "360ms" }}
+      />
+      <div
+        className={`landing-hero-block-drift rounded border ${blk.pairB}`}
+        style={{ animationDelay: "440ms" }}
+      />
+    </div>
+  );
+}
+
+function ArenaChannel({
+  className,
+  variant = "default",
+}: {
+  className?: string;
+  variant?: "default" | "miniScroll";
+}) {
+  return (
+    <div
+      className={`rounded-lg border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-700 dark:bg-neutral-900 ${className ?? ""}`}
+    >
+      <div className="flex items-center gap-1 border-b border-neutral-200/80 pb-1.5 dark:border-neutral-600/80">
+        <span className="size-1.5 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+        <span className="size-1.5 rounded-full bg-neutral-200 dark:bg-neutral-700" />
+        <span className="ml-1 text-[9px] font-medium tracking-wide text-neutral-400 dark:text-neutral-500">
+          are.na
+        </span>
       </div>
       <div className="pt-2">
         <ChannelToolbar />
-        <div className="grid grid-cols-3 grid-rows-3 gap-1.5 [grid-template-rows:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.85fr)]">
-          <div
-            className={`landing-hero-block-drift row-span-2 rounded border ${blk.hero}`}
-            style={{ animationDelay: "0ms" }}
-          />
-          <div
-            className={`landing-hero-block-drift space-y-1 rounded border p-1.5 ${blk.note}`}
-            style={{ animationDelay: "100ms" }}
-          >
-            <div className="h-1 w-full rounded-sm bg-white/50" />
-            <div className="h-1 w-[85%] rounded-sm bg-white/35" />
+        {variant === "miniScroll" ? (
+          <div className="relative mt-0.5 h-[82px] overflow-hidden rounded-md">
+            <div className="landing-how-works-scroll">
+              <div className="pb-1.5">
+                <ArenaChannelGrid />
+              </div>
+              <div className="pb-1.5" aria-hidden>
+                <ArenaChannelGrid />
+              </div>
+            </div>
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-5 bg-linear-to-b from-neutral-50 to-transparent dark:from-neutral-900"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-5 bg-linear-to-t from-neutral-50 to-transparent dark:from-neutral-900"
+              aria-hidden
+            />
           </div>
-          <div
-            className={`landing-hero-block-drift rounded border ${blk.thumb}`}
-            style={{ animationDelay: "200ms" }}
-          >
-            <div className="aspect-square rounded-sm bg-white/15" />
-          </div>
-          <div
-            className={`landing-hero-block-drift col-span-2 space-y-1 rounded border p-1.5 ${blk.wide}`}
-            style={{ animationDelay: "280ms" }}
-          >
-            <div className="h-1 w-full rounded-sm bg-white/45" />
-            <div className="h-1 w-[92%] rounded-sm bg-white/35" />
-            <div className="h-1 w-[55%] rounded-sm bg-white/30" />
-          </div>
-          <div
-            className={`landing-hero-block-drift rounded border ${blk.pairA}`}
-            style={{ animationDelay: "360ms" }}
-          />
-          <div
-            className={`landing-hero-block-drift rounded border ${blk.pairB}`}
-            style={{ animationDelay: "440ms" }}
-          />
-        </div>
+        ) : (
+          <ArenaChannelGrid />
+        )}
       </div>
     </div>
   );
@@ -149,7 +215,7 @@ function SitePageScroll({
   variant = "animated",
 }: {
   className?: string;
-  variant?: "animated" | "static";
+  variant?: "animated" | "static" | "howItWorks";
 }) {
   if (variant === "static") {
     return (
@@ -160,14 +226,45 @@ function SitePageScroll({
           <span className="size-1.5 rounded-full bg-emerald-400/80" />
           <span className="ml-1 truncate font-mono text-[8px] text-neutral-500">yoursite.tiny.garden</span>
         </div>
-        <div className="relative h-[132px] overflow-hidden bg-neutral-50">
+        <div className="relative h-[132px] overflow-hidden bg-neutral-50 dark:bg-neutral-900">
           <SiteLayoutA />
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-linear-to-b from-neutral-50 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-linear-to-b from-neutral-50 to-transparent dark:from-neutral-900"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-neutral-50 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-neutral-50 to-transparent dark:from-neutral-900"
+            aria-hidden
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "howItWorks") {
+    return (
+      <div className={`overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 ${className ?? ""}`}>
+        <div className="flex h-7 items-center gap-1.5 border-b border-neutral-800 bg-neutral-900 px-2">
+          <span className="size-1.5 rounded-full bg-red-400/90" />
+          <span className="size-1.5 rounded-full bg-amber-300/90" />
+          <span className="size-1.5 rounded-full bg-emerald-400/80" />
+          <span className="ml-1 truncate font-mono text-[8px] text-neutral-500">yoursite.tiny.garden</span>
+        </div>
+        <div className="relative h-[132px] overflow-hidden bg-neutral-50 dark:bg-neutral-900">
+          <div className="landing-how-works-scroll">
+            <div className="pb-1">
+              <SiteLayoutA />
+            </div>
+            <div className="pb-1" aria-hidden>
+              <SiteLayoutA />
+            </div>
+          </div>
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-6 bg-linear-to-b from-neutral-50 to-transparent dark:from-neutral-900"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-8 bg-linear-to-t from-neutral-50 to-transparent dark:from-neutral-900"
             aria-hidden
           />
         </div>
@@ -195,7 +292,7 @@ function SitePageScroll({
           </span>
         </button>
       </div>
-      <div className="relative h-[132px] overflow-hidden bg-neutral-50">
+      <div className="relative h-[132px] overflow-hidden bg-neutral-50 dark:bg-neutral-900">
         <div className="landing-hero-site-layout-a absolute inset-0">
           <div className="landing-hero-scroll-content">
             <div className="pb-1">
@@ -221,11 +318,11 @@ function SitePageScroll({
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-linear-to-b from-neutral-50 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-linear-to-b from-neutral-50 to-transparent dark:from-neutral-900"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-neutral-50 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-neutral-50 to-transparent dark:from-neutral-900"
           aria-hidden
         />
       </div>
@@ -239,6 +336,41 @@ function LoadingShroud() {
       <p className="text-[9px] font-medium tracking-wide text-neutral-500">Publishing layout</p>
       <div className="mt-2 h-0.5 w-[55%] overflow-hidden rounded-full bg-neutral-200">
         <div className="landing-hero-loading-bar h-full w-full rounded-full bg-neutral-800" />
+      </div>
+    </div>
+  );
+}
+
+/** Step 1 — Are.na channel grid (same asset as hero, block drift). */
+export function HowItWorksConnectIllustration({ className }: { className?: string }) {
+  return (
+    <div className={`${HOW_IT_WORKS_ARTIFACT_BOX} ${className ?? ""}`} aria-hidden>
+      <div className="flex h-full items-center justify-center overflow-hidden">
+        <div className="w-full origin-center scale-[0.86] sm:scale-[0.88]">
+          <ArenaChannel className="w-full" variant="miniScroll" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Step 2 — template thumbnails with cycling selection ring. Parent should set `how-it-works-tpl-scope` for theme-aware outlines. */
+export function HowItWorksTemplateIllustration({ className }: { className?: string }) {
+  return (
+    <div className={`${HOW_IT_WORKS_ARTIFACT_BOX} ${className ?? ""}`} aria-hidden>
+      <div className="box-border flex h-full min-h-0 w-full px-0.5 py-1">
+        <TemplateChoiceIllustration />
+      </div>
+    </div>
+  );
+}
+
+/** Step 3 — live site chrome + same block colors as channel (static). */
+export function HowItWorksPublishIllustration({ className }: { className?: string }) {
+  return (
+    <div className={`${HOW_IT_WORKS_ARTIFACT_BOX} ${className ?? ""}`} aria-hidden>
+      <div className="flex h-full items-center justify-center">
+        <SitePageScroll className="w-full shrink-0" variant="howItWorks" />
       </div>
     </div>
   );

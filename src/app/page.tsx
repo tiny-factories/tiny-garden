@@ -2,7 +2,12 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { BetaCtaLink, BetaLandingShell } from "@/components/beta-landing-shell";
 import { LandingFeatures } from "@/components/landing-features";
-import { LandingHeroAnimation } from "@/components/landing-hero-animation";
+import {
+  HowItWorksConnectIllustration,
+  HowItWorksPublishIllustration,
+  HowItWorksTemplateIllustration,
+  LandingHeroAnimation,
+} from "@/components/landing-hero-animation";
 import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
@@ -15,6 +20,7 @@ interface FeaturedSite {
   subdomain: string;
   channelTitle: string;
   template: string;
+  arenaUsername: string;
 }
 
 async function getFeaturedSites(): Promise<FeaturedSite[]> {
@@ -22,12 +28,14 @@ async function getFeaturedSites(): Promise<FeaturedSite[]> {
     const sites = await prisma.site.findMany({
       where: { featured: true, published: true },
       orderBy: { createdAt: "desc" },
+      include: { user: { select: { arenaUsername: true } } },
     });
     return sites.map((s) => ({
       id: s.id,
       subdomain: s.subdomain,
       channelTitle: s.channelTitle,
       template: s.template,
+      arenaUsername: s.user.arenaUsername,
     }));
   } catch {
     return [];
@@ -111,25 +119,28 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 dark:border-neutral-800">
+      {/* How it works — mini diagrams reuse the landing hero Are.na → site visual language */}
+      <section className="how-it-works-tpl-scope max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 dark:border-neutral-800">
         <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-8">
           How it works
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div>
+            <HowItWorksConnectIllustration />
             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">1. Connect your channel</p>
             <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 leading-relaxed">
               Log in with Are.na and pick any channel from your account.
             </p>
           </div>
           <div>
+            <HowItWorksTemplateIllustration />
             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">2. Choose a template</p>
             <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 leading-relaxed">
               Select a layout that fits your content — blog, portfolio, or feed.
             </p>
           </div>
           <div>
+            <HowItWorksPublishIllustration />
             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">3. Publish</p>
             <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1 leading-relaxed">
               Pick a subdomain and your site is live at
@@ -420,6 +431,7 @@ export default async function Home() {
       <FeaturedSitesGallery
         sites={featuredSites}
         templateNames={templateNames}
+        siteDomain={process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden"}
       />
 
       {/* CTA */}
