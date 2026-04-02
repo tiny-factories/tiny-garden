@@ -135,7 +135,7 @@ export function FeaturedSitesGallery({
     setProgressKey((k) => k + 1);
   }, []);
 
-  const rowsMeta = items.map((item, i) => {
+  const rowsMeta = items.map((item) => {
     const templateLabel = labelFor(
       hasLive && "id" in item ? item.template : (item as Ph).template,
       templateNames,
@@ -150,7 +150,7 @@ export function FeaturedSitesGallery({
       ? (item as Live).arenaUsername
       : (item as Ph).arenaUsername;
     const rowKey =
-      hasLive && "id" in item ? item.id : `${(item as Ph).subdomain}-${i}`;
+      hasLive && "id" in item ? item.id : (item as Ph).subdomain;
     return {
       key: rowKey,
       templateLabel,
