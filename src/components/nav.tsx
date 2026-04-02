@@ -57,18 +57,6 @@ export function Nav() {
         </Link>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-4">
-        {process.env.NODE_ENV === "development" && (
-          <Link
-            href="/dev/feature-reviews"
-            className={`text-sm transition-colors ${
-              pathname.startsWith("/dev/feature-reviews")
-                ? "text-neutral-900 dark:text-neutral-100"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-            }`}
-          >
-            Feature reviews
-          </Link>
-        )}
         {isAdmin && (
           <Link
             href="/admin"

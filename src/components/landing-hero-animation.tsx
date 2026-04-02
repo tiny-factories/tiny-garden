@@ -13,10 +13,22 @@ const blk = {
   pairB: "border-indigo-300/35 bg-linear-to-br from-indigo-200/80 to-violet-50/60",
 } as const;
 
+/** Flat grays aligned with template ticker previews (page `TemplatePreview` placeholders). */
+const blkNeutral = {
+  hero: "border-neutral-200 bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-700",
+  note: "border-neutral-200 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-600",
+  thumb: "border-neutral-200 bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-700",
+  wide: "border-neutral-200 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-600",
+  pairA: "border-neutral-200 bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-700",
+  pairB: "border-neutral-200 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-600",
+} as const;
+
+type BlockPalette = typeof blk | typeof blkNeutral;
+
 function ChannelToolbar() {
   return (
     <div className="mb-2 flex items-center gap-1">
-      <span className="truncate text-[9px] font-medium tracking-tight text-neutral-600 dark:text-neutral-300">
+      <span className="truncate text-[9px] font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
         reference library
       </span>
       <div className="ml-auto flex items-center gap-0.5">
@@ -27,10 +39,10 @@ function ChannelToolbar() {
           aria-hidden
         >
           <span className="grid grid-cols-2 gap-px">
-            <span className="size-1 rounded-[1px] bg-neutral-400" />
-            <span className="size-1 rounded-[1px] bg-neutral-400" />
-            <span className="size-1 rounded-[1px] bg-neutral-400" />
-            <span className="size-1 rounded-[1px] bg-neutral-400" />
+            <span className="size-1 rounded-[1px] bg-neutral-400 dark:bg-neutral-500" />
+            <span className="size-1 rounded-[1px] bg-neutral-400 dark:bg-neutral-500" />
+            <span className="size-1 rounded-[1px] bg-neutral-400 dark:bg-neutral-500" />
+            <span className="size-1 rounded-[1px] bg-neutral-400 dark:bg-neutral-500" />
           </span>
         </button>
         <button
@@ -39,7 +51,7 @@ function ChannelToolbar() {
           className="flex size-5 items-center justify-center rounded border border-neutral-200 bg-white dark:border-neutral-600 dark:bg-neutral-800"
           aria-hidden
         >
-          <span className="text-[10px] font-semibold leading-none text-neutral-500 dark:text-neutral-400">
+          <span className="text-[10px] font-semibold leading-none text-neutral-400 dark:text-neutral-500">
             ↗
           </span>
         </button>
@@ -50,62 +62,68 @@ function ChannelToolbar() {
 
 /** Three mini layout thumbnails with a cycling “selected” ring (how it works — step 2). */
 function TemplateChoiceIllustration() {
+  const b = blkNeutral;
   return (
     <div className="flex h-full min-h-0 w-full gap-1.5 rounded-md" aria-hidden>
       <div className="landing-how-tpl-card-0 flex min-h-0 flex-1 flex-col gap-1 rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-700 dark:bg-neutral-900">
-        <div className={`h-3 shrink-0 rounded-sm border ${blk.hero}`} />
-        <div className={`mt-auto min-h-0 flex-1 rounded-sm border ${blk.note}`} />
+        <div className={`h-3 shrink-0 rounded-sm border ${b.hero}`} />
+        <div className={`mt-auto min-h-0 flex-1 rounded-sm border ${b.note}`} />
       </div>
       <div className="landing-how-tpl-card-1 flex min-h-0 flex-1 flex-col gap-1 rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-700 dark:bg-neutral-900">
-        <div className={`h-2 w-full shrink-0 rounded-sm border ${blk.wide}`} />
-        <div className={`h-2 w-4/5 shrink-0 rounded-sm border ${blk.thumb}`} />
-        <div className={`mt-auto min-h-0 flex-1 rounded-sm border ${blk.pairA}`} />
+        <div className={`h-2 w-full shrink-0 rounded-sm border ${b.wide}`} />
+        <div className={`h-2 w-4/5 shrink-0 rounded-sm border ${b.thumb}`} />
+        <div className={`mt-auto min-h-0 flex-1 rounded-sm border ${b.pairA}`} />
       </div>
       <div className="landing-how-tpl-card-2 flex min-h-0 flex-1 flex-col gap-1 rounded-md border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-700 dark:bg-neutral-900">
         <div className="flex shrink-0 gap-0.5">
-          <div className={`h-9 flex-1 rounded-sm border ${blk.pairA}`} />
-          <div className={`h-9 flex-1 rounded-sm border ${blk.pairB}`} />
+          <div className={`h-9 flex-1 rounded-sm border ${b.pairA}`} />
+          <div className={`h-9 flex-1 rounded-sm border ${b.pairB}`} />
         </div>
-        <div className={`min-h-0 flex-1 rounded-sm border ${blk.hero}`} />
+        <div className={`min-h-0 flex-1 rounded-sm border ${b.hero}`} />
       </div>
     </div>
   );
 }
 
-function ArenaChannelGrid() {
+function ArenaChannelGrid({ palette }: { palette: "color" | "neutral" }) {
+  const b: BlockPalette = palette === "neutral" ? blkNeutral : blk;
+  const lineMuted = palette === "neutral" ? "bg-neutral-100/80 dark:bg-white/12" : "bg-white/50";
+  const lineMutedMid = palette === "neutral" ? "bg-neutral-100/60 dark:bg-white/10" : "bg-white/35";
+  const lineWide = palette === "neutral" ? "bg-neutral-100/85 dark:bg-white/14" : "bg-white/45";
+  const thumbInner = palette === "neutral" ? "bg-neutral-100/50 dark:bg-white/8" : "bg-white/15";
   return (
     <div className="grid grid-cols-3 grid-rows-3 gap-1.5 [grid-template-rows:minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.85fr)]">
       <div
-        className={`landing-hero-block-drift row-span-2 rounded border ${blk.hero}`}
+        className={`landing-hero-block-drift row-span-2 rounded border ${b.hero}`}
         style={{ animationDelay: "0ms" }}
       />
       <div
-        className={`landing-hero-block-drift space-y-1 rounded border p-1.5 ${blk.note}`}
+        className={`landing-hero-block-drift space-y-1 rounded border p-1.5 ${b.note}`}
         style={{ animationDelay: "100ms" }}
       >
-        <div className="h-1 w-full rounded-sm bg-white/50" />
-        <div className="h-1 w-[85%] rounded-sm bg-white/35" />
+        <div className={`h-1 w-full rounded-sm ${lineMuted}`} />
+        <div className={`h-1 w-[85%] rounded-sm ${lineMutedMid}`} />
       </div>
       <div
-        className={`landing-hero-block-drift rounded border ${blk.thumb}`}
+        className={`landing-hero-block-drift rounded border ${b.thumb}`}
         style={{ animationDelay: "200ms" }}
       >
-        <div className="aspect-square rounded-sm bg-white/15" />
+        <div className={`aspect-square rounded-sm ${thumbInner}`} />
       </div>
       <div
-        className={`landing-hero-block-drift col-span-2 space-y-1 rounded border p-1.5 ${blk.wide}`}
+        className={`landing-hero-block-drift col-span-2 space-y-1 rounded border p-1.5 ${b.wide}`}
         style={{ animationDelay: "280ms" }}
       >
-        <div className="h-1 w-full rounded-sm bg-white/45" />
-        <div className="h-1 w-[92%] rounded-sm bg-white/35" />
-        <div className="h-1 w-[55%] rounded-sm bg-white/30" />
+        <div className={`h-1 w-full rounded-sm ${lineWide}`} />
+        <div className={`h-1 w-[92%] rounded-sm ${lineMutedMid}`} />
+        <div className={`h-1 w-[55%] rounded-sm ${palette === "neutral" ? "bg-neutral-100/50 dark:bg-white/8" : "bg-white/30"}`} />
       </div>
       <div
-        className={`landing-hero-block-drift rounded border ${blk.pairA}`}
+        className={`landing-hero-block-drift rounded border ${b.pairA}`}
         style={{ animationDelay: "360ms" }}
       />
       <div
-        className={`landing-hero-block-drift rounded border ${blk.pairB}`}
+        className={`landing-hero-block-drift rounded border ${b.pairB}`}
         style={{ animationDelay: "440ms" }}
       />
     </div>
@@ -136,10 +154,10 @@ function ArenaChannel({
           <div className="relative mt-0.5 h-[82px] overflow-hidden rounded-md">
             <div className="landing-how-works-scroll">
               <div className="pb-1.5">
-                <ArenaChannelGrid />
+                <ArenaChannelGrid palette="neutral" />
               </div>
               <div className="pb-1.5" aria-hidden>
-                <ArenaChannelGrid />
+                <ArenaChannelGrid palette="neutral" />
               </div>
             </div>
             <div
@@ -152,60 +170,72 @@ function ArenaChannel({
             />
           </div>
         ) : (
-          <ArenaChannelGrid />
+          <ArenaChannelGrid palette="color" />
         )}
       </div>
     </div>
   );
 }
 
-function SiteLayoutA() {
+function SiteLayoutA({ palette = "color" }: { palette?: "color" | "neutral" }) {
+  const b: BlockPalette = palette === "neutral" ? blkNeutral : blk;
+  const n1 = palette === "neutral" ? "bg-neutral-100/80 dark:bg-white/12" : "bg-white/50";
+  const n2 = palette === "neutral" ? "bg-neutral-100/60 dark:bg-white/10" : "bg-white/35";
+  const n3 = palette === "neutral" ? "bg-neutral-100/70 dark:bg-white/11" : "bg-white/40";
+  const w1 = palette === "neutral" ? "bg-neutral-100/85 dark:bg-white/14" : "bg-white/45";
+  const thumbFill = palette === "neutral" ? "bg-neutral-100/40 dark:bg-white/8" : "bg-white/10";
   return (
     <div className="space-y-0">
-      <div className={`mx-1 mt-1 h-14 rounded-md border ${blk.hero}`} />
+      <div className={`mx-1 mt-1 h-14 rounded-md border ${b.hero}`} />
       <div className="mx-1 mt-1.5 flex gap-1.5">
-        <div className={`w-[38%] space-y-1 rounded-md border p-1.5 ${blk.note}`}>
-          <div className="h-1 w-full rounded-sm bg-white/50" />
-          <div className="h-1 w-[80%] rounded-sm bg-white/35" />
-          <div className="h-1 w-full rounded-sm bg-white/40" />
+        <div className={`w-[38%] space-y-1 rounded-md border p-1.5 ${b.note}`}>
+          <div className={`h-1 w-full rounded-sm ${n1}`} />
+          <div className={`h-1 w-[80%] rounded-sm ${n2}`} />
+          <div className={`h-1 w-full rounded-sm ${n3}`} />
         </div>
-        <div className={`min-h-[52px] flex-1 rounded-md border ${blk.thumb}`}>
-          <div className="h-full min-h-[52px] rounded-sm bg-white/10" />
+        <div className={`min-h-[52px] flex-1 rounded-md border ${b.thumb}`}>
+          <div className={`h-full min-h-[52px] rounded-sm ${thumbFill}`} />
         </div>
       </div>
-      <div className={`mx-1 mt-1.5 space-y-1 rounded-md border p-1.5 ${blk.wide}`}>
-        <div className="h-1 w-full rounded-sm bg-white/45" />
-        <div className="h-1 w-[70%] rounded-sm bg-white/35" />
+      <div className={`mx-1 mt-1.5 space-y-1 rounded-md border p-1.5 ${b.wide}`}>
+        <div className={`h-1 w-full rounded-sm ${w1}`} />
+        <div className={`h-1 w-[70%] rounded-sm ${n2}`} />
       </div>
       <div className="mx-1 mt-1.5 flex gap-1.5">
-        <div className={`h-11 flex-1 rounded-md border ${blk.pairA}`} />
-        <div className={`h-11 flex-1 rounded-md border ${blk.pairB}`} />
+        <div className={`h-11 flex-1 rounded-md border ${b.pairA}`} />
+        <div className={`h-11 flex-1 rounded-md border ${b.pairB}`} />
       </div>
     </div>
   );
 }
 
 /** Same block colors, different vertical order — reveals after “reload”. */
-function SiteLayoutB() {
+function SiteLayoutB({ palette = "color" }: { palette?: "color" | "neutral" }) {
+  const b: BlockPalette = palette === "neutral" ? blkNeutral : blk;
+  const w1 = palette === "neutral" ? "bg-neutral-100/85 dark:bg-white/14" : "bg-white/45";
+  const n2 = palette === "neutral" ? "bg-neutral-100/60 dark:bg-white/10" : "bg-white/35";
+  const n3 = palette === "neutral" ? "bg-neutral-100/50 dark:bg-white/8" : "bg-white/30";
+  const n1 = palette === "neutral" ? "bg-neutral-100/80 dark:bg-white/12" : "bg-white/50";
+  const thumbFill = palette === "neutral" ? "bg-neutral-100/40 dark:bg-white/8" : "bg-white/10";
   return (
     <div className="space-y-0">
       <div className="landing-hero-b-row-0 mx-1 mt-1 flex gap-1.5">
-        <div className={`h-10 flex-1 rounded-md border ${blk.pairA}`} />
-        <div className={`h-10 flex-1 rounded-md border ${blk.pairB}`} />
+        <div className={`h-10 flex-1 rounded-md border ${b.pairA}`} />
+        <div className={`h-10 flex-1 rounded-md border ${b.pairB}`} />
       </div>
-      <div className={`landing-hero-b-row-1 mx-1 mt-1.5 space-y-1 rounded-md border p-1.5 ${blk.wide}`}>
-        <div className="h-1 w-full rounded-sm bg-white/45" />
-        <div className="h-1 w-[78%] rounded-sm bg-white/35" />
-        <div className="h-1 w-[50%] rounded-sm bg-white/30" />
+      <div className={`landing-hero-b-row-1 mx-1 mt-1.5 space-y-1 rounded-md border p-1.5 ${b.wide}`}>
+        <div className={`h-1 w-full rounded-sm ${w1}`} />
+        <div className={`h-1 w-[78%] rounded-sm ${n2}`} />
+        <div className={`h-1 w-[50%] rounded-sm ${n3}`} />
       </div>
-      <div className={`landing-hero-b-row-2 mx-1 mt-1.5 space-y-1 rounded-md border p-1.5 ${blk.note}`}>
-        <div className="h-1 w-full rounded-sm bg-white/50" />
-        <div className="h-1 w-[88%] rounded-sm bg-white/35" />
+      <div className={`landing-hero-b-row-2 mx-1 mt-1.5 space-y-1 rounded-md border p-1.5 ${b.note}`}>
+        <div className={`h-1 w-full rounded-sm ${n1}`} />
+        <div className={`h-1 w-[88%] rounded-sm ${n2}`} />
       </div>
-      <div className={`landing-hero-b-row-3 mx-1 mt-1.5 h-12 rounded-md border ${blk.thumb}`}>
-        <div className="h-full rounded-sm bg-white/10" />
+      <div className={`landing-hero-b-row-3 mx-1 mt-1.5 h-12 rounded-md border ${b.thumb}`}>
+        <div className={`h-full rounded-sm ${thumbFill}`} />
       </div>
-      <div className={`landing-hero-b-row-4 mx-1 mt-1.5 h-11 rounded-md border ${blk.hero}`} />
+      <div className={`landing-hero-b-row-4 mx-1 mt-1.5 h-11 rounded-md border ${b.hero}`} />
     </div>
   );
 }
@@ -253,10 +283,10 @@ function SitePageScroll({
         <div className="relative h-[132px] overflow-hidden bg-neutral-50 dark:bg-neutral-900">
           <div className="landing-how-works-scroll">
             <div className="pb-1">
-              <SiteLayoutA />
+              <SiteLayoutA palette="neutral" />
             </div>
             <div className="pb-1" aria-hidden>
-              <SiteLayoutA />
+              <SiteLayoutA palette="neutral" />
             </div>
           </div>
           <div

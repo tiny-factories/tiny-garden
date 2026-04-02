@@ -558,11 +558,11 @@
 }
 
 /* Landing feature cards — icon hover (parent has .group) */
+/* Zap: full bolt at rest; hover replays draw (brief hide → trace) */
 .landing-feature-zap-path {
   stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  opacity: 0.55;
-  transition: opacity 0.2s ease;
+  stroke-dashoffset: 0;
+  opacity: 1;
 }
 
 .group:hover .landing-feature-zap-path {
@@ -570,42 +570,158 @@
 }
 
 @keyframes landing-feature-zap-draw {
+  from {
+    stroke-dashoffset: 100;
+    opacity: 0.88;
+  }
   to {
     stroke-dashoffset: 0;
     opacity: 1;
   }
 }
 
-.landing-feature-lock-body {
-  transform-box: fill-box;
+/* Calendar auto-rebuild: day number crossfade */
+.landing-feature-cal-day {
+  transition: opacity 0.28s ease;
 }
 
-.group:hover .landing-feature-lock-body {
-  animation: landing-feature-lock-click 0.5s cubic-bezier(0.33, 1, 0.68, 1) 0.1s both;
+.landing-feature-cal-day--from {
+  opacity: 1;
 }
 
-@keyframes landing-feature-lock-click {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  35% {
-    transform: scale(0.9);
-  }
-  65% {
-    transform: scale(1.04);
-  }
+.landing-feature-cal-day--to {
+  opacity: 0;
+}
+
+.group:hover .landing-feature-cal-day--from {
+  opacity: 0;
+}
+
+.group:hover .landing-feature-cal-day--to {
+  opacity: 1;
+  transition-delay: 0.06s;
+}
+
+/* Subdomain / link icon: center bridge shortens at rest, extends on hover (Link2 metaphor). */
+.landing-feature-link-bridge {
+  transform-origin: 0 0;
+  transform: scaleX(0.72);
+  transition: transform 0.3s cubic-bezier(0.34, 1, 0.64, 1);
+}
+
+.group:hover .landing-feature-link-bridge {
+  transform: scaleX(1);
+}
+
+/* Layout template / bento: gapped panes → rearranged dashboard on hover (SVG geometry via CSS). */
+.landing-feature-templates-bento .landing-template-cell-1,
+.landing-feature-templates-bento .landing-template-cell-2,
+.landing-feature-templates-bento .landing-template-cell-3 {
+  transition:
+    x 0.48s cubic-bezier(0.34, 1, 0.64, 1),
+    y 0.48s cubic-bezier(0.34, 1, 0.64, 1),
+    width 0.48s cubic-bezier(0.34, 1, 0.64, 1),
+    height 0.48s cubic-bezier(0.34, 1, 0.64, 1);
+}
+
+/* Default: 5u inset, 4u gap under top bar, 4u gutter between bottom tiles (more air). */
+.landing-feature-templates-bento .landing-template-cell-1 {
+  x: 5px;
+  y: 5px;
+  width: 14px;
+  height: 4px;
+  transition-delay: 0s;
+}
+
+.landing-feature-templates-bento .landing-template-cell-2 {
+  x: 5px;
+  y: 13px;
+  width: 5px;
+  height: 7px;
+  transition-delay: 0.04s;
+}
+
+.landing-feature-templates-bento .landing-template-cell-3 {
+  x: 14px;
+  y: 13px;
+  width: 5px;
+  height: 7px;
+  transition-delay: 0.08s;
+}
+
+/* Hover: slim sidebar, 4u channel, stacked main; 5u edge inset */
+.group:hover .landing-feature-templates-bento .landing-template-cell-1 {
+  x: 5px;
+  y: 5px;
+  width: 4px;
+  height: 16px;
+}
+
+.group:hover .landing-feature-templates-bento .landing-template-cell-2 {
+  x: 13px;
+  y: 5px;
+  width: 6px;
+  height: 6px;
+}
+
+.group:hover .landing-feature-templates-bento .landing-template-cell-3 {
+  x: 13px;
+  y: 15px;
+  width: 6px;
+  height: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .group:hover .landing-feature-zap-path {
-    animation: none;
-    stroke-dashoffset: 0;
-    opacity: 1;
+  .landing-feature-zap-path {
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
   }
 
-  .group:hover .landing-feature-lock-body {
+  .group:hover .landing-feature-zap-path {
     animation: none;
+  }
+
+  .landing-feature-cal-day--from,
+  .group:hover .landing-feature-cal-day--from {
+    opacity: 1 !important;
+  }
+
+  .landing-feature-cal-day--to,
+  .group:hover .landing-feature-cal-day--to {
+    opacity: 0 !important;
+    transition: none !important;
+  }
+
+  .landing-feature-link-bridge {
+    transform: scaleX(1) !important;
+    transition: none !important;
+  }
+
+  .landing-feature-templates-bento .landing-template-cell-1,
+  .landing-feature-templates-bento .landing-template-cell-2,
+  .landing-feature-templates-bento .landing-template-cell-3 {
+    transition: none !important;
+  }
+
+  .group:hover .landing-feature-templates-bento .landing-template-cell-1 {
+    x: 5px;
+    y: 5px;
+    width: 14px;
+    height: 4px;
+  }
+
+  .group:hover .landing-feature-templates-bento .landing-template-cell-2 {
+    x: 5px;
+    y: 13px;
+    width: 5px;
+    height: 7px;
+  }
+
+  .group:hover .landing-feature-templates-bento .landing-template-cell-3 {
+    x: 14px;
+    y: 13px;
+    width: 5px;
+    height: 7px;
   }
 }
 
