@@ -4,6 +4,10 @@ export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") || "").toLowerCase();
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
 
+  if (process.env.NODE_ENV === "production" && req.nextUrl.pathname.startsWith("/dev")) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   // Check if this is a subdomain request (e.g. my-site.tiny.garden)
   if (host.endsWith(`.${siteDomain}`) && host !== siteDomain && host !== `www.${siteDomain}`) {
     const subdomain = host.replace(`.${siteDomain}`, "");

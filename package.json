@@ -8,7 +8,8 @@
     "db:push": "prisma db push",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync:feature-reviews": "node scripts/sync-feature-requests.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
