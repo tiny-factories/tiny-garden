@@ -557,3 +557,55 @@
   }
 }
 
+/* Landing feature cards — icon hover (parent has .group) */
+.landing-feature-zap-path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.group:hover .landing-feature-zap-path {
+  animation: landing-feature-zap-draw 0.55s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes landing-feature-zap-draw {
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.landing-feature-lock-body {
+  transform-box: fill-box;
+}
+
+.group:hover .landing-feature-lock-body {
+  animation: landing-feature-lock-click 0.5s cubic-bezier(0.33, 1, 0.68, 1) 0.1s both;
+}
+
+@keyframes landing-feature-lock-click {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.9);
+  }
+  65% {
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .landing-feature-zap-path {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+
+  .group:hover .landing-feature-lock-body {
+    animation: none;
+  }
+}
+

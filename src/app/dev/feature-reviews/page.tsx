@@ -52,11 +52,16 @@ export default async function DevFeatureReviewsPage() {
         >
           tiny-factories / tiny-garden-feature-requests
         </a>
-        . To refresh the repo snapshot, run{" "}
+        . Starting <span className="font-mono text-xs">npm run dev</span> runs{" "}
+        <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">
+          sync:feature-reviews
+        </code>{" "}
+        first (via <span className="font-mono text-xs">predev</span>) so{" "}
+        <span className="font-mono text-xs">docs/feature-reviews.md</span> stays current; you can also run{" "}
         <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">
           npm run sync:feature-reviews
         </code>{" "}
-        and commit <span className="font-mono text-xs">docs/feature-reviews.md</span>.
+        anytime and commit the doc.
       </p>
 
       {error ? (

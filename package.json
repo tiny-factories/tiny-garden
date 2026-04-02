@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/sync-feature-requests.mjs || node -e \"console.warn('[dev] feature-reviews sync failed; continuing with stale docs/feature-reviews.md')\"",
     "dev": "next dev --experimental-https",
     "build": "prisma generate && next build",
     "db:push": "prisma db push",
