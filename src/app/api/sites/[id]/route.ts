@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { removeDomainFromVercel } from "@/lib/vercel";
+import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 
 export async function DELETE(
   _req: NextRequest,
@@ -43,7 +44,12 @@ export async function PATCH(
 
   const data: Record<string, unknown> = {};
   if (typeof body.published === "boolean") data.published = body.published;
-  if (typeof body.template === "string" && body.template) data.template = body.template;
+  if (typeof body.template === "string" && body.template) {
+    if (!(await isKnownTemplateSlug(body.template))) {
+      return NextResponse.json({ error: "Invalid template" }, { status: 400 });
+    }
+    data.template = body.template;
+  }
 
   const updated = await prisma.site.update({
     where: { id },

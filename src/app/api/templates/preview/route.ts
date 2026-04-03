@@ -13,8 +13,20 @@ function escapeHtmlAttr(value: string): string {
     .replace(/</g, "&lt;");
 }
 
-// Register helper once
+// Register helpers (keep in sync with src/lib/build.ts)
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
+Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+Handlebars.registerHelper("formatDate", (dateStr: string) => {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+});
 
 export async function GET(request: NextRequest) {
   const template = request.nextUrl.searchParams.get("template");

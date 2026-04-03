@@ -9,12 +9,9 @@ import { PlanTierBadge } from "@/components/PlanTierBadge";
 import { Toolbar, type ViewMode } from "@/components/toolbar";
 import { SitesPageSkeleton } from "@/components/sites-dashboard-skeletons";
 import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
+import { SITE_CARD_GRID_CLASS } from "@/lib/site-card-grid";
 
 const SITES_VIEW_MODE_KEY = "tinygarden:sites-view-mode";
-
-/** 1 col on narrow viewports; 2-up on sm+ with full-width last row when odd count avoids a lone half-width card. */
-const SITES_CARD_GRID_CLASS =
-  "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:[&>*:nth-last-child(1):nth-child(odd)]:col-span-2";
 
 function parseStoredViewMode(raw: string | null): ViewMode | null {
   if (raw === "single" || raw === "grid" || raw === "list") return raw;
@@ -501,7 +498,7 @@ export default function SitesPage() {
           ) : (
             /* ── Single / Grid view ── */
             <div
-              className={viewMode === "grid" ? SITES_CARD_GRID_CLASS : "space-y-3"}
+              className={viewMode === "grid" ? SITE_CARD_GRID_CLASS : "space-y-3"}
             >
               {filtered.map((site) => {
                 const isBuilding = !!building[site.id];

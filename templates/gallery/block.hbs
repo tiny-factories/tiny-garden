@@ -1,0 +1,188 @@
+{{#if (eq type "image")}}
+  <div class="gallery-item gallery-item--image">
+    <button type="button" class="gallery-tile">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+    </button>
+    <template class="gallery-detail-template">
+      <div class="gallery-detail-split">
+        <figure class="gallery-detail-figure">
+          <img src="{{#if image.large}}{{image.large}}{{else}}{{image.display}}{{/if}}" alt="{{title}}" loading="lazy" tabindex="-1">
+        </figure>
+        <aside class="gallery-detail-aside">
+          {{#if title}}
+            <h2 class="gallery-detail-title">{{title}}</h2>
+          {{/if}}
+          {{#if description}}
+            <p class="gallery-detail-description">{{description}}</p>
+          {{/if}}
+          <p class="gallery-detail-meta">
+            <time datetime="{{created_at}}">{{formatDate created_at}}</time>
+            {{#if arena_url}}
+              <span class="gallery-detail-meta-sep">&middot;</span>
+              <a href="{{arena_url}}" target="_blank" rel="noopener">View on Are.na</a>
+            {{/if}}
+          </p>
+        </aside>
+      </div>
+    </template>
+  </div>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <div class="gallery-item gallery-item--text">
+    <button type="button" class="gallery-tile gallery-tile--text">
+      <span class="gallery-tile-text-inner">
+        {{#if title}}
+          <span class="gallery-tile-text-title">{{title}}</span>
+        {{else}}
+          <span class="gallery-tile-text-label">Text</span>
+        {{/if}}
+      </span>
+    </button>
+    <template class="gallery-detail-template">
+      <div class="gallery-detail-split gallery-detail-split--stack">
+        <aside class="gallery-detail-aside gallery-detail-aside--solo" tabindex="-1">
+          {{#if title}}
+            <h2 class="gallery-detail-title">{{title}}</h2>
+          {{/if}}
+          {{#if description}}
+            <p class="gallery-detail-lede">{{description}}</p>
+          {{/if}}
+          <div class="gallery-detail-prose">{{{content}}}</div>
+          <p class="gallery-detail-meta">
+            <time datetime="{{created_at}}">{{formatDate created_at}}</time>
+            {{#if arena_url}}
+              <span class="gallery-detail-meta-sep">&middot;</span>
+              <a href="{{arena_url}}" target="_blank" rel="noopener">View on Are.na</a>
+            {{/if}}
+          </p>
+        </aside>
+      </div>
+    </template>
+  </div>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <div class="gallery-item gallery-item--link">
+    <button type="button" class="gallery-tile">
+      {{#if link.thumbnail}}
+        <img src="{{link.thumbnail}}" alt="" loading="lazy">
+      {{else}}
+        <span class="gallery-tile-fallback">{{link.title}}</span>
+      {{/if}}
+    </button>
+    <template class="gallery-detail-template">
+      <div class="gallery-detail-split">
+        <figure class="gallery-detail-figure">
+          {{#if link.thumbnail}}
+            <img src="{{link.thumbnail}}" alt="" loading="lazy" tabindex="-1">
+          {{else}}
+            <div class="gallery-detail-link-placeholder" tabindex="-1"></div>
+          {{/if}}
+        </figure>
+        <aside class="gallery-detail-aside">
+          <h2 class="gallery-detail-title">{{link.title}}</h2>
+          {{#if title}}
+            {{#unless (eq title link.title)}}
+              <p class="gallery-detail-subtitle">{{title}}</p>
+            {{/unless}}
+          {{/if}}
+          {{#if link.description}}
+            <p class="gallery-detail-description">{{link.description}}</p>
+          {{/if}}
+          {{#if description}}
+            <p class="gallery-detail-description gallery-detail-description--secondary">{{description}}</p>
+          {{/if}}
+          <p class="gallery-detail-actions">
+            <a class="gallery-detail-external" href="{{link.url}}" target="_blank" rel="noopener">Open link</a>
+          </p>
+          <p class="gallery-detail-meta">
+            <time datetime="{{created_at}}">{{formatDate created_at}}</time>
+            {{#if arena_url}}
+              <span class="gallery-detail-meta-sep">&middot;</span>
+              <a href="{{arena_url}}" target="_blank" rel="noopener">View on Are.na</a>
+            {{/if}}
+          </p>
+        </aside>
+      </div>
+    </template>
+  </div>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <div class="gallery-item gallery-item--media">
+    <button type="button" class="gallery-tile gallery-tile--embed">
+      <div class="gallery-tile-embed">{{{embed.html}}}</div>
+    </button>
+    <template class="gallery-detail-template">
+      <div class="gallery-detail-split gallery-detail-split--media">
+        <div class="gallery-detail-embed" tabindex="-1">{{{embed.html}}}</div>
+        <aside class="gallery-detail-aside">
+          {{#if title}}
+            <h2 class="gallery-detail-title">{{title}}</h2>
+          {{/if}}
+          {{#if description}}
+            <p class="gallery-detail-description">{{description}}</p>
+          {{/if}}
+          {{#if embed.url}}
+            <p class="gallery-detail-actions">
+              <a class="gallery-detail-external" href="{{embed.url}}" target="_blank" rel="noopener">Open source</a>
+            </p>
+          {{/if}}
+          <p class="gallery-detail-meta">
+            <time datetime="{{created_at}}">{{formatDate created_at}}</time>
+            {{#if arena_url}}
+              <span class="gallery-detail-meta-sep">&middot;</span>
+              <a href="{{arena_url}}" target="_blank" rel="noopener">View on Are.na</a>
+            {{/if}}
+          </p>
+        </aside>
+      </div>
+    </template>
+  </div>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <div class="gallery-item gallery-item--attachment">
+    <button type="button" class="gallery-tile">
+      {{#if image.display}}
+        <img src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+      {{else}}
+        <span class="gallery-tile-fallback">{{attachment.file_name}}</span>
+      {{/if}}
+    </button>
+    <template class="gallery-detail-template">
+      <div class="gallery-detail-split">
+        {{#if image.display}}
+          <figure class="gallery-detail-figure">
+            <img src="{{#if image.large}}{{image.large}}{{else}}{{image.display}}{{/if}}" alt="{{attachment.file_name}}" loading="lazy" tabindex="-1">
+          </figure>
+        {{else}}
+          <div class="gallery-detail-figure gallery-detail-figure--empty" tabindex="-1">
+            <span class="gallery-detail-file-icon" aria-hidden="true">↧</span>
+          </div>
+        {{/if}}
+        <aside class="gallery-detail-aside">
+          {{#if title}}
+            <h2 class="gallery-detail-title">{{title}}</h2>
+          {{else}}
+            <h2 class="gallery-detail-title">{{attachment.file_name}}</h2>
+          {{/if}}
+          {{#if description}}
+            <p class="gallery-detail-description">{{description}}</p>
+          {{/if}}
+          <p class="gallery-detail-actions">
+            <a class="gallery-detail-external" href="{{attachment.url}}" download>Download</a>
+          </p>
+          <p class="gallery-detail-meta">
+            <time datetime="{{created_at}}">{{formatDate created_at}}</time>
+            {{#if arena_url}}
+              <span class="gallery-detail-meta-sep">&middot;</span>
+              <a href="{{arena_url}}" target="_blank" rel="noopener">View on Are.na</a>
+            {{/if}}
+          </p>
+        </aside>
+      </div>
+    </template>
+  </div>
+{{/if}}

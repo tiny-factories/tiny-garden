@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Docs — Block rendering",
   description:
-    "How tiny.garden maps Are.na blocks to site templates: image, text, link, media, and attachment.",
+    "How tiny.garden maps Are.na blocks to site templates (image, text, link, media, attachment), including Gallery and other layouts.",
 };
 
 const blockTypes = [
@@ -79,6 +79,20 @@ const templates: {
       "Link: optional thumbnail and link title; block title (if any) is shown as caption for every block type at the bottom of the tile.",
       "Media: embed.",
       "Attachment: preview + file name link.",
+    ],
+  },
+  {
+    id: "gallery",
+    name: "Gallery",
+    summary:
+      "Masonry-style column grid of thumbnails; each block opens in a full-screen dialog with image (or embed) and description, similar to a museum wall label.",
+    notes: [
+      "Image: display in the grid; large (or display) image in the dialog; block title and description; date and Are.na link.",
+      "Text: compact “Text” tile; dialog shows title, optional description, and full HTML body.",
+      "Link: thumbnail or title fallback in the grid; dialog shows image, link title, descriptions, and an “Open link” action.",
+      "Media: scaled embed in the grid; full embed plus title, description, and source link in the dialog.",
+      "Attachment: preview image or file name in the grid; dialog with download and optional image preview.",
+      "Uses the native HTML dialog element and loads copy from each block’s template fragment (no extra network request).",
     ],
   },
   {

@@ -105,9 +105,11 @@ export default function NewSitePage() {
   useEffect(() => {
     fetch("/api/templates")
       .then((r) => r.json())
-      .then((data) => {
-        setTemplates(data);
-        if (data.length > 0) setSelectedTemplate(data[0].id);
+      .then((data: TemplateMeta[]) => {
+        setTemplates(Array.isArray(data) ? data : []);
+        if (!Array.isArray(data) || data.length === 0) return;
+        const preferred = data.find((t) => t.id === "blog");
+        setSelectedTemplate(preferred ? preferred.id : data[0].id);
       });
   }, []);
 

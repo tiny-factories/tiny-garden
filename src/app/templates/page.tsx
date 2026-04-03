@@ -1,81 +1,80 @@
 import Link from "next/link";
-import fs from "fs/promises";
-import path from "path";
-
-interface TemplateMeta {
-  name: string;
-  description: string;
-  slug: string;
-}
-
-async function getTemplates(): Promise<TemplateMeta[]> {
-  const templatesDir = path.join(process.cwd(), "templates");
-  const entries = await fs.readdir(templatesDir, { withFileTypes: true });
-  const templates: TemplateMeta[] = [];
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    try {
-      const meta = JSON.parse(
-        await fs.readFile(path.join(templatesDir, entry.name, "meta.json"), "utf-8")
-      );
-      templates.push({ ...meta, slug: entry.name });
-    } catch {
-      // skip directories without meta.json
-    }
-  }
-
-  return templates;
-}
+import { ArrowUpRight } from "lucide-react";
+import { SITE_CARD_GRID_CLASS } from "@/lib/site-card-grid";
+import { loadTemplatesFromDisk } from "@/lib/templates-manifest";
 
 export default async function TemplatesPage() {
-  const templates = await getTemplates();
+  const rows = await loadTemplatesFromDisk();
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 font-sans">
-      <header className="flex flex-col gap-4 border-b border-neutral-200 px-8 pb-6 pt-8 sm:flex-row sm:items-start sm:justify-between dark:border-neutral-800">
+    <main className="min-h-screen w-full min-w-0 max-w-4xl mx-auto px-4 py-16 bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 font-sans">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-12">
         <div>
-          <h1 className="text-xl font-semibold text-neutral-950 dark:text-neutral-50">Templates</h1>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Preview each template with sample Are.na content. Click to view full-screen.
+          <h1 className="text-lg font-medium text-neutral-950 dark:text-neutral-50">Templates</h1>
+          <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500">
+            Preview each template with sample Are.na content. Click the preview or Open for full-screen.
           </p>
         </div>
         <Link
           href="/#templates"
-          className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-900"
+          className="inline-flex shrink-0 items-center justify-center whitespace-nowrap text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
         >
           Back to home
         </Link>
-      </header>
-
-      <div className="grid grid-cols-1 gap-8 p-8 [grid-template-columns:repeat(auto-fill,minmax(560px,1fr))]">
-        {templates.map((t) => (
-          <div
-            key={t.slug}
-            className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-              <div className="min-w-0">
-                <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t.name}</span>
-                <span className="ml-2 text-xs text-neutral-500 dark:text-neutral-400">{t.description}</span>
-              </div>
-              <a
-                href={`/api/templates/preview?template=${t.slug}`}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex shrink-0 items-center rounded border border-neutral-200 px-2 py-1 text-xs text-neutral-600 transition-colors hover:bg-white dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-950"
-              >
-                Open
-              </a>
-            </div>
-            <iframe
-              src={`/api/templates/preview?template=${t.slug}`}
-              className="block h-[500px] w-full border-0 bg-white dark:bg-neutral-950"
-              title={`${t.name} preview`}
-            />
-          </div>
-        ))}
       </div>
-    </div>
+
+      <div className={SITE_CARD_GRID_CLASS}>
+        {rows.map((t) => {
+          const previewUrl = `/api/templates/preview?template=${t.id}`;
+          return (
+            <div
+              key={t.id}
+              className="group/card border rounded overflow-hidden border-neutral-200 dark:border-neutral-700"
+            >
+              <div className="relative">
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="block bg-neutral-50 group/preview cursor-pointer dark:bg-neutral-900"
+                >
+                  <div className="aspect-[16/9] overflow-hidden relative">
+                    <iframe
+                      src={previewUrl}
+                      className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none"
+                      tabIndex={-1}
+                      title={`Preview of ${t.name}`}
+                    />
+                    <div className="absolute inset-0 z-10 bg-transparent group-hover/preview:bg-black/5 transition-colors pointer-events-none">
+                      <span className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white/90 dark:bg-neutral-900/90 backdrop-blur px-2 py-1 rounded-md opacity-0 group-hover/preview:opacity-100 transition-opacity shadow-sm border border-neutral-200/80 dark:border-neutral-700/80">
+                        Open preview
+                        <ArrowUpRight className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <p className="text-sm font-medium truncate text-neutral-950 dark:text-neutral-50">{t.name}</p>
+                    <p className="text-xs text-neutral-400 line-clamp-2 dark:text-neutral-500">{t.description}</p>
+                  </div>
+                  <a
+                    href={previewUrl}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors shrink-0 dark:hover:bg-neutral-800/80 dark:border-neutral-700"
+                  >
+                    Open
+                  </a>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </main>
   );
 }

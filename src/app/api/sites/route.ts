@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { seedFromSubdomain } from "@/lib/garden-icon";
 import { buildSite } from "@/lib/build";
 import { isBetaFull } from "@/lib/beta";
+import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
@@ -28,6 +29,10 @@ export async function POST(req: NextRequest) {
 
   if (!channelSlug || !template || !subdomain) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  if (!(await isKnownTemplateSlug(template))) {
+    return NextResponse.json({ error: "Invalid template" }, { status: 400 });
   }
 
   // Check site limit based on plan

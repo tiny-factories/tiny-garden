@@ -32,16 +32,19 @@ tiny.garden turns Are.na channels into static websites. Users log in with Are.na
 - `src/middleware.ts` — Wildcard subdomain routing + auth guard for `/dashboard`
 
 ### Templates
-Templates live in `templates/{name}/` and are decoupled from the app:
+Templates live in `templates/{slug}/` and are decoupled from the app. Adding a folder with `meta.json` is enough for it to appear in **New site**, **`/templates`**, and the site settings template picker (`GET /api/templates` reads the disk via `src/lib/templates-manifest.ts`, sorted by display name).
+
 ```
 templates/blog/
   index.hbs        — Main layout (Handlebars)
-  block.hbs        — Block partial
+  block.hbs        — Block partial (optional; omit if unused)
   style.css        — Styles
   meta.json        — { "name": "...", "description": "..." }
 ```
 
-The data contract passed to templates is the `SiteData` interface in `src/lib/build.ts`. Block types: `image`, `text`, `link`, `media`, `attachment`.
+**Site creation and production:** `POST /api/sites` and `PATCH /api/sites/[id]` only accept template slugs that exist on disk (`isKnownTemplateSlug`). `runBuild` in `src/lib/build.ts` rejects unknown templates so builds cannot read arbitrary paths. Default template in the new-site UI is **blog** when present, otherwise the first entry from the API.
+
+The data contract passed to templates is the `SiteData` interface in `src/lib/build.ts`. Block types: `image`, `text`, `link`, `media`, `attachment`. In-app docs: `/docs` (block-type table and per-template notes, including **Gallery** masonry + dialog).
 
 ### Database (Prisma)
 Three models: `User` (Are.na auth + Stripe customer), `Site` (subdomain, channel, template), `Subscription` (free/pro plan).

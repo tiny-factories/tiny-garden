@@ -3,9 +3,9 @@
 Source: [tiny garden feature requests](https://www.are.na/tiny-factories/tiny-garden-feature-requests)
 
 - **Channel slug:** `tiny-garden-feature-requests`
-- **Channel updated (Are.na):** 2026-03-31T17:01:43Z
-- **Markdown synced:** 2026-04-02T18:48:34.905Z
-- **Block count:** 8
+- **Channel updated (Are.na):** 2026-04-03T16:49:22Z
+- **Markdown synced:** 2026-04-03T21:01:28.412Z
+- **Block count:** 7
 
 Comments on each block on Are.na are treated as support / votes for that request.
 
@@ -19,6 +19,8 @@ Comments on each block on Are.na are treated as support / votes for that request
 
 Custom Templates
 
+Templates: Custom
+
 ---
 
 ### 2. [Editing of Templates](https://www.are.na/block/44812763)
@@ -31,13 +33,16 @@ Editing of Templates
 
 ---
 
-### 3. [Block Support: STL Files](https://www.are.na/block/44813802)
+### 3. [Block Support: 3D Files](https://www.are.na/block/44813802)
 
 - **Type:** Text
 - **Comments:** 0
 - **Added:** 2026-03-28T01:25:53Z
 
-Block Support: STL Files
+Block Support: 3D Files
+
+Block Support: 3d Files  
+Add support for 3-D file formats like STLs in OBJs, etc. that way you can manipulate
 
 ---
 
@@ -52,44 +57,37 @@ Create a link bio template that allows you to paste it in social media links, wh
 
 ---
 
-### 5. [Template: Update Gallery to have full screen Modal](https://www.are.na/block/44912940)
-
-- **Type:** Text
-- **Comments:** 0
-- **Added:** 2026-03-31T14:39:16Z
-
-Template: Update Gallery to have full screen Modal
-
----
-
-### 6. [Template: Map](https://www.are.na/block/44912950)
+### 5. [Template: Map](https://www.are.na/block/44912950)
 
 - **Type:** Text
 - **Comments:** 0
 - **Added:** 2026-03-31T14:39:31Z
 
-Template: Map
+Template: Map  
+Create a template where you can read a series of titles and launch latitude locations from block elements to display them on a interactive map interface
 
 ---
 
-### 7. [UI: Site](https://www.are.na/block/44913004)
+### 6. [UI: Site [DONE\]](https://www.are.na/block/44913004)
 
 - **Type:** Text
-- **Comments:** 0
+- **Comments:** 1
 - **Added:** 2026-03-31T14:41:23Z
+
+UI: Site [DONE]
 
 UI: Site  
 Cache the layout toggle [Single, Gris, List] toggle so you dont need to change it each time the site age loads.
 
 ---
 
-### 8. [Template: Photography](https://www.are.na/block/44917222)
+### 7. [Template: Photography](https://www.are.na/block/44917222)
 
 - **Type:** Text
 - **Comments:** 0
 - **Added:** 2026-03-31T17:01:43Z
 
-Template: Photography
+Template: Photography  
+Create a template for the people to have a splash style alternative where you can show some meditated info about the camera optionally, where and what the copyright are have the option in a griddy, forming based on the aspect ratio of the photo
 
 ---
-

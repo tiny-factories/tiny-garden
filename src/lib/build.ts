@@ -7,6 +7,7 @@ import { ArenaClient, ArenaBlock } from "./arena";
 import { prisma } from "./db";
 import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
+import { isKnownTemplateSlug } from "./templates-manifest";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -317,6 +318,10 @@ async function runBuild(siteId: string): Promise<string> {
 
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+
+  if (!(await isKnownTemplateSlug(site.template))) {
+    throw new Error(`Unknown template "${site.template}".`);
+  }
 
   const siteData: SiteData = {
     channel: {
