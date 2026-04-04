@@ -31,10 +31,19 @@
   {{/if}}
 
   {{#if (eq type "attachment")}}
-    {{#if image.display}}
+    {{#if attachment.is_image}}
       <figure class="portfolio-figure">
-        <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+        <img src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
       </figure>
+    {{else}}
+      {{#if (eq attachment.kind "video")}}
+        {{#if attachment.preview_url}}
+          <video class="portfolio-figure" controls preload="metadata">
+            <source src="{{attachment.preview_url}}" type="{{attachment.content_type}}">
+            Your browser does not support video playback.
+          </video>
+        {{/if}}
+      {{/if}}
     {{/if}}
     <a href="{{attachment.url}}" class="portfolio-attachment" download>
       {{attachment.display_name}}

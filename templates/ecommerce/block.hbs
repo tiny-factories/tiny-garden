@@ -39,10 +39,22 @@
 {{/if}}
 
 {{#if (eq type "attachment")}}
-  {{#if image.display}}
-    <img class="shop-block-img" src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+  {{#if attachment.is_video}}
+    <video class="shop-block-img" src="{{attachment.url}}" controls preload="metadata"></video>
+  {{else}}
+    {{#if attachment.is_pdf}}
+      <iframe class="shop-block-img" src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+    {{else}}
+      {{#if attachment.preview_url}}
+        <img class="shop-block-img" src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{/if}}
+    {{/if}}
   {{/if}}
   <a href="{{attachment.url}}" class="shop-block shop-block--attachment" download>
     {{attachment.display_name}}
+    {{#if attachment.extension}}<small>.{{attachment.extension}}</small>{{/if}}
   </a>
+  {{#if attachment.is_model}}
+    <p class="shop-block-link-desc">3D file preview not available in this template yet.</p>
+  {{/if}}
 {{/if}}

@@ -50,10 +50,24 @@
     {{#if title}}
       <h2 class="sv-document-article-title">{{title}}</h2>
     {{/if}}
-    {{#if image.display}}
+    {{#if attachment.preview_url}}
       <figure class="sv-document-article-image">
-        <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+        {{#if (eq attachment.kind "video")}}
+          <video controls preload="metadata" style="max-width:100%">
+            <source src="{{attachment.preview_url}}" type="{{attachment.content_type}}">
+            <a href="{{attachment.url}}">Open video</a>
+          </video>
+        {{else}}
+          {{#if (eq attachment.kind "pdf")}}
+            <iframe src="{{attachment.preview_url}}" title="{{attachment.alt_text}}" style="width:100%;min-height:28rem;border:0"></iframe>
+          {{else}}
+            <img src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+          {{/if}}
+        {{/if}}
       </figure>
+    {{/if}}
+    {{#if (eq attachment.kind "model")}}
+      <p class="sv-document-article-caption">3D model preview is not available in this template yet.</p>
     {{/if}}
     <a href="{{attachment.url}}" class="sv-document-article-attachment" download>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

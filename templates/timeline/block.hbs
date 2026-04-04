@@ -54,6 +54,18 @@
     {{#if (eq type "attachment")}}
       {{#if image.display}}
         <img class="sv-tl-entry-img" src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{else}}
+        {{#if attachment.preview_url}}
+          {{#if (eq attachment.kind "video")}}
+            <video class="sv-tl-entry-img" src="{{attachment.preview_url}}" controls preload="metadata"></video>
+          {{/if}}
+          {{#if (eq attachment.kind "pdf")}}
+            <iframe class="sv-tl-entry-img" src="{{attachment.preview_url}}" title="{{attachment.alt_text}}" loading="lazy"></iframe>
+          {{/if}}
+          {{#if (eq attachment.kind "image")}}
+            <img class="sv-tl-entry-img" src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+          {{/if}}
+        {{/if}}
       {{/if}}
       <a href="{{attachment.url}}" class="sv-tl-entry-attachment" download>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -61,6 +73,7 @@
         </svg>
         <span>{{attachment.display_name}}</span>
       </a>
+      <p class="sv-tl-entry-description">{{attachment.type}}</p>
       {{#if description}}
         <p class="sv-tl-entry-description">{{description}}</p>
       {{/if}}

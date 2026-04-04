@@ -35,7 +35,7 @@ const blockTypes = [
     type: "attachment",
     arena: "Attachment",
     fields:
-      "attachment.url, file_name, display_name, alt_text, optional preview via image.display when Are.na provides one",
+      "attachment.url, file_name, display_name, alt_text, attachment.kind, attachment.extension, attachment.preview_url, attachment.has_visual_preview",
   },
 ] as const;
 
@@ -54,7 +54,7 @@ const templates: {
       "Text: optional title, HTML body, optional description below.",
       "Link: optional thumbnail, link title and description inside one clickable card.",
       "Media: embed, optional title and description.",
-      "Attachment: preview image if present, download row, optional description.",
+      "Attachment: supports richer previews by file type (image/GIF, video, PDF); model and unknown files fall back to label + download.",
     ],
   },
   {
@@ -66,7 +66,7 @@ const templates: {
       "Text: HTML body only (no separate title line in the partial).",
       "Link: thumbnail, title, and description in a horizontal card.",
       "Media: embed only.",
-      "Attachment: preview image if present, title/description-aware download label (fallback to file name).",
+      "Attachment: preview image/video/PDF when possible, title/description-aware label fallback.",
     ],
   },
   {
@@ -78,7 +78,7 @@ const templates: {
       "Text: HTML body.",
       "Link: optional thumbnail and link title; block title (if any) is shown as caption for every block type at the bottom of the tile.",
       "Media: embed.",
-      "Attachment: preview + title/description-aware download label (fallback to file name).",
+      "Attachment: preview + title/description-aware label (fallback to file name), with file-type awareness.",
     ],
   },
   {
@@ -91,7 +91,7 @@ const templates: {
       "Text: compact “Text” tile; dialog shows title, optional description, and full HTML body.",
       "Link: thumbnail or title fallback in the grid; dialog shows image, link title, descriptions, and an “Open link” action.",
       "Media: scaled embed in the grid; full embed plus title, description, and source link in the dialog.",
-      "Attachment: preview image or display label in the grid; dialog with download and optional image preview.",
+      "Attachment: preview image/video/PDF or display label in the grid; dialog includes download and file-type fallback behavior.",
       "Uses the native HTML dialog element and loads copy from each block’s template fragment (no extra network request).",
     ],
   },
@@ -104,7 +104,7 @@ const templates: {
       "Text: centered HTML.",
       "Link: uses block preview image (image.display) when available, not always the same as link.thumbnail; caption links out with link title.",
       "Media: full-slide embed.",
-      "Attachment: preview + download control.",
+      "Attachment: preview + download control, including video and PDF when available.",
     ],
   },
   {
@@ -116,7 +116,7 @@ const templates: {
       "Text: raw HTML.",
       "Link: plain anchor with link title.",
       "Media: raw embed HTML.",
-      "Attachment: optional preview + title/description-aware file link.",
+      "Attachment: optional preview + title/description-aware file link; model/archive files show safe fallback.",
     ],
   },
   {
@@ -137,7 +137,7 @@ const templates: {
       "Image: optional title, figure linking to image.original, figcaption from block description.",
       "Link: optional block title, then card with thumbnail, link title, description, and visible URL.",
       "Media: optional title, embed.",
-      "Attachment: optional title, preview image, download row.",
+      "Attachment: optional title, preview image/video/PDF, download row.",
     ],
   },
   {
@@ -159,7 +159,7 @@ const templates: {
       "Text: product-style HTML body.",
       "Link: prominent button using link title or “View Link”, optional description as subtext.",
       "Media: embed.",
-      "Attachment: preview + download.",
+      "Attachment: preview + download, with media/PDF rendering when source allows embedding.",
     ],
   },
   {
@@ -171,7 +171,7 @@ const templates: {
       "Text: title and HTML body.",
       "Link: card with thumbnail, link title, link description.",
       "Media: title, embed.",
-      "Attachment: preview + download.",
+      "Attachment: preview + download, with richer previews for video/PDF/image attachments.",
     ],
   },
   {
@@ -183,7 +183,7 @@ const templates: {
       "Text: HTML on a slide.",
       "Link: card with image.display, link title, and URL line.",
       "Media: centered embed.",
-      "Attachment: constrained preview + large download control.",
+      "Attachment: constrained preview for image/video/PDF + large download control.",
     ],
   },
   {
@@ -195,7 +195,7 @@ const templates: {
       "Text: title plus HTML body, or description if there is no body.",
       "Link: prefers block title/description, falls back to link title/description; the card does not surface the URL (whole card goes to Are.na).",
       "Media: only title and description — embed HTML is not rendered in this template.",
-      "Attachment: preview, title/description-aware label, description.",
+      "Attachment: preview when available, title/description-aware label, description.",
     ],
   },
   {
@@ -278,6 +278,15 @@ export default function DocsPage() {
           Attachment blocks also expose normalized display metadata so templates can show cleaner labels:
           <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.display_name</span> (title/description first, then file name) and
           <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.alt_text</span>.
+        </p>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-3 leading-relaxed max-w-lg">
+          Attachments now include file-type metadata for richer rendering:
+          <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.kind</span>,
+          <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.extension</span>,
+          <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.preview_url</span>, and
+          <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.has_visual_preview</span>.
+          This enables templates to render GIF/image, video, and PDF previews while falling back gracefully for model files
+          (such as STL/OBJ) and other non-previewable formats.
         </p>
       </section>
 

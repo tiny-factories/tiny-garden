@@ -64,6 +64,16 @@
     {{#if (eq type "attachment")}}
       {{#if image.display}}
         <img class="sv-fr-card-img" src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{else}}
+        {{#if (eq attachment.kind "video")}}
+          <video class="sv-fr-card-img" src="{{attachment.url}}" muted playsinline controls preload="metadata"></video>
+        {{/if}}
+        {{#if (eq attachment.kind "pdf")}}
+          <div class="sv-fr-card-img">PDF</div>
+        {{/if}}
+        {{#if (eq attachment.kind "model")}}
+          <div class="sv-fr-card-img">3D</div>
+        {{/if}}
       {{/if}}
       {{#if title}}
         <h2 class="sv-fr-card-title">{{title}}</h2>
