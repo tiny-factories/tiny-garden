@@ -45,21 +45,26 @@ function migrateDeploy() {
     process.exit(r.status === null ? 1 : r.status);
   }
 
-  if (process.env.PRISMA_NO_AUTO_BASELINE === "1") {
+  if (process.env.PRISMA_AUTO_BASELINE_ON_P3005 !== "1") {
     process.stderr.write(`
-Prisma P3005: existing DB, no migration history. Auto-baseline is disabled (PRISMA_NO_AUTO_BASELINE=1).
+Prisma P3005: database has data but no Prisma migration history.
 
-  yarn db:baseline
+1) Apply schema to the DB first (Neon SQL editor, same DB as DATABASE_URL), e.g.:
+     prisma/manual-fix-discoverable.sql
+   and/or the full:
+     prisma/migrations/${BASELINE_MIGRATION}/migration.sql
 
-If "Site"."discoverable", "ApiToken", or "BuildRequest" are missing, run
-  prisma/migrations/${BASELINE_MIGRATION}/migration.sql
-in Neon first, then yarn db:baseline.
+2) Then record the migration without re-running SQL:
+     yarn db:baseline
+
+Optional (dangerous): set PRISMA_AUTO_BASELINE_ON_P3005=1 for one build to mark the migration
+applied without running SQL — only if the DB already matches that migration.
 `);
     process.exit(r.status === null ? 1 : r.status);
   }
 
   process.stderr.write(
-    `\n[prisma] P3005: baselining migration ${BASELINE_MIGRATION}, then retrying migrate deploy…\n\n`
+    `\n[prisma] P3005: PRISMA_AUTO_BASELINE_ON_P3005=1 — marking ${BASELINE_MIGRATION} applied, then retrying deploy…\n\n`
   );
 
   const resolved = runPrismaCapture([
@@ -80,9 +85,7 @@ in Neon first, then yarn db:baseline.
   if (again.stderr) process.stderr.write(again.stderr);
   if (again.status !== 0) {
     process.stderr.write(`
-[prisma] migrate deploy still failed after baseline. If schema is missing this migration's changes, run
-  prisma/migrations/${BASELINE_MIGRATION}/migration.sql
-in your SQL editor, then run: yarn build
+[prisma] migrate deploy still failed after baseline. Apply SQL from prisma/migrations/${BASELINE_MIGRATION}/migration.sql first.
 `);
     process.exit(again.status === null ? 1 : again.status);
   }
