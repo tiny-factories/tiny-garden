@@ -1,6 +1,6 @@
 "use strict";
 
-const { spawnSync } = require("child_process");
+const { spawnSync, execSync } = require("child_process");
 const {
   loadDotenv,
   ensureDirectUrlForGenerate,
@@ -31,17 +31,65 @@ function runPrismaCapture(args, env) {
 const prisma = prismaCliPath();
 const nextBin = require.resolve("next/dist/bin/next");
 
+function sleepSync(ms) {
+  if (process.platform !== "win32") {
+    try {
+      const s = Math.max(1, Math.ceil(ms / 1000));
+      execSync(`sleep ${s}`, { stdio: "ignore" });
+      return;
+    } catch {
+      /* fall through */
+    }
+  }
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    /* busy wait */
+  }
+}
+
 function migrateDeploy() {
   const migrateEnv = getMigrateEnv();
-  const r = runPrismaCapture([prisma, "migrate", "deploy"], migrateEnv);
-  if (r.stdout) process.stdout.write(r.stdout);
-  if (r.stderr) process.stderr.write(r.stderr);
+  const maxAttempts = Math.min(
+    8,
+    Math.max(1, parseInt(process.env.PRISMA_MIGRATE_DEPLOY_ATTEMPTS || "5", 10))
+  );
+  const p1002BaseWaitMs = parseInt(
+    process.env.PRISMA_MIGRATE_P1002_WAIT_MS || "12000",
+    10
+  );
+
+  let r = { status: 1, stdout: "", stderr: "" };
+  let combined = "";
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    r = runPrismaCapture([prisma, "migrate", "deploy"], migrateEnv);
+    if (r.stdout) process.stdout.write(r.stdout);
+    if (r.stderr) process.stderr.write(r.stderr);
+    combined = `${r.stdout || ""}${r.stderr || ""}`;
+    if (r.status === 0) return;
+
+    const isP1002 = combined.includes("P1002");
+    if (isP1002 && attempt < maxAttempts) {
+      const waitMs = p1002BaseWaitMs + (attempt - 1) * 5000;
+      process.stderr.write(
+        `[prisma] P1002 (advisory lock timeout) — retrying migrate deploy (${attempt + 1}/${maxAttempts}) in ${Math.round(waitMs / 1000)}s (concurrent deploys / Neon wake).\n`
+      );
+      sleepSync(waitMs);
+      continue;
+    }
+    break;
+  }
+
   if (r.status === 0) return;
 
-  const combined = `${r.stdout || ""}${r.stderr || ""}`;
   const isP3005 = combined.includes("P3005");
 
   if (!isP3005) {
+    if (combined.includes("P1002")) {
+      process.stderr.write(
+        `[prisma] Still P1002 after ${maxAttempts} attempts. Cancel overlapping Vercel builds or run: yarn db:migrate with DIRECT_URL when the DB is quiet.\n`
+      );
+    }
     process.exit(r.status === null ? 1 : r.status);
   }
 

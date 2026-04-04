@@ -42,6 +42,19 @@ function tryNeonDirectUrlFromPooled(databaseUrl) {
   }
 }
 
+/** Libpq connect_timeout (seconds) — helps cold Neon / slow TLS before migrate runs. */
+function withConnectTimeout(databaseUrl, seconds) {
+  try {
+    const url = new URL(databaseUrl);
+    if (!url.searchParams.has("connect_timeout")) {
+      url.searchParams.set("connect_timeout", String(seconds));
+    }
+    return url.toString();
+  } catch {
+    return databaseUrl;
+  }
+}
+
 /**
  * Prisma schema requires DIRECT_URL; `generate` does not need a real direct connection.
  * Duplicate pooled URL is fine here.
@@ -62,7 +75,7 @@ function getMigrateEnv() {
   const direct = process.env.DIRECT_URL || "";
 
   if (!db) {
-    base.DIRECT_URL = direct || db;
+    base.DIRECT_URL = direct ? withConnectTimeout(direct, 60) : "";
     return base;
   }
 
@@ -89,11 +102,11 @@ https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-c
 `);
       process.exit(1);
     }
-    base.DIRECT_URL = effectiveDirect;
+    base.DIRECT_URL = withConnectTimeout(effectiveDirect, 60);
     return base;
   }
 
-  base.DIRECT_URL = direct || db;
+  base.DIRECT_URL = withConnectTimeout(direct || db, 60);
   return base;
 }
 
@@ -101,6 +114,7 @@ module.exports = {
   loadDotenv,
   looksLikePoolerUrl,
   tryNeonDirectUrlFromPooled,
+  withConnectTimeout,
   ensureDirectUrlForGenerate,
   getMigrateEnv,
 };
