@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { TerminalSquare, Search, RefreshCw, Download } from "lucide-react";
 import { BetaCtaLink, BetaLandingShell } from "@/components/beta-landing-shell";
-import { CliEmailDemo } from "@/components/cli-email-demo";
+import { CliTerminalDemo } from "@/components/cli-terminal-demo";
 import { isBetaFull } from "@/lib/beta";
 
 function CliFeature({
@@ -54,10 +54,10 @@ export default async function CliPage() {
               Generate API token
             </BetaCtaLink>
             <a
-              href="#email-demo"
+              href="#terminal-demo"
               className="px-4 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
             >
-              See email demo
+              See terminal demo
             </a>
           </div>
         </section>
@@ -110,17 +110,17 @@ npm --prefix cli run start -- site backup my-subdomain --out ~/Sites/my-backup`}
         </section>
 
         <section
-          id="email-demo"
+          id="terminal-demo"
           className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 dark:border-neutral-800"
         >
           <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-2">
-            Interactive email demo
+            Interactive terminal demo
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-6 leading-relaxed max-w-xl">
-            A product-style announcement preview that looks interactive, for launch
-            emails or changelog embeds.
+            Click through common flows to preview terminal commands and output
+            exactly like a customer would see in CLI-first usage.
           </p>
-          <CliEmailDemo />
+          <CliTerminalDemo />
         </section>
 
         <section className="max-w-3xl mx-auto px-4 py-20 border-t border-neutral-100 dark:border-neutral-800 text-center">
