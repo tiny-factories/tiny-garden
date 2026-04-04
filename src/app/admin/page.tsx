@@ -181,6 +181,88 @@ function StatCard({
   );
 }
 
+/** Mirrors loaded admin layout (excludes billing-only blocks to avoid layout shift). */
+function AdminPageSkeleton() {
+  return (
+    <main
+      className="max-w-4xl mx-auto px-4 py-8"
+      aria-busy="true"
+      aria-label="Loading admin dashboard"
+    >
+      <div className="animate-pulse">
+        <div className="flex items-center justify-between mb-8">
+          <div className="h-7 w-24 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+          <div className="h-9 w-[5.5rem] rounded-md border border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900" />
+        </div>
+
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-4 border border-neutral-100 rounded dark:border-neutral-800"
+            >
+              <div className="h-3 w-14 rounded bg-neutral-200 dark:bg-neutral-800" />
+              <div className="mt-2 flex items-baseline gap-2">
+                <div className="h-8 w-12 rounded bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-3 w-16 rounded bg-neutral-100 dark:bg-neutral-800" />
+              </div>
+              <div className="mt-3 h-16 w-full rounded bg-neutral-100 dark:bg-neutral-900" />
+            </div>
+          ))}
+        </section>
+
+        <section className="mb-8">
+          <div className="mb-4 h-3 w-28 rounded bg-neutral-200 dark:bg-neutral-800" />
+          <div className="overflow-hidden rounded border border-neutral-100 dark:border-neutral-800">
+            <div className="flex gap-2 border-b border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:border-neutral-800 dark:bg-neutral-900">
+              {["w-[22%]", "w-[18%]", "w-14", "w-16", "w-14", "w-14", "w-16"].map(
+                (w, j) => (
+                  <div
+                    key={j}
+                    className={`h-3 shrink-0 rounded bg-neutral-200 dark:bg-neutral-800 ${w}`}
+                  />
+                )
+              )}
+            </div>
+            {Array.from({ length: 6 }).map((_, r) => (
+              <div
+                key={r}
+                className="flex items-center gap-2 border-b border-neutral-50 px-3 py-2.5 last:border-0 dark:border-neutral-800/50"
+              >
+                <div className="h-3 w-20 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 min-w-0 flex-1 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-5 w-[4.5rem] shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-6 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-4 h-3 w-36 rounded bg-neutral-200 dark:bg-neutral-800" />
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-4 border border-neutral-100 rounded p-3 dark:border-neutral-800"
+              >
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-4 max-w-md rounded bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="h-3 max-w-sm rounded bg-neutral-100 dark:bg-neutral-800" />
+                </div>
+                <div className="h-7 w-[4.5rem] shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -255,18 +337,7 @@ export default function AdminPage() {
   }
 
   if (loading) {
-    return (
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 w-32 bg-neutral-100 rounded dark:bg-neutral-800" />
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-neutral-50 rounded dark:bg-neutral-900" />
-            ))}
-          </div>
-        </div>
-      </main>
-    );
+    return <AdminPageSkeleton />;
   }
 
   if (!stats) return null;
