@@ -23,6 +23,26 @@ function looksLikePoolerUrl(url) {
 }
 
 /**
+ * Neon pooled hosts use `-pooler.` in the hostname; direct is the same URL with that segment removed.
+ * Same user, password, db, params — only the host changes.
+ */
+function tryNeonDirectUrlFromPooled(databaseUrl) {
+  try {
+    const url = new URL(databaseUrl);
+    const host = url.hostname;
+    if (!host.includes("neon.tech") || !host.includes("-pooler")) {
+      return null;
+    }
+    const directHost = host.replace(/-pooler\./g, ".");
+    if (directHost === host) return null;
+    url.hostname = directHost;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Prisma schema requires DIRECT_URL; `generate` does not need a real direct connection.
  * Duplicate pooled URL is fine here.
  */
@@ -47,19 +67,29 @@ function getMigrateEnv() {
   }
 
   if (looksLikePoolerUrl(db)) {
-    if (!direct || looksLikePoolerUrl(direct)) {
+    let effectiveDirect = direct;
+    if (!effectiveDirect || looksLikePoolerUrl(effectiveDirect)) {
+      const derived = tryNeonDirectUrlFromPooled(db);
+      if (derived && !looksLikePoolerUrl(derived)) {
+        effectiveDirect = derived;
+        if (process.env.VERCEL === "1") {
+          console.error(
+            "[prisma] DIRECT_URL not set: using direct host derived from Neon pooled DATABASE_URL for migrate deploy.\n"
+          );
+        }
+      }
+    }
+    if (!effectiveDirect || looksLikePoolerUrl(effectiveDirect)) {
       console.error(`
-[prisma] DATABASE_URL points at a pooler (e.g. Neon *-pooler* host). Prisma Migrate cannot take advisory locks through it (P1002).
+[prisma] DATABASE_URL points at a pooler. Prisma Migrate needs a non-pooled Postgres URL (P1002).
 
-Add DIRECT_URL to .env.local and Vercel:
-  Neon dashboard → your project → Connect → use the "Direct connection" string (host without "-pooler").
-Keep DATABASE_URL as the pooled connection for the app.
+For Neon: set DIRECT_URL to the "Direct connection" string, or use a pooled DATABASE_URL whose host contains "-pooler." so we can derive the direct host.
 
 https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections#direct-url
 `);
       process.exit(1);
     }
-    base.DIRECT_URL = direct;
+    base.DIRECT_URL = effectiveDirect;
     return base;
   }
 
@@ -70,6 +100,7 @@ https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-c
 module.exports = {
   loadDotenv,
   looksLikePoolerUrl,
+  tryNeonDirectUrlFromPooled,
   ensureDirectUrlForGenerate,
   getMigrateEnv,
 };
