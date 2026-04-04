@@ -146,16 +146,16 @@
   <div class="gallery-item gallery-item--attachment">
     <button type="button" class="gallery-tile">
       {{#if image.display}}
-        <img src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+        <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
       {{else}}
-        <span class="gallery-tile-fallback">{{attachment.file_name}}</span>
+        <span class="gallery-tile-fallback">{{attachment.display_name}}</span>
       {{/if}}
     </button>
     <template class="gallery-detail-template">
       <div class="gallery-detail-split">
         {{#if image.display}}
           <figure class="gallery-detail-figure">
-            <img src="{{#if image.large}}{{image.large}}{{else}}{{image.display}}{{/if}}" alt="{{attachment.file_name}}" loading="lazy" tabindex="-1">
+            <img src="{{#if image.large}}{{image.large}}{{else}}{{image.display}}{{/if}}" alt="{{attachment.alt_text}}" loading="lazy" tabindex="-1">
           </figure>
         {{else}}
           <div class="gallery-detail-figure gallery-detail-figure--empty" tabindex="-1">
@@ -166,7 +166,7 @@
           {{#if title}}
             <h2 class="gallery-detail-title">{{title}}</h2>
           {{else}}
-            <h2 class="gallery-detail-title">{{attachment.file_name}}</h2>
+            <h2 class="gallery-detail-title">{{attachment.display_name}}</h2>
           {{/if}}
           {{#if description}}
             <p class="gallery-detail-description">{{description}}</p>

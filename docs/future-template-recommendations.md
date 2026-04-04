@@ -15,6 +15,7 @@ This document proposes next templates for tiny.garden based on:
 | High | **Case Study / Project Breakdown** | Designers, product teams, agencies | Design studios, software agencies, consultancies | Structured narrative template for challenge → process → outcome; ideal for converting mixed Are.na research into client-facing stories. |
 | High | **Finder / Document Viewer (Stable)** | Researchers, archivists, policy teams, legal ops, internal knowledge teams | Consulting firms, nonprofits, think tanks, enterprise teams | Finder-like two-pane browsing (folders/list + preview) with a stable doc-reading experience for text/PDF/link-heavy channels. |
 | Medium | **Directory / Resource Library** | Curators, educators, niche community builders | Media companies, nonprofits, communities | Turns channels into filterable collections (tags/categories), a common high-value use case for knowledge curation. |
+| Medium | **Library / Catalog** | Librarians, publishers, archivists, education teams | Libraries, museums, publishers, research orgs | Collection-first layout with card/list toggle, metadata rows (author/year/type), and robust search/browse patterns. |
 | Medium | **Changelog / Product Updates** | Builders shipping frequently | SaaS startups, open-source teams, product teams | Date-first update stream with version markers and callouts; improves communication for active products. |
 | Medium | **Event / Conference Microsite** | Organizers, collectives, schools | Conferences, meetups, art spaces, universities | Supports schedule, speakers, venue/map, sponsor sections from one channel; useful recurring commercial use case. |
 | Medium | **Team / Studio Profile** | Small teams and collectives | Agencies, creative studios, nonprofit teams | About + people + work links layout for groups that do not need a full corporate site. |
@@ -35,14 +36,14 @@ Recommendation: ship these three first as a "requested templates pack," then pri
 
 1. **Pack A (highest demand):** Link in Bio, Map, Photography  
 2. **Pack B (business utility):** Finder / Document Viewer, Case Study, Directory  
-3. **Pack C (vertical expansion):** Changelog, Event, Team Profile, Course, Press Kit
+3. **Pack C (vertical expansion):** Library / Catalog, Changelog, Event, Team Profile, Course, Press Kit
 
 ## Audience segmentation summary
 
 - **Creators / individuals:** Link in Bio, Photography, Press Kit
 - **Studios / agencies:** Portfolio (existing), Case Study, Team Profile
 - **Startups / product teams:** Changelog, Homepage (existing), Campaign (existing)
-- **Communities / nonprofits / education:** Directory, Event, Course, Document (existing), Finder / Document Viewer
+- **Communities / nonprofits / education:** Directory, Library / Catalog, Event, Course, Document (existing), Finder / Document Viewer
 - **Research / knowledge-heavy teams:** Finder / Document Viewer, Document (existing), Timeline (existing)
 
 ## Notes for future scoring

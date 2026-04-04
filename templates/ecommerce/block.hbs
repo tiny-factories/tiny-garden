@@ -40,9 +40,9 @@
 
 {{#if (eq type "attachment")}}
   {{#if image.display}}
-    <img class="shop-block-img" src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+    <img class="shop-block-img" src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
   {{/if}}
   <a href="{{attachment.url}}" class="shop-block shop-block--attachment" download>
-    {{attachment.file_name}}
+    {{attachment.display_name}}
   </a>
 {{/if}}
