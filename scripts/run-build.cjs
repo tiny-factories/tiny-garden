@@ -146,7 +146,15 @@ const localPooledWithoutDirect =
 
 if (process.env.PRISMA_SKIP_MIGRATE_DEPLOY === "1") {
   process.stderr.write(
-    "[prisma] Skipping migrate deploy (PRISMA_SKIP_MIGRATE_DEPLOY=1). Do not set this on Vercel.\n"
+    "[prisma] Skipping migrate deploy (PRISMA_SKIP_MIGRATE_DEPLOY=1).\n"
+  );
+} else if (
+  process.env.VERCEL === "1" &&
+  process.env.PRISMA_MIGRATE_ON_VERCEL !== "1"
+) {
+  process.stderr.write(
+    "[prisma] Skipping migrate deploy on Vercel (default). Neon + concurrent builds often hit P1002 on pg_advisory_lock.\n" +
+      "Apply migrations separately (e.g. `DIRECT_URL=… npx prisma migrate deploy` from CI or your machine), or set PRISMA_MIGRATE_ON_VERCEL=1 on this project to run migrate during the Vercel build.\n"
   );
 } else if (localPooledWithoutDirect) {
   process.stderr.write(
