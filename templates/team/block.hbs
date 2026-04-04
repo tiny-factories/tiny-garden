@@ -1,0 +1,37 @@
+{{#if (eq type "image")}}
+  <article class="team-card">
+    <img class="team-avatar" src="{{image.display}}" alt="{{title}}" loading="lazy">
+    <div>
+      <h3>{{#if title}}{{title}}{{else}}Team Member{{/if}}</h3>
+      {{#if description}}<p>{{description}}</p>{{/if}}
+    </div>
+  </article>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <article class="team-note">
+    {{#if title}}<h3>{{title}}</h3>{{/if}}
+    {{{content}}}
+  </article>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <a class="team-link" href="{{link.url}}" target="_blank" rel="noopener">
+    <strong>{{#if link.title}}{{link.title}}{{else}}{{link.url}}{{/if}}</strong>
+    {{#if link.description}}<span>{{link.description}}</span>{{/if}}
+  </a>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <article class="team-media">
+    {{#if title}}<h3>{{title}}</h3>{{/if}}
+    {{{embed.html}}}
+  </article>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <a class="team-attachment" href="{{attachment.url}}" download>
+    <span>{{attachment.display_name}}</span>
+    <small>{{attachment.type_label}}</small>
+  </a>
+{{/if}}

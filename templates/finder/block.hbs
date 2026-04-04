@@ -1,0 +1,36 @@
+<article class="finder-item finder-item--{{type}}" id="finder-item-{{@index}}">
+  <header class="finder-item-head">
+    <strong>{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}</strong>
+    <span class="finder-type">{{#if (eq type "attachment")}}{{attachment.type_label}}{{else}}{{type}}{{/if}}</span>
+  </header>
+
+  {{#if (eq type "text")}}
+    <div class="finder-prose">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "image")}}
+    <img class="finder-img" src="{{image.display}}" alt="{{title}}" loading="lazy">
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <p><a href="{{link.url}}" target="_blank" rel="noopener">{{link.title}}</a></p>
+    {{#if link.description}}<p>{{link.description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    <div class="finder-media">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if attachment.preview_image_url}}
+      <img class="finder-img" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    {{#if attachment.is_video}}
+      <video class="finder-media-el" src="{{attachment.url}}" controls preload="metadata"></video>
+    {{/if}}
+    {{#if attachment.is_pdf}}
+      <iframe class="finder-pdf" src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+    {{/if}}
+    <p><a href="{{attachment.url}}" download>{{attachment.display_name}}</a></p>
+  {{/if}}
+</article>

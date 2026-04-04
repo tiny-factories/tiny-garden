@@ -1,0 +1,34 @@
+<article class="dir-card dir-card--{{type}}" data-type="{{type}}">
+  {{#if (eq type "image")}}
+    <figure class="dir-figure">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+    </figure>
+    {{#if title}}<h3>{{title}}</h3>{{/if}}
+    {{#if description}}<p>{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}<h3>{{title}}</h3>{{/if}}
+    <div class="dir-body">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <h3>{{link.title}}</h3>
+    {{#if link.description}}<p>{{link.description}}</p>{{/if}}
+    <a class="dir-link" href="{{link.url}}" target="_blank" rel="noopener">Visit resource</a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h3>{{title}}</h3>{{/if}}
+    <div class="dir-body">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if attachment.preview_image_url}}
+      <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    <h3>{{attachment.display_name}}</h3>
+    <p>{{attachment.type_label}}</p>
+    <a class="dir-link" href="{{attachment.url}}" download>Download</a>
+  {{/if}}
+</article>

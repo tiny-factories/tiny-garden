@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="lib-body">
+  <header class="lib-header">
+    <h1>{{channel.title}}</h1>
+    {{#if channel.description}}<p>{{channel.description}}</p>{{/if}}
+  </header>
+  <main class="lib-main">
+    {{#each blocks}}
+      <article class="lib-row">
+        <div class="lib-col lib-col-title">
+          {{#if title}}{{title}}{{else}}Untitled{{/if}}
+        </div>
+        <div class="lib-col lib-col-type">
+          {{#if (eq type "attachment")}}
+            {{attachment.type_label}}
+          {{else}}
+            {{type}}
+          {{/if}}
+        </div>
+        <div class="lib-col lib-col-date">{{formatDate created_at}}</div>
+        <div class="lib-col lib-col-source">
+          {{#if (eq type "link")}}
+            <a href="{{link.url}}" target="_blank" rel="noopener">{{link.url}}</a>
+          {{else}}
+            {{#if source_url}}<a href="{{source_url}}" target="_blank" rel="noopener">Open</a>{{/if}}
+          {{/if}}
+        </div>
+      </article>
+      {{> block}}
+    {{/each}}
+  </main>
+</body>
+</html>

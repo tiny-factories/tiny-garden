@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="team-body">
+  <header class="team-header">
+    <h1>{{channel.title}}</h1>
+    {{#if channel.description}}
+      <p>{{channel.description}}</p>
+    {{/if}}
+  </header>
+  <main class="team-grid">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+</body>
+</html>

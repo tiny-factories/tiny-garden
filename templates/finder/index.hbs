@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="finder-body">
+  <header class="finder-header">
+    <h1>{{channel.title}}</h1>
+    {{#if channel.description}}<p>{{channel.description}}</p>{{/if}}
+  </header>
+
+  <main class="finder-layout">
+    <aside class="finder-sidebar">
+      <div class="finder-filter-row">
+        <input id="finder-search" type="search" placeholder="Filter documents...">
+      </div>
+      <ul class="finder-list" id="finder-list">
+        {{#each blocks}}
+          <li class="finder-item" data-target="doc-{{@index}}" data-title="{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}">
+            <button type="button">
+              <span class="finder-item-title">
+                {{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}
+              </span>
+              <span class="finder-item-meta">{{formatDate created_at}}</span>
+            </button>
+          </li>
+        {{/each}}
+      </ul>
+    </aside>
+
+    <section class="finder-preview" id="finder-preview">
+      {{#each blocks}}
+        <article class="finder-doc{{#if @first}} active{{/if}}" id="doc-{{@index}}">
+          {{> block}}
+        </article>
+      {{/each}}
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var list = document.getElementById('finder-list');
+      var search = document.getElementById('finder-search');
+      if (!list) return;
+      var items = list.querySelectorAll('.finder-item');
+      var docs = document.querySelectorAll('.finder-doc');
+
+      function openDoc(id) {
+        docs.forEach(function (d) { d.classList.toggle('active', d.id === id); });
+        items.forEach(function (it) { it.classList.toggle('active', it.getAttribute('data-target') === id); });
+      }
+
+      list.addEventListener('click', function (e) {
+        var btn = e.target.closest('button');
+        if (!btn) return;
+        var li = btn.parentElement;
+        if (!li) return;
+        openDoc(li.getAttribute('data-target'));
+      });
+
+      if (search) {
+        search.addEventListener('input', function () {
+          var q = search.value.toLowerCase().trim();
+          items.forEach(function (it) {
+            var t = (it.getAttribute('data-title') || '').toLowerCase();
+            it.style.display = !q || t.indexOf(q) !== -1 ? '' : 'none';
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

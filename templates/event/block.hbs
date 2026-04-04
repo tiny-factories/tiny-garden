@@ -1,0 +1,33 @@
+<article class="ev-item ev-item--{{type}}">
+  {{#if (eq type "image")}}
+    <figure class="ev-figure">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+      {{#if title}}<figcaption>{{title}}</figcaption>{{/if}}
+    </figure>
+    {{#if description}}<p class="ev-note">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}<h2 class="ev-title">{{title}}</h2>{{/if}}
+    <div class="ev-body">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a class="ev-link" href="{{link.url}}" target="_blank" rel="noopener">
+      <strong>{{link.title}}</strong>
+      {{#if link.description}}<span>{{link.description}}</span>{{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h2 class="ev-title">{{title}}</h2>{{/if}}
+    <div class="ev-embed">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <a class="ev-attachment" href="{{attachment.url}}" download>
+      <strong>{{attachment.display_name}}</strong>
+      <span>{{attachment.type_label}}</span>
+    </a>
+  {{/if}}
+</article>
