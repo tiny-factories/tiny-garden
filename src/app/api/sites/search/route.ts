@@ -56,7 +56,6 @@ export async function GET(req: NextRequest) {
       ? prisma.site.findMany({
           where: {
             published: true,
-            discoverable: true,
             ...(q
               ? {
                   OR: [
@@ -102,7 +101,7 @@ export async function GET(req: NextRequest) {
       channelSlug: site.channelSlug,
       template: site.template,
       published: site.published,
-      discoverable: site.discoverable,
+      discoverable: true,
       owner: {
         arenaUsername: site.user.arenaUsername,
         isSelf: auth ? site.userId === auth.userId : false,
