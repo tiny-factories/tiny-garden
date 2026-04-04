@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateBlobUrl } from "@/lib/blob-url";
 
 export async function GET(req: NextRequest) {
-  const url = req.nextUrl.searchParams.get("url");
-  if (!url) return new NextResponse("Missing url", { status: 400 });
+  const rawUrl = req.nextUrl.searchParams.get("url");
+  if (!rawUrl) return new NextResponse("Missing url", { status: 400 });
 
   // Only allow fetching from our blob store
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!blobToken || !url.includes("vercel-storage.com") && !url.includes("blob.vercel-storage.com")) {
+  if (!blobToken) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  const parsedUrl = validateBlobUrl(rawUrl);
+  if (!parsedUrl) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
   try {
-    const res = await fetch(url, {
+    const res = await fetch(parsedUrl.toString(), {
       headers: { Authorization: `Bearer ${blobToken}` },
     });
     if (!res.ok) return new NextResponse("Not found", { status: 404 });
