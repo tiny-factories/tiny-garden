@@ -95,6 +95,16 @@ export function Nav() {
         ) : (
           <>
             <Link
+              href="/cli"
+              className={`text-sm transition-colors ${
+                pathname === "/cli"
+                  ? "text-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+              }`}
+            >
+              CLI
+            </Link>
+            <Link
               href="/about"
               className={`text-sm transition-colors ${
                 pathname === "/about"
