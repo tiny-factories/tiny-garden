@@ -4,6 +4,7 @@ const { existsSync } = require("fs");
 const { resolve } = require("path");
 const { spawnSync } = require("child_process");
 const dotenv = require("dotenv");
+const { prismaCliPath } = require("./prisma-cli.cjs");
 
 dotenv.config({ path: resolve(".env") });
 if (existsSync(resolve(".env.local"))) {
@@ -11,9 +12,8 @@ if (existsSync(resolve(".env.local"))) {
 }
 
 const args = process.argv.slice(2);
-const r = spawnSync("npx", ["prisma", ...args], {
+const r = spawnSync(process.execPath, [prismaCliPath(), ...args], {
   stdio: "inherit",
-  shell: true,
   env: process.env,
 });
 process.exit(r.status === null ? 1 : r.status);
