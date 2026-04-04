@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  parseSessionCookie,
+  SESSION_COOKIE_NAME,
+} from "@/lib/session-crypto";
+import { sessionCookieBaseOptions } from "@/lib/session-cookie-options";
 
 export function middleware(req: NextRequest) {
   const rawHost = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "").toLowerCase();
@@ -39,12 +44,29 @@ export function middleware(req: NextRequest) {
     );
   }
 
-  // Protect dashboard routes
-  const isProtected = req.nextUrl.pathname.startsWith("/sites") || req.nextUrl.pathname.startsWith("/site") || req.nextUrl.pathname.startsWith("/account") || req.nextUrl.pathname.startsWith("/admin");
-  const hasSession = req.cookies.has("session");
+  // Protect dashboard routes — require a decryptable session (not just cookie presence).
+  const isProtected =
+    req.nextUrl.pathname.startsWith("/sites") ||
+    req.nextUrl.pathname.startsWith("/site") ||
+    req.nextUrl.pathname.startsWith("/account") ||
+    req.nextUrl.pathname.startsWith("/admin");
 
-  if (isProtected && !hasSession) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  const rawSession = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = parseSessionCookie(rawSession);
+
+  if (isProtected && !session) {
+    const login = NextResponse.redirect(new URL("/login", req.url));
+    if (rawSession) {
+      const base = sessionCookieBaseOptions();
+      login.cookies.set(SESSION_COOKIE_NAME, "", {
+        ...base,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 0,
+      });
+    }
+    return login;
   }
 
   return NextResponse.next();
@@ -52,4 +74,5 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  runtime: "nodejs",
 };

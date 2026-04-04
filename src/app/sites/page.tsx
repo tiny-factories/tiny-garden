@@ -178,6 +178,8 @@ interface AccountInfo {
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [account, setAccount] = useState<AccountInfo | null>(null);
+  /** Set when /api/sites or /api/account fails (e.g. 401 with a stale cookie). */
+  const [loadError, setLoadError] = useState<"unauthorized" | "failed" | null>(null);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
@@ -201,8 +203,14 @@ export default function SitesPage() {
     }
   }, []);
 
-  const fetchSites = useCallback(() => {
-    return fetch("/api/sites").then((r) => r.json());
+  const fetchSites = useCallback(async () => {
+    const r = await fetch("/api/sites", { credentials: "same-origin" });
+    const data = await r.json();
+    if (!r.ok) {
+      if (r.status === 401) throw new Error("unauthorized");
+      throw new Error("failed");
+    }
+    return data;
   }, []);
 
   // URL params: new-site build state, post-OAuth, post-Stripe return (clean up + analytics)
@@ -242,21 +250,36 @@ export default function SitesPage() {
 
     Promise.all([
       fetchSites(),
-      fetch("/api/account").then((r) => r.json()),
+      fetch("/api/account", { credentials: "same-origin" }).then(async (r) => {
+        const accountData: unknown = await r.json();
+        if (!r.ok) {
+          if (r.status === 401) throw new Error("unauthorized");
+          return null;
+        }
+        if (
+          accountData &&
+          typeof accountData === "object" &&
+          "error" in accountData &&
+          (accountData as { error?: unknown }).error
+        ) {
+          return null;
+        }
+        return accountData as AccountInfo;
+      }),
     ])
       .then(([sitesData, accountData]) => {
         if (cancelled) return;
+        setLoadError(null);
         setSites(Array.isArray(sitesData) ? sitesData : []);
-        setAccount(
-          accountData && typeof accountData === "object" && !("error" in accountData && accountData.error)
-            ? accountData
-            : null
-        );
+        setAccount(accountData);
       })
-      .catch(() => {
+      .catch((e: unknown) => {
         if (!cancelled) {
           setSites([]);
           setAccount(null);
+          setLoadError(
+            e instanceof Error && e.message === "unauthorized" ? "unauthorized" : "failed"
+          );
         }
       })
       .finally(() => {
@@ -276,7 +299,12 @@ export default function SitesPage() {
     if (buildingIds.length === 0) return;
 
     const interval = setInterval(async () => {
-      const updated = await fetchSites();
+      let updated: unknown;
+      try {
+        updated = await fetchSites();
+      } catch {
+        return;
+      }
       if (!Array.isArray(updated)) return;
       setSites(updated);
 
@@ -385,6 +413,32 @@ export default function SitesPage() {
 
   return (
     <main className="min-h-screen w-full min-w-0 max-w-4xl mx-auto px-4 py-16">
+      {loadError === "unauthorized" ? (
+        <div
+          className="mb-8 rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-100"
+          role="alert"
+        >
+          <p className="font-medium">Session not valid</p>
+          <p className="mt-1 text-amber-900/90 dark:text-amber-200/90">
+            Log in again to load your sites. If this keeps happening, try logging out and back in.
+          </p>
+          <Link
+            href="/login"
+            className="mt-3 inline-block text-sm font-medium text-amber-950 underline underline-offset-2 dark:text-amber-50"
+          >
+            Log in
+          </Link>
+        </div>
+      ) : null}
+      {loadError === "failed" ? (
+        <div
+          className="mb-8 rounded-lg border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-950 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-100"
+          role="alert"
+        >
+          <p className="font-medium">Couldn&apos;t load sites</p>
+          <p className="mt-1 opacity-90">Refresh the page or try again in a moment.</p>
+        </div>
+      ) : null}
       <div className="flex items-center justify-between mb-12">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
