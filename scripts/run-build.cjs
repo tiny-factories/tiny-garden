@@ -5,6 +5,7 @@ const {
   loadDotenv,
   ensureDirectUrlForGenerate,
   getMigrateEnv,
+  looksLikePoolerUrl,
 } = require("./prisma-db-env.cjs");
 const { prismaCliPath } = require("./prisma-cli.cjs");
 
@@ -87,9 +88,22 @@ applied without running SQL — only if the DB already matches that migration.
   }
 }
 
+const dbUrl = process.env.DATABASE_URL || "";
+const inCI = process.env.CI === "true" || process.env.CI === "1";
+const localPooledWithoutDirect =
+  process.env.VERCEL !== "1" &&
+  !inCI &&
+  looksLikePoolerUrl(dbUrl) &&
+  !process.env.DIRECT_URL;
+
 if (process.env.PRISMA_SKIP_MIGRATE_DEPLOY === "1") {
   process.stderr.write(
     "[prisma] Skipping migrate deploy (PRISMA_SKIP_MIGRATE_DEPLOY=1). Do not set this on Vercel.\n"
+  );
+} else if (localPooledWithoutDirect) {
+  process.stderr.write(
+    "[prisma] Skipping migrate deploy (local build: pooled DATABASE_URL, no DIRECT_URL).\n" +
+      "Add DIRECT_URL from Neon → Connect → Direct connection to run migrations locally, or rely on Vercel (set DIRECT_URL there).\n"
   );
 } else {
   migrateDeploy();
