@@ -1,0 +1,37 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - "cli-v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install CLI dependencies
+        run: npm --prefix cli ci
+
+      - name: Build CLI
+        run: npm --prefix cli run build
+
+      - name: Verify package contents
+        run: npm --prefix cli pack --dry-run
+
+      - name: Publish CLI package
+        run: npm --prefix cli publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
