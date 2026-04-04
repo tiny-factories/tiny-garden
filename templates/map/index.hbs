@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="tg-map-body">
+  <header class="tg-map-header">
+    <h1>{{channel.title}}</h1>
+    {{#if channel.description}}<p>{{channel.description}}</p>{{/if}}
+  </header>
+
+  <main class="tg-map-layout">
+    <section class="tg-map-canvas-wrap">
+      <div id="map" class="tg-map-canvas" role="img" aria-label="Map preview"></div>
+      <div class="tg-map-note">Set coordinates in title/description as <code>lat, lon</code> (example: <code>40.7128, -74.0060</code>).</div>
+    </section>
+    <aside class="tg-map-list" id="map-list">
+      {{#each blocks}}
+        {{> block}}
+      {{/each}}
+    </aside>
+  </main>
+
+  <script>
+    (function() {
+      var items = document.querySelectorAll(".tg-map-item[data-lat][data-lon]");
+      var map = document.getElementById("map");
+      if (!map || !items.length) return;
+
+      function project(lat, lon) {
+        var x = ((lon + 180) / 360) * 100;
+        var y = ((90 - lat) / 180) * 100;
+        return { x: x, y: y };
+      }
+
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var lat = parseFloat(item.getAttribute("data-lat") || "");
+        var lon = parseFloat(item.getAttribute("data-lon") || "");
+        if (isNaN(lat) || isNaN(lon)) continue;
+        var p = project(lat, lon);
+
+        var pin = document.createElement("button");
+        pin.className = "tg-map-pin";
+        pin.style.left = p.x + "%";
+        pin.style.top = p.y + "%";
+        pin.setAttribute("aria-label", item.getAttribute("data-title") || "Location");
+        pin.addEventListener("click", (function(target) {
+          return function() {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            target.classList.add("is-focused");
+            setTimeout(function() { target.classList.remove("is-focused"); }, 1100);
+          };
+        })(item));
+        map.appendChild(pin);
+      }
+    })();
+  </script>
+</body>
+</html>

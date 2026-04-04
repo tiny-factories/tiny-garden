@@ -1,0 +1,48 @@
+<article class="photo-block photo-block--{{type}}">
+  {{#if (eq type "image")}}
+    <figure class="photo-figure">
+      <img src="{{image.original}}" alt="{{title}}" loading="lazy">
+      {{#if title}}
+        <figcaption class="photo-caption-title">{{title}}</figcaption>
+      {{/if}}
+      {{#if description}}
+        <figcaption class="photo-caption-description">{{description}}</figcaption>
+      {{/if}}
+    </figure>
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}<h2 class="photo-section-title">{{title}}</h2>{{/if}}
+    <div class="photo-prose">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a class="photo-link" href="{{link.url}}" target="_blank" rel="noopener">
+      {{#if link.thumbnail}}
+        <img src="{{link.thumbnail}}" alt="" loading="lazy">
+      {{/if}}
+      <span class="photo-link-title">{{link.title}}</span>
+      {{#if link.description}}<span class="photo-link-desc">{{link.description}}</span>{{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    <div class="photo-media">{{{embed.html}}}</div>
+    {{#if title}}<h3 class="photo-media-title">{{title}}</h3>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if attachment.preview_image_url}}
+      <img class="photo-attachment-preview" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    {{#if (eq attachment.kind "video")}}
+      <video class="photo-attachment-video" src="{{attachment.url}}" controls preload="metadata"></video>
+    {{/if}}
+    {{#if (eq attachment.kind "pdf")}}
+      <iframe class="photo-attachment-pdf" src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+    {{/if}}
+    <a class="photo-attachment-link" href="{{attachment.url}}" download>
+      {{attachment.display_name}}
+    </a>
+  {{/if}}
+</article>

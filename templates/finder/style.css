@@ -1,0 +1,21 @@
+.finder-root { max-width: 1100px; margin: 0 auto; padding: 28px 18px 56px; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color: #1a1a1a; }
+.finder-head h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.02em; }
+.finder-head p { margin: 0; color: #555; max-width: 70ch; }
+.finder-shell { display: grid; grid-template-columns: 280px 1fr; gap: 14px; margin-top: 16px; min-height: 68vh; }
+.finder-list { border: 1px solid #dfdfdf; border-radius: 10px; padding: 10px; background: #fafafa; overflow: auto; }
+.finder-item { display: block; text-decoration: none; color: inherit; border: 1px solid #ececec; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; background: #fff; }
+.finder-item small { color: #777; display: block; margin-top: 4px; font-size: 12px; }
+.finder-preview { border: 1px solid #dfdfdf; border-radius: 10px; padding: 14px; background: #fff; overflow: auto; }
+.finder-block { border-bottom: 1px solid #eee; padding: 12px 0; }
+.finder-block:last-child { border-bottom: 0; }
+.finder-block h3 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.01em; }
+.finder-meta { color: #6f6f6f; font-size: 12px; margin: 0 0 8px; }
+.finder-body { line-height: 1.6; }
+.finder-link { color: #0d4ec6; text-decoration: none; }
+.finder-link:hover { text-decoration: underline; }
+.finder-media iframe, .finder-media video, .finder-media audio, .finder-media img, .finder-media object { width: 100%; max-width: 100%; border: 1px solid #ececec; border-radius: 8px; }
+.finder-media video, .finder-media img, .finder-media object { max-height: 380px; object-fit: contain; background: #f8f8f8; }
+.finder-attachment { display: inline-block; margin-top: 8px; text-decoration: none; color: #1d5d2a; font-weight: 600; }
+@media (max-width: 900px) {
+  .finder-shell { grid-template-columns: 1fr; }
+}

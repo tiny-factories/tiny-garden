@@ -1,0 +1,36 @@
+<article class="cl-item cl-item--{{type}}">
+  <header class="cl-item-head">
+    <time datetime="{{created_at}}" class="cl-item-date">{{formatDateTime24 created_at}} UTC</time>
+    <span class="cl-item-type">{{type}}</span>
+  </header>
+
+  {{#if (eq type "image")}}
+    <img class="cl-item-image" src="{{image.display}}" alt="{{title}}" loading="lazy">
+    {{#if title}}<h3 class="cl-item-title">{{title}}</h3>{{/if}}
+    {{#if description}}<p class="cl-item-desc">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}<h3 class="cl-item-title">{{title}}</h3>{{/if}}
+    <div class="cl-item-body">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a class="cl-item-link" href="{{link.url}}" target="_blank" rel="noopener">
+      <strong>{{link.title}}</strong>
+      {{#if link.description}}<span>{{link.description}}</span>{{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h3 class="cl-item-title">{{title}}</h3>{{/if}}
+    <div class="cl-item-embed">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <a class="cl-item-file" href="{{attachment.url}}" download>
+      <span>{{attachment.display_name}}</span>
+      <small>{{attachment.type_label}}</small>
+    </a>
+  {{/if}}
+</article>

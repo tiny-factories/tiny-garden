@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="lib-body">
+  <main class="lib-shell">
+    <header class="lib-header">
+      {{#if channel.user.avatar_url}}
+        <img class="lib-avatar" src="{{channel.user.avatar_url}}" alt="{{channel.user.name}}" loading="lazy">
+      {{/if}}
+      <h1>{{channel.title}}</h1>
+      {{#if channel.description}}
+        <p class="lib-description">{{channel.description}}</p>
+      {{/if}}
+    </header>
+
+    <section class="lib-links">
+      {{#each blocks}}
+        {{#if (eq type "link")}}
+          <a class="lib-link-card" href="{{link.url}}" target="_blank" rel="noopener">
+            <span class="lib-link-title">{{#if link.title}}{{link.title}}{{else}}{{link.url}}{{/if}}</span>
+            {{#if link.description}}
+              <span class="lib-link-description">{{link.description}}</span>
+            {{/if}}
+          </a>
+        {{/if}}
+      {{/each}}
+    </section>
+
+    <section class="lib-content">
+      {{#each blocks}}
+        {{#unless (eq type "link")}}
+          {{> block}}
+        {{/unless}}
+      {{/each}}
+    </section>
+  </main>
+</body>
+</html>

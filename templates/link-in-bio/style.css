@@ -1,0 +1,28 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #111827;
+  background: #f6f7fb;
+}
+.bio-wrap { max-width: 640px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+.bio-header { text-align: center; margin-bottom: 1.25rem; }
+.bio-avatar { width: 92px; height: 92px; border-radius: 9999px; object-fit: cover; border: 2px solid #e5e7eb; }
+.bio-title { font-size: 1.35rem; margin: 0.7rem 0 0.25rem; }
+.bio-desc { color: #4b5563; margin: 0; }
+.bio-links { display: grid; gap: 0.7rem; margin-top: 1.2rem; }
+.bio-link {
+  display: block;
+  text-decoration: none;
+  color: #111827;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem;
+}
+.bio-link-title { font-weight: 600; }
+.bio-link-desc { margin: 0.22rem 0 0; color: #4b5563; font-size: 0.92rem; }
+.bio-sections { margin-top: 1.25rem; display: grid; gap: 0.8rem; }
+.bio-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 0.85rem; }
+.bio-card-title { margin: 0 0 0.35rem; font-size: 0.96rem; }
+.bio-card img, .bio-card iframe, .bio-card video { width: 100%; border-radius: 8px; border: 0; }

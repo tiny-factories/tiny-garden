@@ -1,0 +1,32 @@
+<article class="course-item course-item--{{type}}">
+  {{#if (eq type "text")}}
+    {{#if title}}<h2 class="course-title">{{title}}</h2>{{/if}}
+    <div class="course-body">{{{content}}}</div>
+    {{#if description}}<p class="course-lede">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "image")}}
+    <figure class="course-figure">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+      {{#if title}}<figcaption>{{title}}</figcaption>{{/if}}
+    </figure>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a class="course-link" href="{{link.url}}" target="_blank" rel="noopener">
+      <span>{{link.title}}</span>
+      <small>{{link.url}}</small>
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    <div class="course-embed">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if attachment.preview_image_url}}
+      <img class="course-preview" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    <a class="course-attachment" href="{{attachment.url}}" download>{{attachment.display_name}}</a>
+  {{/if}}
+</article>
