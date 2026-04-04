@@ -1,15 +1,14 @@
 "use strict";
 
-const { existsSync } = require("fs");
-const { resolve } = require("path");
 const { spawnSync } = require("child_process");
-const dotenv = require("dotenv");
+const {
+  loadDotenv,
+  ensureDirectUrlForGenerate,
+} = require("./prisma-db-env.cjs");
 const { prismaCliPath } = require("./prisma-cli.cjs");
 
-dotenv.config({ path: resolve(".env") });
-if (existsSync(resolve(".env.local"))) {
-  dotenv.config({ path: resolve(".env.local"), override: true });
-}
+loadDotenv();
+ensureDirectUrlForGenerate();
 
 const r = spawnSync(process.execPath, [prismaCliPath(), "generate"], {
   stdio: "inherit",

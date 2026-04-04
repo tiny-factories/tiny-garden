@@ -1,19 +1,35 @@
 "use strict";
 
-const { existsSync } = require("fs");
-const { resolve } = require("path");
 const { spawnSync } = require("child_process");
-const dotenv = require("dotenv");
+const {
+  loadDotenv,
+  ensureDirectUrlForGenerate,
+  getMigrateEnv,
+} = require("./prisma-db-env.cjs");
 const { prismaCliPath } = require("./prisma-cli.cjs");
 
-dotenv.config({ path: resolve(".env") });
-if (existsSync(resolve(".env.local"))) {
-  dotenv.config({ path: resolve(".env.local"), override: true });
-}
+loadDotenv();
 
 const args = process.argv.slice(2);
+
+function commandNeedsDirectPostgres(args) {
+  const [a, b] = args;
+  if (a === "migrate") return true;
+  if (a === "db" && (b === "push" || b === "execute" || b === "pull"))
+    return true;
+  return false;
+}
+
+let env;
+if (commandNeedsDirectPostgres(args)) {
+  env = getMigrateEnv();
+} else {
+  ensureDirectUrlForGenerate();
+  env = process.env;
+}
+
 const r = spawnSync(process.execPath, [prismaCliPath(), ...args], {
   stdio: "inherit",
-  env: process.env,
+  env,
 });
 process.exit(r.status === null ? 1 : r.status);
