@@ -4,7 +4,7 @@ Source: [tiny garden feature requests](https://www.are.na/tiny-factories/tiny-ga
 
 - **Channel slug:** `tiny-garden-feature-requests`
 - **Channel updated (Are.na):** 2026-04-03T16:49:22Z
-- **Markdown synced:** 2026-04-04T23:39:33.673Z
+- **Markdown synced:** 2026-04-04T23:46:08.675Z
 - **Block count:** 7
 
 Comments on each block on Are.na are treated as support / votes for that request.
