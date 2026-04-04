@@ -158,6 +158,8 @@ export const MOCK_SITE_DATA: SiteData = {
         file_name: "reading-list.pdf",
         file_size: 245000,
         content_type: "application/pdf",
+        display_name: "reading-list.pdf",
+        alt_text: "reading-list.pdf",
       },
       source_url: "#",
       comment_count: 0,

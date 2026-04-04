@@ -173,10 +173,21 @@ export interface TemplateBlock {
     file_name: string;
     file_size: number;
     content_type: string;
+    display_name: string;
+    alt_text: string;
   };
   source_url: string | null;
   comment_count: number;
   arena_url: string;
+}
+
+function pickFirstNonEmpty(...values: Array<string | null | undefined>): string {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
 }
 
 function normalizeBlock(block: ArenaBlock): TemplateBlock {
@@ -268,11 +279,20 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
   }
 
   if (block.attachment) {
+    const attachmentLabel = pickFirstNonEmpty(
+      normalized.title,
+      normalized.description,
+      block.attachment.file_name,
+      "Attachment"
+    );
+
     normalized.attachment = {
       url: block.attachment.url,
       file_name: block.attachment.file_name,
       file_size: block.attachment.file_size,
       content_type: block.attachment.content_type,
+      display_name: attachmentLabel,
+      alt_text: pickFirstNonEmpty(normalized.title, normalized.description, attachmentLabel),
     };
     normalized.source_url = block.attachment.url;
   }
@@ -282,10 +302,26 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
 
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+
+function parseDate(dateStr: string): Date | null {
+  const parsed = new Date(dateStr);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
 Handlebars.registerHelper("formatDate", (dateStr: string) => {
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  } catch { return dateStr; }
+  const parsed = parseDate(dateStr);
+  if (!parsed) return dateStr;
+  return `${parsed.getUTCFullYear()}-${pad2(parsed.getUTCMonth() + 1)}-${pad2(parsed.getUTCDate())}`;
+});
+
+Handlebars.registerHelper("formatDateTime24", (dateStr: string) => {
+  const parsed = parseDate(dateStr);
+  if (!parsed) return dateStr;
+  return `${parsed.getUTCFullYear()}-${pad2(parsed.getUTCMonth() + 1)}-${pad2(parsed.getUTCDate())} ${pad2(parsed.getUTCHours())}:${pad2(parsed.getUTCMinutes())}`;
 });
 
 export async function buildSite(siteId: string): Promise<string> {

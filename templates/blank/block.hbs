@@ -17,8 +17,8 @@
 
   {{#if (eq type "attachment")}}
     {{#if image.display}}
-      <img src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy" style="max-width:100%">
+    <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy" style="max-width:100%">
     {{/if}}
-    <a href="{{attachment.url}}" download>{{attachment.file_name}}</a>
+  <a href="{{attachment.url}}" download>{{attachment.display_name}}</a>
   {{/if}}
 </div>

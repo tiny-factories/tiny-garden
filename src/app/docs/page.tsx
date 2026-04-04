@@ -35,7 +35,7 @@ const blockTypes = [
     type: "attachment",
     arena: "Attachment",
     fields:
-      "attachment.url, file_name, optional preview via image.display when Are.na provides one",
+      "attachment.url, file_name, display_name, alt_text, optional preview via image.display when Are.na provides one",
   },
 ] as const;
 
@@ -66,7 +66,7 @@ const templates: {
       "Text: HTML body only (no separate title line in the partial).",
       "Link: thumbnail, title, and description in a horizontal card.",
       "Media: embed only.",
-      "Attachment: preview image if present, file name link.",
+      "Attachment: preview image if present, title/description-aware download label (fallback to file name).",
     ],
   },
   {
@@ -78,7 +78,7 @@ const templates: {
       "Text: HTML body.",
       "Link: optional thumbnail and link title; block title (if any) is shown as caption for every block type at the bottom of the tile.",
       "Media: embed.",
-      "Attachment: preview + file name link.",
+      "Attachment: preview + title/description-aware download label (fallback to file name).",
     ],
   },
   {
@@ -91,7 +91,7 @@ const templates: {
       "Text: compact “Text” tile; dialog shows title, optional description, and full HTML body.",
       "Link: thumbnail or title fallback in the grid; dialog shows image, link title, descriptions, and an “Open link” action.",
       "Media: scaled embed in the grid; full embed plus title, description, and source link in the dialog.",
-      "Attachment: preview image or file name in the grid; dialog with download and optional image preview.",
+      "Attachment: preview image or display label in the grid; dialog with download and optional image preview.",
       "Uses the native HTML dialog element and loads copy from each block’s template fragment (no extra network request).",
     ],
   },
@@ -116,15 +116,15 @@ const templates: {
       "Text: raw HTML.",
       "Link: plain anchor with link title.",
       "Media: raw embed HTML.",
-      "Attachment: optional preview + file link.",
+      "Attachment: optional preview + title/description-aware file link.",
     ],
   },
   {
     id: "timeline",
     name: "Timeline",
-    summary: "Vertical timeline with created_at on each entry.",
+    summary: "Vertical timeline with clean UTC date/time labels on each entry.",
     notes: [
-      "Same broad pattern as Blog: image / text / link card / media / attachment, with dates at the top of each entry.",
+      "Same broad pattern as Blog: image / text / link card / media / attachment, with dates rendered as YYYY-MM-DD HH:mm (24-hour UTC) at the top of each entry.",
       "Link: card with thumbnail, link title, and link description.",
     ],
   },
@@ -195,7 +195,20 @@ const templates: {
       "Text: title plus HTML body, or description if there is no body.",
       "Link: prefers block title/description, falls back to link title/description; the card does not surface the URL (whole card goes to Are.na).",
       "Media: only title and description — embed HTML is not rendered in this template.",
-      "Attachment: preview, title or file name, description.",
+      "Attachment: preview, title/description-aware label, description.",
+    ],
+  },
+  {
+    id: "library-proposed",
+    name: "Library (proposed)",
+    summary:
+      "Finder-like knowledge browser for document-heavy channels, with stable reading and predictable metadata.",
+    notes: [
+      "Two-pane layout: left for sections/filters, right for document preview and metadata.",
+      "Prioritizes text, link, and attachment blocks; image/media blocks become supplementary references.",
+      "Attachment labels should prefer title/description before falling back to file name.",
+      "Dates should stay clean and sortable in UTC using YYYY-MM-DD and optional HH:mm (24-hour).",
+      "Designed for research teams, archives, policy/legal docs, and internal knowledge bases.",
     ],
   },
 ];
@@ -260,6 +273,11 @@ export default function DocsPage() {
           <span className="font-mono text-neutral-500 dark:text-neutral-400">created_at</span>, and a link back to
           Are.na. Templates use these fields only when they need them (for example, dates on
           Timeline, or comment count on Feature Requests).
+        </p>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-3 leading-relaxed max-w-lg">
+          Attachment blocks also expose normalized display metadata so templates can show cleaner labels:
+          <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.display_name</span> (title/description first, then file name) and
+          <span className="font-mono text-neutral-500 dark:text-neutral-400"> attachment.alt_text</span>.
         </p>
       </section>
 
