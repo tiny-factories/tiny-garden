@@ -87,7 +87,13 @@ applied without running SQL — only if the DB already matches that migration.
   }
 }
 
-migrateDeploy();
+if (process.env.PRISMA_SKIP_MIGRATE_DEPLOY === "1") {
+  process.stderr.write(
+    "[prisma] Skipping migrate deploy (PRISMA_SKIP_MIGRATE_DEPLOY=1). Do not set this on Vercel.\n"
+  );
+} else {
+  migrateDeploy();
+}
 ensureDirectUrlForGenerate();
 runNode([prisma, "generate"]);
 runNode([nextBin, "build"]);
