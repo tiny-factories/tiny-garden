@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { buildSite } from "@/lib/build";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 export const maxDuration = 300;
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const csrfError = requireTrustedRequestOrigin(req);
+  if (csrfError) return csrfError;
+
   const session = await getSession();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

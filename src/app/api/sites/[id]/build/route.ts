@@ -3,15 +3,19 @@ import { prisma } from "@/lib/db";
 import { buildSite } from "@/lib/build";
 import { getRequestAuth } from "@/lib/request-auth";
 import { canRequestBuild } from "@/lib/build-limits";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 // Large Are.na channels can exceed 60s (fetch + template + I/O). Match cron rebuild.
 export const maxDuration = 300;
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await getRequestAuth(_req);
+  const csrfFailure = requireTrustedRequestOrigin(req);
+  if (csrfFailure) return csrfFailure;
+
+  const auth = await getRequestAuth(req);
   if (!auth)
     return NextResponse.json(
       { error: "Unauthorized", code: "unauthorized" },

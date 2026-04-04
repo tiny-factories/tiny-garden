@@ -28,6 +28,32 @@ describe("site domain route auth guards", () => {
     vi.resetAllMocks();
   });
 
+  it("POST returns 403 for invalid origin", async () => {
+    getSessionMock.mockResolvedValue({
+      userId: "u1",
+      arenaToken: "tok",
+      arenaUserId: 1,
+      arenaUsername: "alice",
+    });
+    findUniqueMock.mockResolvedValue({
+      id: "site123",
+      userId: "u1",
+      customDomain: null,
+      user: { isAdmin: false, isFriend: false, subscription: { plan: "pro" } },
+    });
+
+    const { POST } = await import("@/app/api/sites/[id]/domain/route");
+    const req = new Request("https://tiny.garden/api/sites/site123/domain", {
+      method: "POST",
+      headers: { origin: "https://evil.example", "content-type": "application/json" },
+      body: JSON.stringify({ domain: "example.com" }),
+    });
+    const res = await POST(req as never, {
+      params: Promise.resolve({ id: "site123" }),
+    });
+    expect(res.status).toBe(403);
+  });
+
   it("GET returns 401 when session is missing", async () => {
     getSessionMock.mockResolvedValue(null);
     const { GET } = await import("@/app/api/sites/[id]/domain/route");
