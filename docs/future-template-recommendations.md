@@ -13,6 +13,7 @@ This document proposes next templates for tiny.garden based on:
 | High | **Map / Places** | Researchers, travel writers, urbanists, photographers, event organizers | Research labs, media projects, tourism orgs, cultural orgs | Converts location-rich blocks into an interactive map + list view; unique versus standard site builders. |
 | High | **Photography Story** | Photographers, photo editors, documentary creators | Photography studios, magazines, visual agencies | Supports image sequences, EXIF/caption emphasis, and copyright metadata for portfolio + editorial storytelling. |
 | High | **Case Study / Project Breakdown** | Designers, product teams, agencies | Design studios, software agencies, consultancies | Structured narrative template for challenge → process → outcome; ideal for converting mixed Are.na research into client-facing stories. |
+| High | **Finder / Document Viewer (Stable)** | Researchers, archivists, policy teams, legal ops, internal knowledge teams | Consulting firms, nonprofits, think tanks, enterprise teams | Finder-like two-pane browsing (folders/list + preview) with a stable doc-reading experience for text/PDF/link-heavy channels. |
 | Medium | **Directory / Resource Library** | Curators, educators, niche community builders | Media companies, nonprofits, communities | Turns channels into filterable collections (tags/categories), a common high-value use case for knowledge curation. |
 | Medium | **Changelog / Product Updates** | Builders shipping frequently | SaaS startups, open-source teams, product teams | Date-first update stream with version markers and callouts; improves communication for active products. |
 | Medium | **Event / Conference Microsite** | Organizers, collectives, schools | Conferences, meetups, art spaces, universities | Supports schedule, speakers, venue/map, sponsor sections from one channel; useful recurring commercial use case. |
@@ -28,20 +29,21 @@ These requests are already present in `docs/feature-reviews.md` and should infor
 2. **Template: Map**
 3. **Template: Photography**
 
-Recommendation: ship these three first as a "requested templates pack," then continue with Case Study and Directory.
+Recommendation: ship these three first as a "requested templates pack," then prioritize Finder / Document Viewer as the next utility-focused template.
 
 ## Suggested rollout strategy
 
 1. **Pack A (highest demand):** Link in Bio, Map, Photography  
-2. **Pack B (business utility):** Case Study, Directory, Changelog  
-3. **Pack C (vertical expansion):** Event, Team Profile, Course, Press Kit
+2. **Pack B (business utility):** Finder / Document Viewer, Case Study, Directory  
+3. **Pack C (vertical expansion):** Changelog, Event, Team Profile, Course, Press Kit
 
 ## Audience segmentation summary
 
 - **Creators / individuals:** Link in Bio, Photography, Press Kit
 - **Studios / agencies:** Portfolio (existing), Case Study, Team Profile
 - **Startups / product teams:** Changelog, Homepage (existing), Campaign (existing)
-- **Communities / nonprofits / education:** Directory, Event, Course, Document (existing)
+- **Communities / nonprofits / education:** Directory, Event, Course, Document (existing), Finder / Document Viewer
+- **Research / knowledge-heavy teams:** Finder / Document Viewer, Document (existing), Timeline (existing)
 
 ## Notes for future scoring
 
