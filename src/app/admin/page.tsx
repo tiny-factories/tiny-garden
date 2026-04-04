@@ -47,6 +47,16 @@ interface RecentSite {
   createdAt: string;
 }
 
+async function readJsonBody<T>(r: Response, fallback: T): Promise<T> {
+  const text = await r.text();
+  if (!text.trim()) return fallback;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 // Simple SVG sparkline bar chart
 function BarChart({
   data,
@@ -180,21 +190,44 @@ export default function AdminPage() {
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    let cancelled = false;
+
     Promise.all([
-      fetch("/api/admin/stats").then((r) => {
-        if (r.status === 401) { router.push("/login"); return null; }
-        if (r.status === 403) { router.push("/sites"); return null; }
-        return r.json();
+      fetch("/api/admin/stats", { credentials: "same-origin" }).then(async (r) => {
+        if (r.status === 401) {
+          router.push("/login");
+          return null;
+        }
+        if (r.status === 403) {
+          router.push("/sites");
+          return null;
+        }
+        if (!r.ok) return null;
+        return readJsonBody<Stats | null>(r, null);
       }),
-      fetch("/api/admin/feature").then((r) => r.json()),
-      fetch("/api/admin/billing").then((r) => r.ok ? r.json() : null),
+      fetch("/api/admin/feature", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return [] as RecentSite[];
+        const data = await readJsonBody<unknown>(r, []);
+        return Array.isArray(data) ? (data as RecentSite[]) : [];
+      }),
+      fetch("/api/admin/billing", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return null;
+        return readJsonBody<BillingStats | null>(r, null);
+      }),
     ])
       .then(([statsData, featuredData, billingData]) => {
+        if (cancelled) return;
         if (statsData) setStats(statsData);
         setFeaturedSites(featuredData);
         if (billingData) setBilling(billingData);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleToggleFeatured(site: RecentSite) {
@@ -206,10 +239,17 @@ export default function AdminPage() {
     });
 
     const [statsData, featuredData] = await Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/feature").then((r) => r.json()),
+      fetch("/api/admin/stats", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return null;
+        return readJsonBody<Stats | null>(r, null);
+      }),
+      fetch("/api/admin/feature", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return [] as RecentSite[];
+        const data = await readJsonBody<unknown>(r, []);
+        return Array.isArray(data) ? (data as RecentSite[]) : [];
+      }),
     ]);
-    setStats(statsData);
+    if (statsData) setStats(statsData);
     setFeaturedSites(featuredData);
     setToggling((t) => ({ ...t, [site.id]: false }));
   }
