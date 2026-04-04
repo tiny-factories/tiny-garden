@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { seedFromSubdomain } from "@/lib/garden-icon";
 import { buildSite } from "@/lib/build";
 import { isBetaFull } from "@/lib/beta";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
+import { getRequestAuth } from "@/lib/request-auth";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
 
-export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const auth = await getRequestAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized", code: "unauthorized" }, { status: 401 });
+  }
 
   const sites = await prisma.site.findMany({
-    where: { userId: session.userId },
+    where: { userId: auth.userId },
     orderBy: { createdAt: "desc" },
   });
 
@@ -22,8 +24,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized", code: "unauthorized" }, { status: 401 });
+  }
 
   const { channelSlug, channelTitle, template, subdomain } = await req.json();
 
@@ -37,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   // Check site limit based on plan
   const user = await prisma.user.findUniqueOrThrow({
-    where: { id: session.userId },
+    where: { id: auth.userId },
     include: { subscription: true, sites: true },
   });
 
@@ -82,7 +86,7 @@ export async function POST(req: NextRequest) {
       channelTitle: channelTitle || channelSlug,
       template,
       iconSeed: seedFromSubdomain(subdomain),
-      userId: session.userId,
+      userId: auth.userId,
     },
   });
 
