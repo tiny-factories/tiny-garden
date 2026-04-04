@@ -429,6 +429,16 @@ async function runBuild(siteId: string): Promise<string> {
     html = html.replace("</head>", `${themeInjection}</head>`);
   }
 
+  // Inject site-level CSS last so user overrides win in cascade.
+  if (site.customCss && site.customCss.trim()) {
+    const siteCssInjection = `<style id="tiny-garden-site-css">\n${site.customCss}\n</style>\n`;
+    if (html.includes("</head>")) {
+      html = html.replace("</head>", `${siteCssInjection}</head>`);
+    } else {
+      html = siteCssInjection + html;
+    }
+  }
+
   // Upload to Vercel Blob if token available, otherwise write to filesystem
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
 

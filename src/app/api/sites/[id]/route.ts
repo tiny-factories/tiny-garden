@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { removeDomainFromVercel } from "@/lib/vercel";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
+import { getRequestAuth } from "@/lib/request-auth";
 
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(_req);
+  if (!auth) {
+    return NextResponse.json(
+      { error: "Unauthorized", code: "unauthorized" },
+      { status: 401 }
+    );
+  }
 
   const { id } = await params;
 
   const site = await prisma.site.findUnique({ where: { id } });
-  if (!site || site.userId !== session.userId) {
+  if (!site || site.userId !== auth.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -31,14 +36,19 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) {
+    return NextResponse.json(
+      { error: "Unauthorized", code: "unauthorized" },
+      { status: 401 }
+    );
+  }
 
   const { id } = await params;
   const body = await req.json();
 
   const site = await prisma.site.findUnique({ where: { id } });
-  if (!site || site.userId !== session.userId) {
+  if (!site || site.userId !== auth.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

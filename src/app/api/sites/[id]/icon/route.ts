@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { generatePlantSVGLayered, seedFromSubdomain } from "@/lib/garden-icon";
+import { getRequestAuth } from "@/lib/request-auth";
 
 /** GET — Serve the plant icon SVG for a site */
 export async function GET(
@@ -28,18 +28,18 @@ export async function GET(
 
 /** POST — Regenerate the plant icon with a new random seed */
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) {
+  const auth = await getRequestAuth(req);
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
 
   const site = await prisma.site.findUnique({ where: { id } });
-  if (!site || site.userId !== session.userId) {
+  if (!site || site.userId !== auth.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
