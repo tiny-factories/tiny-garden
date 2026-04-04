@@ -173,8 +173,25 @@ export interface TemplateBlock {
     file_name: string;
     file_size: number;
     content_type: string;
+    extension: string;
+    kind: "image" | "gif" | "video" | "pdf" | "model" | "audio" | "text" | "archive" | "other";
+    kind_label: string;
+    type_label: string;
     display_name: string;
     alt_text: string;
+    preview_url: string;
+    preview_image_url: string;
+    preview_image: string;
+    preview_video_url: string;
+    has_visual_preview: boolean;
+    is_image: boolean;
+    is_gif: boolean;
+    is_video: boolean;
+    is_pdf: boolean;
+    is_model: boolean;
+    is_audio: boolean;
+    is_text: boolean;
+    is_archive: boolean;
   };
   source_url: string | null;
   comment_count: number;
@@ -188,6 +205,63 @@ function pickFirstNonEmpty(...values: Array<string | null | undefined>): string 
     }
   }
   return "";
+}
+
+function getFileExtension(value: string): string {
+  if (!value) return "";
+  const cleaned = value.split("#")[0]?.split("?")[0] || "";
+  const ext = path.extname(cleaned).toLowerCase().replace(/^\./, "");
+  return ext;
+}
+
+type AttachmentKind = TemplateBlock["attachment"] extends infer A
+  ? A extends { kind: infer K } ? K : never
+  : never;
+
+const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "webm", "ogv", "m4v"]);
+const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "ogg", "m4a", "aac", "flac"]);
+const MODEL_EXTENSIONS = new Set(["stl", "obj", "glb", "gltf", "ply", "fbx", "usd", "usdz", "3mf"]);
+const TEXT_EXTENSIONS = new Set(["txt", "md", "markdown", "csv", "json", "xml", "yaml", "yml", "rtf", "doc", "docx"]);
+const ARCHIVE_EXTENSIONS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz"]);
+
+function classifyAttachment(contentType: string, extension: string): AttachmentKind {
+  const ct = contentType.toLowerCase();
+  const ext = extension.toLowerCase();
+
+  if (ct.startsWith("image/") || ["jpg", "jpeg", "png", "webp", "svg", "avif", "heic", "heif", "gif"].includes(ext)) {
+    if (ct === "image/gif" || ext === "gif") return "gif";
+    return "image";
+  }
+  if (ct.startsWith("video/") || VIDEO_EXTENSIONS.has(ext)) return "video";
+  if (ct === "application/pdf" || ext === "pdf") return "pdf";
+  if (ct.startsWith("audio/") || AUDIO_EXTENSIONS.has(ext)) return "audio";
+  if (ct.startsWith("model/") || MODEL_EXTENSIONS.has(ext)) return "model";
+  if (ct.startsWith("text/") || TEXT_EXTENSIONS.has(ext)) return "text";
+  if (ct.includes("zip") || ct.includes("archive") || ARCHIVE_EXTENSIONS.has(ext)) return "archive";
+  return "other";
+}
+
+function getAttachmentKindLabel(kind: AttachmentKind): string {
+  switch (kind) {
+    case "image":
+      return "Image";
+    case "gif":
+      return "GIF";
+    case "video":
+      return "Video";
+    case "pdf":
+      return "PDF";
+    case "model":
+      return "3D Model";
+    case "audio":
+      return "Audio";
+    case "text":
+      return "Document";
+    case "archive":
+      return "Archive";
+    default:
+      return "File";
+  }
 }
 
 function normalizeBlock(block: ArenaBlock): TemplateBlock {
@@ -279,20 +353,51 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
   }
 
   if (block.attachment) {
+    const contentType = (block.attachment.content_type || "").toLowerCase();
+    const extension = pickFirstNonEmpty(
+      getFileExtension(block.attachment.file_name),
+      getFileExtension(block.attachment.url)
+    );
+    const kind = classifyAttachment(contentType, extension);
+    const previewImageUrl = kind === "image" || kind === "gif"
+      ? pickFirstNonEmpty(normalized.image?.display, block.attachment.url)
+      : pickFirstNonEmpty(normalized.image?.display);
+    const previewVideoUrl = kind === "video" ? block.attachment.url : "";
+    const previewUrl = kind === "video" || kind === "pdf"
+      ? block.attachment.url
+      : previewImageUrl;
     const attachmentLabel = pickFirstNonEmpty(
       normalized.title,
       normalized.description,
       block.attachment.file_name,
       "Attachment"
     );
+    const kindLabel = getAttachmentKindLabel(kind);
 
     normalized.attachment = {
       url: block.attachment.url,
       file_name: block.attachment.file_name,
       file_size: block.attachment.file_size,
-      content_type: block.attachment.content_type,
+      content_type: contentType,
+      extension,
+      kind,
+      kind_label: kindLabel,
+      type_label: kindLabel,
       display_name: attachmentLabel,
       alt_text: pickFirstNonEmpty(normalized.title, normalized.description, attachmentLabel),
+      preview_url: previewUrl,
+      preview_image_url: previewImageUrl,
+      preview_image: previewImageUrl,
+      preview_video_url: previewVideoUrl,
+      has_visual_preview: Boolean(previewImageUrl),
+      is_image: kind === "image",
+      is_gif: kind === "gif",
+      is_video: kind === "video",
+      is_pdf: kind === "pdf",
+      is_model: kind === "model",
+      is_audio: kind === "audio",
+      is_text: kind === "text",
+      is_archive: kind === "archive",
     };
     normalized.source_url = block.attachment.url;
   }

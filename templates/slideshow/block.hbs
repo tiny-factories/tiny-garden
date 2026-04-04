@@ -30,8 +30,24 @@
 
 {{#if (eq type "attachment")}}
   <div class="sv-slide-content sv-slide-content--attachment">
-    {{#if image.display}}
-      <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{#if attachment.preview_url}}
+      {{#if attachment.is_video}}
+        <video src="{{attachment.preview_url}}" controls preload="metadata" style="max-width:100%;max-height:70vh"></video>
+      {{else}}
+        {{#if attachment.is_pdf}}
+          <object data="{{attachment.preview_url}}" type="application/pdf" style="width:100%;height:70vh">
+            <p>PDF preview unavailable.</p>
+          </object>
+        {{else}}
+          {{#if attachment.is_image}}
+            <img src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+          {{/if}}
+        {{/if}}
+      {{/if}}
+    {{else}}
+      {{#if image.display}}
+        <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{/if}}
     {{/if}}
     <a href="{{attachment.url}}" class="sv-slide-attachment" download>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

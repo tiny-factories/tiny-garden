@@ -145,18 +145,34 @@
 {{#if (eq type "attachment")}}
   <div class="gallery-item gallery-item--attachment">
     <button type="button" class="gallery-tile">
-      {{#if image.display}}
-        <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{#if attachment.preview_url}}
+        {{#if attachment.is_video}}
+          <video src="{{attachment.preview_url}}" muted playsinline preload="metadata" loading="lazy" aria-label="{{attachment.alt_text}}"></video>
+        {{else}}
+          <img src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+        {{/if}}
       {{else}}
         <span class="gallery-tile-fallback">{{attachment.display_name}}</span>
       {{/if}}
     </button>
     <template class="gallery-detail-template">
       <div class="gallery-detail-split">
-        {{#if image.display}}
-          <figure class="gallery-detail-figure">
-            <img src="{{#if image.large}}{{image.large}}{{else}}{{image.display}}{{/if}}" alt="{{attachment.alt_text}}" loading="lazy" tabindex="-1">
-          </figure>
+        {{#if attachment.preview_url}}
+          {{#if attachment.is_video}}
+            <figure class="gallery-detail-figure">
+              <video src="{{attachment.preview_url}}" controls preload="metadata" playsinline tabindex="-1"></video>
+            </figure>
+          {{else}}
+            {{#if attachment.is_pdf}}
+              <figure class="gallery-detail-figure">
+                <iframe src="{{attachment.preview_url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+              </figure>
+            {{else}}
+              <figure class="gallery-detail-figure">
+                <img src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy" tabindex="-1">
+              </figure>
+            {{/if}}
+          {{/if}}
         {{else}}
           <div class="gallery-detail-figure gallery-detail-figure--empty" tabindex="-1">
             <span class="gallery-detail-file-icon" aria-hidden="true">↧</span>

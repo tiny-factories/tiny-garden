@@ -35,8 +35,23 @@
 
 {{#if (eq type "attachment")}}
   <div class="pres-slide-inner pres-slide--attachment">
-    {{#if image.display}}
-      <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy" style="max-width:100%;max-height:70vh;object-fit:contain">
+    {{#if attachment.is_video}}
+      <video controls preload="metadata" style="max-width:100%;max-height:70vh;object-fit:contain">
+        <source src="{{attachment.url}}" type="{{attachment.content_type}}">
+      </video>
+    {{else}}
+      {{#if attachment.is_pdf}}
+        <iframe
+          src="{{attachment.url}}"
+          title="{{attachment.alt_text}}"
+          loading="lazy"
+          style="width:100%;height:70vh;border:1px solid rgba(0,0,0,0.15);border-radius:8px;background:#fff"
+        ></iframe>
+      {{else}}
+        {{#if image.display}}
+          <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy" style="max-width:100%;max-height:70vh;object-fit:contain">
+        {{/if}}
+      {{/if}}
     {{/if}}
     <a href="{{attachment.url}}" class="pres-attachment" download>
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

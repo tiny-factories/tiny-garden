@@ -47,10 +47,20 @@
   {{/if}}
 
   {{#if (eq type "attachment")}}
-    {{#if image.display}}
+    {{#if attachment.preview_url}}
       <figure class="sv-blog-article-image">
-        <img src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+        <img src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
       </figure>
+    {{/if}}
+    {{#if (eq attachment.kind "video")}}
+      <div class="sv-blog-article-embed">
+        <video controls preload="metadata" src="{{attachment.url}}"></video>
+      </div>
+    {{/if}}
+    {{#if (eq attachment.kind "pdf")}}
+      <div class="sv-blog-article-embed">
+        <iframe src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+      </div>
     {{/if}}
     <a href="{{attachment.url}}" class="sv-blog-article-attachment" download>
       <span class="sv-blog-article-attachment-icon">
