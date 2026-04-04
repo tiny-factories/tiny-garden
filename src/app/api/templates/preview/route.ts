@@ -5,6 +5,7 @@ import path from "path";
 import { MOCK_SITE_DATA } from "@/lib/mock-data";
 import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
 import { prisma } from "@/lib/db";
+import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -34,6 +35,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { error: "Missing ?template= param" },
       { status: 400 }
+    );
+  }
+
+  if (!(await isKnownTemplateSlug(template))) {
+    return NextResponse.json(
+      { error: `Template "${template}" not found` },
+      { status: 404 }
     );
   }
 
