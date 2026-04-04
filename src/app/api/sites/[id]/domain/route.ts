@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 import {
   addDomainToVercel,
   removeDomainFromVercel,
@@ -32,6 +33,8 @@ export async function POST(
 ) {
   const auth = await getRequestAuth(req);
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const csrf = requireTrustedRequestOrigin(req);
+  if (csrf) return csrf;
 
   const { id } = await params;
   const site = await getSiteForUser(id, auth.userId);
@@ -146,6 +149,8 @@ export async function DELETE(
 ) {
   const auth = await getRequestAuth(req);
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const csrf = requireTrustedRequestOrigin(req);
+  if (csrf) return csrf;
 
   const { id } = await params;
   const site = await getSiteForUser(id, auth.userId);

@@ -28,9 +28,10 @@ vi.mock("@/lib/db", () => ({
 describe("site id route auth guards", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    process.env.NEXT_PUBLIC_APP_URL = "https://tiny.garden";
   });
 
-  it("returns 401 when session is missing", async () => {
+  it("returns 403 when request origin is missing", async () => {
     getSessionMock.mockResolvedValue(null);
     const { DELETE } = await import("@/app/api/sites/[id]/route");
     const req = new Request("https://tiny.garden/api/sites/site123", {
@@ -39,10 +40,10 @@ describe("site id route auth guards", () => {
     const res = await DELETE(req as never, {
       params: Promise.resolve({ id: "site123" }),
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
-  it("returns 404 when site belongs to another user", async () => {
+  it("returns 403 when request origin is missing before auth checks", async () => {
     getSessionMock.mockResolvedValue({
       userId: "u1",
       arenaToken: "tok",
@@ -62,6 +63,41 @@ describe("site id route auth guards", () => {
     const res = await DELETE(req as never, {
       params: Promise.resolve({ id: "site123" }),
     });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 403 for untrusted origin on DELETE", async () => {
+    getSessionMock.mockResolvedValue({
+      userId: "u1",
+      arenaToken: "tok",
+      arenaUserId: 1,
+      arenaUsername: "alice",
+    });
+    const { DELETE } = await import("@/app/api/sites/[id]/route");
+    const req = new Request("https://tiny.garden/api/sites/site123", {
+      method: "DELETE",
+      headers: {
+        origin: "https://evil.example",
+      },
+    });
+    const res = await DELETE(req as never, {
+      params: Promise.resolve({ id: "site123" }),
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("allows trusted origin on DELETE and then evaluates auth", async () => {
+    getSessionMock.mockResolvedValue(null);
+    const { DELETE } = await import("@/app/api/sites/[id]/route");
+    const req = new Request("https://tiny.garden/api/sites/site123", {
+      method: "DELETE",
+      headers: {
+        origin: "https://tiny.garden",
+      },
+    });
+    const res = await DELETE(req as never, {
+      params: Promise.resolve({ id: "site123" }),
+    });
+    expect(res.status).toBe(401);
   });
 });

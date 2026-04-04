@@ -23,11 +23,24 @@ describe("site build route auth guard", () => {
     vi.resetAllMocks();
   });
 
+  it("returns 403 when origin is not trusted", async () => {
+    const { POST } = await import("@/app/api/sites/[id]/build/route");
+    const req = new Request("https://tiny.garden/api/sites/site123/build", {
+      method: "POST",
+      headers: { origin: "https://evil.example" },
+    });
+    const res = await POST(req as never, {
+      params: Promise.resolve({ id: "site123" }),
+    });
+    expect(res.status).toBe(403);
+  });
+
   it("returns 401 when session is missing", async () => {
     getSessionMock.mockResolvedValue(null);
     const { POST } = await import("@/app/api/sites/[id]/build/route");
     const req = new Request("https://tiny.garden/api/sites/site123/build", {
       method: "POST",
+      headers: { origin: "https://tiny.garden" },
     });
     const res = await POST(req as never, {
       params: Promise.resolve({ id: "site123" }),

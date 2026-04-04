@@ -11,6 +11,7 @@ import {
   PWYC_MAX_CENTS,
   PWYC_MIN_PAID_CENTS,
 } from "@/lib/pricing-tiers";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 /** Stripe requires absolute URLs with a scheme; env is often set as `tiny.garden` by mistake. */
 function appOrigin(): string {
@@ -30,6 +31,9 @@ function getStripe() {
 }
 
 export async function POST(req: NextRequest) {
+  const csrfError = requireTrustedRequestOrigin(req);
+  if (csrfError) return csrfError;
+
   const stripe = getStripe();
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
