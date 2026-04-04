@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const host = (req.headers.get("host") || "").toLowerCase();
-  const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
+  const rawHost = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "").toLowerCase();
+  const host = rawHost.split(",")[0].trim();
+  const hostname = host.split(":")[0] || host;
+  const siteDomain = (process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden")
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .split("/")[0];
+  const vercelUrl = (process.env.VERCEL_URL || "").toLowerCase().split(":")[0];
+  const isVercelDeploymentHost = hostname.endsWith(".vercel.app") || (vercelUrl ? hostname === vercelUrl : false);
 
   if (process.env.NODE_ENV === "production" && req.nextUrl.pathname.startsWith("/dev")) {
     return new NextResponse(null, { status: 404 });
   }
 
   // Check if this is a subdomain request (e.g. my-site.tiny.garden)
-  if (host.endsWith(`.${siteDomain}`) && host !== siteDomain && host !== `www.${siteDomain}`) {
-    const subdomain = host.replace(`.${siteDomain}`, "");
+  if (hostname.endsWith(`.${siteDomain}`) && hostname !== siteDomain && hostname !== `www.${siteDomain}`) {
+    const subdomain = hostname.replace(`.${siteDomain}`, "");
 
     return NextResponse.rewrite(
       new URL(`/api/serve/${subdomain}${req.nextUrl.pathname}`, req.url)
@@ -19,15 +26,16 @@ export function middleware(req: NextRequest) {
 
   // Check if this is the main app domain
   const isAppDomain =
-    host === siteDomain ||
-    host === `www.${siteDomain}` ||
-    host.startsWith("localhost") ||
-    host.startsWith("127.0.0.1");
+    hostname === siteDomain ||
+    hostname === `www.${siteDomain}` ||
+    hostname.startsWith("localhost") ||
+    hostname.startsWith("127.0.0.1") ||
+    isVercelDeploymentHost;
 
   // If not the app domain and not a subdomain, treat as custom domain
   if (!isAppDomain) {
     return NextResponse.rewrite(
-      new URL(`/api/serve/_custom/${host}${req.nextUrl.pathname}`, req.url)
+      new URL(`/api/serve/_custom/${hostname}${req.nextUrl.pathname}`, req.url)
     );
   }
 
