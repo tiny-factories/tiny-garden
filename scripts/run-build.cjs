@@ -41,36 +41,51 @@ function migrateDeploy() {
   const combined = `${r.stdout || ""}${r.stderr || ""}`;
   const isP3005 = combined.includes("P3005");
 
-  if (
-    isP3005 &&
-    process.env.PRISMA_BASELINE_ON_P3005 === "1"
-  ) {
-    process.stderr.write(
-      `\n[prisma] P3005: marking ${BASELINE_MIGRATION} as applied (PRISMA_BASELINE_ON_P3005=1), then retrying deploy…\n\n`
-    );
-    runNode([prisma, "migrate", "resolve", "--applied", BASELINE_MIGRATION]);
-    runNode([prisma, "migrate", "deploy"]);
-    return;
+  if (!isP3005) {
+    process.exit(r.status === null ? 1 : r.status);
   }
 
-  if (isP3005) {
+  if (process.env.PRISMA_NO_AUTO_BASELINE === "1") {
     process.stderr.write(`
-Prisma P3005: this database already has tables but no Prisma migration history.
-
-Fix once (same DATABASE_URL as this build):
+Prisma P3005: existing DB, no migration history. Auto-baseline is disabled (PRISMA_NO_AUTO_BASELINE=1).
 
   yarn db:baseline
-  # or: npm run db:baseline
 
-If "Site"."discoverable", "ApiToken", or "BuildRequest" are missing, run the SQL in
+If "Site"."discoverable", "ApiToken", or "BuildRequest" are missing, run
   prisma/migrations/${BASELINE_MIGRATION}/migration.sql
-in the Neon console first, then run db:baseline again.
-
-One-shot on Vercel: add env PRISMA_BASELINE_ON_P3005=1 for a single deploy, then remove it.
+in Neon first, then yarn db:baseline.
 `);
+    process.exit(r.status === null ? 1 : r.status);
   }
 
-  process.exit(r.status === null ? 1 : r.status);
+  process.stderr.write(
+    `\n[prisma] P3005: baselining migration ${BASELINE_MIGRATION}, then retrying migrate deploy…\n\n`
+  );
+
+  const resolved = runPrismaCapture([
+    prisma,
+    "migrate",
+    "resolve",
+    "--applied",
+    BASELINE_MIGRATION,
+  ]);
+  if (resolved.stdout) process.stdout.write(resolved.stdout);
+  if (resolved.stderr) process.stderr.write(resolved.stderr);
+  if (resolved.status !== 0) {
+    process.exit(resolved.status === null ? 1 : resolved.status);
+  }
+
+  const again = runPrismaCapture([prisma, "migrate", "deploy"]);
+  if (again.stdout) process.stdout.write(again.stdout);
+  if (again.stderr) process.stderr.write(again.stderr);
+  if (again.status !== 0) {
+    process.stderr.write(`
+[prisma] migrate deploy still failed after baseline. If schema is missing this migration's changes, run
+  prisma/migrations/${BASELINE_MIGRATION}/migration.sql
+in your SQL editor, then run: yarn build
+`);
+    process.exit(again.status === null ? 1 : again.status);
+  }
 }
 
 migrateDeploy();
