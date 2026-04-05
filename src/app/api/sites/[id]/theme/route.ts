@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 export async function GET(
   req: NextRequest,
@@ -39,6 +40,10 @@ export async function PUT(
       { error: "Unauthorized", code: "unauthorized" },
       { status: 401 }
     );
+  if (auth.method === "session") {
+    const csrfError = requireTrustedRequestOrigin(req);
+    if (csrfError) return csrfError;
+  }
 
   const { id } = await params;
 

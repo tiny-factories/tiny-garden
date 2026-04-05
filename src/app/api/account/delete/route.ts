@@ -3,8 +3,12 @@ import { getSession, clearSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import fs from "fs/promises";
 import path from "path";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
-export async function POST() {
+export async function POST(req: Request) {
+  const csrfError = requireTrustedRequestOrigin(req);
+  if (csrfError) return csrfError;
+
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
