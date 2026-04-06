@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import Handlebars from "handlebars";
 import fs from "fs/promises";
 import path from "path";
+import { ArenaClient } from "@/lib/arena";
 import { MOCK_SITE_DATA } from "@/lib/mock-data";
+import { channelBlocksForTemplate } from "@/lib/build";
+import {
+  extractChannelStylesCss,
+  isReservedStylesCssTitle,
+  resolveSiteCustomCss,
+} from "@/lib/channel-styles";
 import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
 import { prisma } from "@/lib/db";
+import { getRequestAuth } from "@/lib/request-auth";
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -16,6 +24,9 @@ function escapeHtmlAttr(value: string): string {
 // Register helpers (keep in sync with src/lib/build.ts)
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+Handlebars.registerHelper("isReservedStylesCssTitle", (title: unknown) =>
+  typeof title === "string" && isReservedStylesCssTitle(title)
+);
 Handlebars.registerHelper("formatDate", (dateStr: string) => {
   try {
     return new Date(dateStr).toLocaleDateString("en-US", {
@@ -101,20 +112,72 @@ export async function GET(request: NextRequest) {
       </style>`;
     }
 
-    const compiledTemplate = Handlebars.compile(inlinedSource);
-    const siteData = {
-      ...MOCK_SITE_DATA,
-      site: { ...MOCK_SITE_DATA.site, template },
-    };
-    let html = compiledTemplate({ ...siteData, styles: styleContent });
-
+    let previewChannel = MOCK_SITE_DATA.channel;
+    let previewBlocks = MOCK_SITE_DATA.blocks;
     let siteHead = "";
+    let ownerCustomCss = "";
+
     if (siteId) {
+      const auth = await getRequestAuth(request);
       const site = await prisma.site.findUnique({
         where: { id: siteId },
-        select: { id: true, channelTitle: true },
+        select: {
+          id: true,
+          channelTitle: true,
+          channelSlug: true,
+          customCss: true,
+          userId: true,
+          user: { select: { arenaToken: true } },
+        },
       });
       if (site) {
+        if (auth && site.userId === auth.userId) {
+          try {
+            const client = new ArenaClient(site.user.arenaToken);
+            const [arenaChannel, arenaBlocks] = await Promise.all([
+              client.getChannel(site.channelSlug),
+              client.getAllChannelBlocks(site.channelSlug),
+            ]);
+            previewChannel = {
+              title: arenaChannel.title,
+              slug: arenaChannel.slug,
+              description:
+                typeof arenaChannel.description === "string"
+                  ? arenaChannel.description
+                  : "",
+              user: {
+                name:
+                  arenaChannel.owner?.name ||
+                  arenaChannel.owner?.full_name ||
+                  arenaChannel.owner?.username ||
+                  arenaChannel.user?.full_name ||
+                  "",
+                slug:
+                  arenaChannel.owner?.slug || arenaChannel.user?.slug || "",
+                avatar_url:
+                  arenaChannel.owner?.avatar ||
+                  arenaChannel.owner?.avatar_image?.display ||
+                  arenaChannel.user?.avatar_image?.display ||
+                  "",
+              },
+              created_at: arenaChannel.created_at,
+              updated_at: arenaChannel.updated_at,
+              length:
+                arenaChannel.length || arenaChannel.counts?.contents || 0,
+            };
+            previewBlocks = channelBlocksForTemplate(arenaBlocks);
+            const channelCss = extractChannelStylesCss(arenaBlocks);
+            const effectiveCss = resolveSiteCustomCss(
+              site.customCss,
+              channelCss
+            );
+            if (effectiveCss) {
+              ownerCustomCss = `<style id="tiny-garden-site-css">\n${effectiveCss}\n</style>`;
+            }
+          } catch {
+            /* mock channel/blocks; preview still works */
+          }
+        }
         const origin = request.nextUrl.origin;
         const iconUrl = new URL(`/api/sites/${site.id}/icon`, origin).href;
         const pageUrl = request.nextUrl.toString();
@@ -135,8 +198,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Inject font links + theme overrides + site icon / OG before </head> or at start
-    const injection = fontLinks + themeCSS + siteHead;
+    const compiledTemplate = Handlebars.compile(inlinedSource);
+    const siteData = {
+      channel: previewChannel,
+      blocks: previewBlocks,
+      site: { ...MOCK_SITE_DATA.site, template },
+    };
+    let html = compiledTemplate({ ...siteData, styles: styleContent });
+
+    // Inject font links + theme overrides + site icon / OG + owner customCss before </head> or at start
+    const injection = fontLinks + themeCSS + siteHead + ownerCustomCss;
     if (injection) {
       if (html.includes("</head>")) {
         html = html.replace("</head>", `${injection}</head>`);
@@ -146,7 +217,10 @@ export async function GET(request: NextRequest) {
     }
 
     return new NextResponse(html, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "private, no-store",
+      },
     });
   } catch {
     return NextResponse.json(

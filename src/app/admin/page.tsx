@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FeaturedToggleButton } from "@/components/featured-toggle-button";
+import { PublishStatusBadge } from "@/components/publish-status-badge";
 
 interface TimelinePoint {
   date: string;
@@ -488,35 +490,26 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {stats.recentSites.map((site) => (
-                <tr key={site.id} className="border-b border-neutral-50 last:border-0">
+                <tr
+                  key={site.id}
+                  className="border-b border-neutral-50 last:border-0 dark:border-neutral-800/80"
+                >
                   <td className="px-3 py-2 text-xs font-medium">{site.subdomain}</td>
                   <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">{site.channelTitle}</td>
                   <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.template}</td>
                   <td className="px-3 py-2">
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      site.published ? "bg-green-50 text-green-600" : "bg-neutral-50 text-neutral-400"
-                    }`}>
-                      {site.published ? "published" : "draft"}
-                    </span>
+                    <PublishStatusBadge published={site.published} />
                   </td>
                   <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.arenaUsername}</td>
                   <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">
                     {new Date(site.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-3 py-2">
-                    <button
-                      onClick={() => handleToggleFeatured(site)}
+                    <FeaturedToggleButton
+                      featured={site.featured}
                       disabled={!!toggling[site.id]}
-                      className={`text-xs px-2 py-0.5 rounded border transition-colors ${
-                        toggling[site.id] ? "opacity-50 cursor-wait" : "cursor-pointer"
-                      } ${
-                        site.featured
-                          ? "bg-amber-50 border-amber-200 text-amber-700"
-                          : "bg-white border-neutral-200 text-neutral-400 hover:text-neutral-600"
-                      }`}
-                    >
-                      {site.featured ? "Featured" : "Feature"}
-                    </button>
+                      onClick={() => handleToggleFeatured(site)}
+                    />
                   </td>
                 </tr>
               ))}
@@ -546,9 +539,10 @@ export default function AdminPage() {
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleToggleFeatured(site)}
                   disabled={!!toggling[site.id]}
-                  className="text-xs px-2 py-0.5 rounded border border-red-100 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-0.5 rounded border border-red-100 text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-950/40"
                 >
                   Unfeature
                 </button>

@@ -4,6 +4,12 @@ import path from "path";
 import crypto from "crypto";
 import { put } from "@vercel/blob";
 import { ArenaClient, ArenaBlock } from "./arena";
+import {
+  extractChannelStylesCss,
+  filterOutChannelStylesBlocks,
+  isReservedStylesCssTitle,
+  resolveSiteCustomCss,
+} from "./channel-styles";
 import { prisma } from "./db";
 import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
@@ -405,8 +411,18 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
   return normalized;
 }
 
+/** Are.na channel blocks → template blocks (omits reserved `styles.css` title). */
+export function channelBlocksForTemplate(blocks: ArenaBlock[]): TemplateBlock[] {
+  return filterOutChannelStylesBlocks(blocks)
+    .map(normalizeBlock)
+    .filter((b) => !isReservedStylesCssTitle(b.title));
+}
+
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+Handlebars.registerHelper("isReservedStylesCssTitle", (title: unknown) =>
+  typeof title === "string" && isReservedStylesCssTitle(title)
+);
 
 function parseDate(dateStr: string): Date | null {
   const parsed = new Date(dateStr);
@@ -456,6 +472,8 @@ async function runBuild(siteId: string): Promise<string> {
   const client = new ArenaClient(site.user.arenaToken);
   const channel = await client.getChannel(site.channelSlug);
   const blocks = await client.getAllChannelBlocks(site.channelSlug);
+  const channelCss = extractChannelStylesCss(blocks);
+  const effectiveCustomCss = resolveSiteCustomCss(site.customCss, channelCss);
 
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
@@ -478,12 +496,12 @@ async function runBuild(siteId: string): Promise<string> {
       updated_at: channel.updated_at,
       length: channel.length || channel.counts?.contents || 0,
     },
-    blocks: blocks.map(normalizeBlock),
+    blocks: channelBlocksForTemplate(blocks),
     site: {
       subdomain: site.subdomain,
       url: `${protocol}://${site.subdomain}.${siteDomain}`,
       template: site.template,
-      custom_css: site.customCss || "",
+      custom_css: effectiveCustomCss,
       built_at: new Date().toISOString(),
     },
   };
@@ -570,9 +588,9 @@ async function runBuild(siteId: string): Promise<string> {
     html = html.replace("</head>", `${themeInjection}</head>`);
   }
 
-  // Inject site-level CSS last so user overrides win in cascade.
-  if (site.customCss && site.customCss.trim()) {
-    const siteCssInjection = `<style id="tiny-garden-site-css">\n${site.customCss}\n</style>\n`;
+  // Inject site-level CSS last (saved customCss and/or channel styles.css block).
+  if (effectiveCustomCss) {
+    const siteCssInjection = `<style id="tiny-garden-site-css">\n${effectiveCustomCss}\n</style>\n`;
     if (html.includes("</head>")) {
       html = html.replace("</head>", `${siteCssInjection}</head>`);
     } else {

@@ -29,6 +29,7 @@
 {{/if}}
 
 {{#if (eq type "text")}}
+  {{#unless (isReservedStylesCssTitle title)}}
   <div class="gallery-item gallery-item--text">
     <button type="button" class="gallery-tile gallery-tile--text">
       <span class="gallery-tile-text-inner">
@@ -60,6 +61,7 @@
       </div>
     </template>
   </div>
+  {{/unless}}
 {{/if}}
 
 {{#if (eq type "link")}}

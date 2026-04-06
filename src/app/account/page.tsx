@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/button";
+import { SegmentedControl } from "@/components/toolbar";
 import { track } from "@/lib/track";
 import {
   INDIVIDUAL_STEP_LABELS,
@@ -40,8 +42,14 @@ interface Account {
   createdAt: string;
 }
 
+type AccountTab = "settings" | "subscription";
+
+const ACCOUNT_MAIN_CLASS =
+  "min-h-screen w-full min-w-0 max-w-4xl mx-auto px-4 py-16";
+
 export default function AccountPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<AccountTab>("settings");
   const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -238,11 +246,16 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 w-32 bg-neutral-100 rounded dark:bg-neutral-800" />
-          <div className="h-3 w-48 bg-neutral-50 rounded dark:bg-neutral-900" />
-          <div className="h-24 bg-neutral-50 rounded dark:bg-neutral-900" />
+      <main className={ACCOUNT_MAIN_CLASS}>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <div className="h-6 w-28 animate-pulse rounded bg-neutral-100 dark:bg-neutral-800" />
+            <div className="h-9 w-full max-w-[19rem] animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-800" />
+          </div>
+          <div className="animate-pulse space-y-4">
+            <div className="h-3 w-48 bg-neutral-50 rounded dark:bg-neutral-900" />
+            <div className="h-24 bg-neutral-50 rounded dark:bg-neutral-900" />
+          </div>
         </div>
       </main>
     );
@@ -251,159 +264,175 @@ export default function AccountPage() {
   if (!account) return null;
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between gap-4 mb-8">
-        <h1 className="text-lg font-medium">Account</h1>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="shrink-0 text-sm text-neutral-500 hover:text-neutral-900 transition-colors dark:text-neutral-400"
-        >
-          Log out
-        </button>
-      </div>
-
-      {/* Profile */}
-      <section className="mb-8 p-4 border border-neutral-100 rounded dark:border-neutral-800">
-        <div className="flex items-center gap-3 mb-4">
-          {account.avatarUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={account.avatarUrl}
-              alt=""
-              className="w-8 h-8 rounded-full"
-            />
-          )}
-          <div>
-            <p className="text-sm font-medium">{account.arenaUsername}</p>
-            <p className="text-xs text-neutral-400 dark:text-neutral-500">
-              {account.siteCount} site{account.siteCount !== 1 ? "s" : ""}
-            </p>
-          </div>
-        </div>
-        <a
-          href={`https://www.are.na/${account.arenaUsername}`}
-          target="_blank"
-          rel="noopener"
-          className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors dark:hover:text-neutral-300 dark:text-neutral-500"
-        >
-          View Are.na profile
-        </a>
-      </section>
-
-      {/* Subscription */}
-      <section className="mb-8">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-400 mb-3 dark:text-neutral-500">
-          Subscription
-        </h2>
-        <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">
-                {{ free: "Free", pro: "Supporter", studio: "Studio" }[account.plan] || "Free"} plan
-                {account.isAdmin && (
-                  <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
-                    Admin
-                  </span>
-                )}
-                {account.isFriend && !account.isAdmin && (
-                  <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
-                    Friend
-                  </span>
-                )}
-              </p>
-              <p className="text-xs text-neutral-400 mt-0.5 dark:text-neutral-500">
-                {
-                  {
-                    free: "3 sites, manual rebuild — or subscribe from Pricing (Individual / Studio)",
-                    pro: "Unlimited sites, daily auto-rebuild",
-                    studio: "50 sites, daily auto-rebuild",
-                  }[account.plan] || "3 sites"
-                }
-              </p>
+    <main className={ACCOUNT_MAIN_CLASS}>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="min-w-0 pb-2 sm:flex-1">
+            <div className="flex flex-wrap items-end justify-between gap-3 gap-y-2">
+              <h1 className="text-lg font-medium text-neutral-950 dark:text-neutral-50">
+                Account
+              </h1>
+              <Button variant="ghost" className="shrink-0" onClick={handleLogout}>
+                Log out
+              </Button>
             </div>
-            {account.plan === "free" &&
-              (() => {
-                const cents = getCentsForSelection(
-                  checkoutPlan,
-                  checkoutIndividualStep,
-                  checkoutStudioLevel
-                );
-                if (cents <= 0) {
-                  return (
-                    <p className="text-[11px] text-neutral-400 max-w-[11rem] text-right leading-relaxed dark:text-neutral-500">
-                      <Link
-                        href="/#pricing"
-                        className="text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
-                      >
-                        Pricing
-                      </Link>{" "}
-                      — pick a paid tier to subscribe here.
-                    </p>
-                  );
-                }
-                const subLabel =
-                  checkoutPlan === "studio"
-                    ? `Studio · ${formatUsdPerMonth(cents)}`
-                    : `Individual · ${INDIVIDUAL_STEP_LABELS[checkoutIndividualStep]} · ${formatUsdPerMonth(cents)}`;
-                return (
-                  <button
-                    type="button"
-                    onClick={handleUpgrade}
-                    disabled={upgrading}
-                    className="text-xs px-3 py-1.5 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50"
-                  >
-                    {upgrading ? "Loading..." : `Subscribe · ${subLabel}`}
-                  </button>
-                );
-              })()}
-            {account.plan === "pro" && (
-              <span className="text-xs text-neutral-400 dark:text-neutral-500">
-                {account.subscriptionStatus}
-              </span>
-            )}
           </div>
+          <SegmentedControl<AccountTab>
+            segments={[
+              { value: "settings", label: "Settings" },
+              { value: "subscription", label: "Subscription" },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Account sections"
+            className="w-full max-w-[19rem] shrink-0 sm:w-[19rem] sm:self-end"
+            labelClassName="px-3 text-xs font-medium"
+          />
         </div>
-      </section>
 
-      {/* Danger */}
-      <section
-        className="space-y-3"
-        onMouseEnter={() => setDangerHover(true)}
-        onMouseLeave={() => setDangerHover(false)}
-      >
-        <h2
-          className={`text-xs font-medium uppercase tracking-wide mb-3 transition-colors ${
-            dangerHover ? "text-red-500" : "text-red-400/90"
-          }`}
-        >
-          <span>Danger</span>
-          {dangerHover && (
-            <>
-              <span>{DANGER_SUFFIX.slice(0, dangerTyped)}</span>
-              <span
-                className="inline-block w-[0.5ch] text-center font-mono translate-y-px"
-                style={{ opacity: caretVisible ? 1 : 0 }}
-                aria-hidden
+        <div className="outline-none">
+          {activeTab === "settings" && (
+            <div className="flex flex-col gap-8">
+              <section className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                <div className="flex items-center gap-3 mb-4">
+                  {account.avatarUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={account.avatarUrl}
+                      alt=""
+                      className="w-8 h-8 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">{account.arenaUsername}</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                      {account.siteCount} site{account.siteCount !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={`https://www.are.na/${account.arenaUsername}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors dark:hover:text-neutral-300 dark:text-neutral-500"
+                >
+                  View Are.na profile
+                </a>
+              </section>
+
+              <section
+                className="space-y-3"
+                onMouseEnter={() => setDangerHover(true)}
+                onMouseLeave={() => setDangerHover(false)}
               >
-                |
-              </span>
-            </>
+                <h2
+                  className={`text-xs font-medium uppercase tracking-wide mb-3 transition-colors ${
+                    dangerHover ? "text-red-500" : "text-red-400/90"
+                  }`}
+                >
+                  <span>Danger</span>
+                  {dangerHover && (
+                    <>
+                      <span>{DANGER_SUFFIX.slice(0, dangerTyped)}</span>
+                      <span
+                        className="inline-block w-[0.5ch] text-center font-mono translate-y-px"
+                        style={{ opacity: caretVisible ? 1 : 0 }}
+                        aria-hidden
+                      >
+                        |
+                      </span>
+                    </>
+                  )}
+                </h2>
+                <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? "Deleting..." : "Delete account"}
+                </Button>
+                <p className="text-xs text-neutral-300 px-1 dark:text-neutral-500">
+                  Deleting your account removes your sites and data from tiny.garden.
+                  Your Are.na account is not affected.
+                </p>
+              </section>
+            </div>
           )}
-        </h2>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleting}
-          className="block w-full text-left text-sm px-4 py-3 border border-red-100 rounded text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-        >
-          {deleting ? "Deleting..." : "Delete account"}
-        </button>
-        <p className="text-xs text-neutral-300 px-1">
-          Deleting your account removes your sites and data from tiny.garden.
-          Your Are.na account is not affected.
-        </p>
-      </section>
+
+          {activeTab === "subscription" && (
+            <section>
+              <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {{ free: "Free", pro: "Supporter", studio: "Studio" }[account.plan] || "Free"}{" "}
+                      plan
+                      {account.isAdmin && (
+                        <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded dark:bg-amber-950/60 dark:text-amber-200">
+                          Admin
+                        </span>
+                      )}
+                      {account.isFriend && !account.isAdmin && (
+                        <span className="ml-2 inline-block text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded dark:bg-green-950/50 dark:text-green-300">
+                          Friend
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-neutral-400 mt-0.5 dark:text-neutral-500">
+                      {
+                        {
+                          free: "3 sites, manual rebuild — or subscribe from Pricing (Individual / Studio)",
+                          pro: "Unlimited sites, daily auto-rebuild",
+                          studio: "50 sites, daily auto-rebuild",
+                        }[account.plan] || "3 sites"
+                      }
+                    </p>
+                  </div>
+                  <div className="shrink-0 sm:text-right">
+                    {account.plan === "free" &&
+                      (() => {
+                        const cents = getCentsForSelection(
+                          checkoutPlan,
+                          checkoutIndividualStep,
+                          checkoutStudioLevel
+                        );
+                        if (cents <= 0) {
+                          return (
+                            <p className="text-[11px] text-neutral-400 max-w-[14rem] leading-relaxed dark:text-neutral-500 sm:ml-auto">
+                              <Link
+                                href="/#pricing"
+                                className="text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
+                              >
+                                Pricing
+                              </Link>{" "}
+                              — pick a paid tier to subscribe here.
+                            </p>
+                          );
+                        }
+                        const subLabel =
+                          checkoutPlan === "studio"
+                            ? `Studio · ${formatUsdPerMonth(cents)}`
+                            : `Individual · ${INDIVIDUAL_STEP_LABELS[checkoutIndividualStep]} · ${formatUsdPerMonth(cents)}`;
+                        return (
+                          <Button
+                            variant="primary"
+                            size="xs"
+                            className="shrink-0"
+                            onClick={handleUpgrade}
+                            disabled={upgrading}
+                          >
+                            {upgrading ? "Loading..." : `Subscribe · ${subLabel}`}
+                          </Button>
+                        );
+                      })()}
+                    {account.plan === "pro" && (
+                      <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                        {account.subscriptionStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

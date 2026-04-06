@@ -1,20 +1,32 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { track } from "@/lib/track";
 import { PlanTierBadge } from "@/components/PlanTierBadge";
-import { Toolbar, type ViewMode } from "@/components/toolbar";
+import { SegmentedControl, Toolbar, type ViewMode } from "@/components/toolbar";
 import { SitesPageSkeleton } from "@/components/sites-dashboard-skeletons";
 import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
+import { Button } from "@/components/button";
 import { SITE_CARD_GRID_CLASS } from "@/lib/site-card-grid";
 
 const SITES_VIEW_MODE_KEY = "tinygarden:sites-view-mode";
+const SITES_LIST_SCOPE_KEY = "tinygarden:sites-list-scope";
+
+/** Page size for "All sites" (server-paginated public catalog). */
+const CATALOG_PAGE_SIZE = 24;
+
+type SitesListScope = "yours" | "all";
 
 function parseStoredViewMode(raw: string | null): ViewMode | null {
   if (raw === "single" || raw === "grid" || raw === "list") return raw;
+  return null;
+}
+
+function parseStoredListScope(raw: string | null): SitesListScope | null {
+  if (raw === "yours" || raw === "all") return raw;
   return null;
 }
 
@@ -26,9 +38,22 @@ interface Site {
   template: string;
   published: boolean;
   lastBuiltAt: string | null;
+  /** Set when listing published catalog; false = another user’s site */
+  isSelf?: boolean;
+  ownerArenaUsername?: string;
 }
 
-function Toggle({
+interface PublicSiteSearchItem {
+  id: string;
+  subdomain: string;
+  channelSlug: string;
+  channelTitle: string;
+  template: string;
+  published: boolean;
+  owner: { arenaUsername: string; isSelf: boolean };
+}
+
+function PublishToggle({
   checked,
   loading,
   onChange,
@@ -150,11 +175,17 @@ function SitePlantThumb({
   siteId,
   size,
   className = "",
+  bordered = true,
 }: {
   siteId: string;
   size: number;
   className?: string;
+  /** When false, no frame border (e.g. sites list row). */
+  bordered?: boolean;
 }) {
+  const frame = bordered
+    ? "border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+    : "bg-transparent";
   return (
     <Image
       src={`/api/sites/${siteId}/icon`}
@@ -162,7 +193,7 @@ function SitePlantThumb({
       width={size}
       height={size}
       unoptimized
-      className={`rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 object-contain pointer-events-none select-none [image-rendering:crisp-edges] ${className}`}
+      className={`rounded object-contain pointer-events-none select-none [image-rendering:crisp-edges] ${frame} ${className}`}
     />
   );
 }
@@ -184,11 +215,39 @@ export default function SitesPage() {
   const [building, setBuilding] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("single");
+  const [listScope, setListScope] = useState<SitesListScope>("yours");
+  const [publicCatalog, setPublicCatalog] = useState<PublicSiteSearchItem[] | null>(null);
+  const [publicCatalogLoading, setPublicCatalogLoading] = useState(false);
+  const [publicCatalogError, setPublicCatalogError] = useState(false);
+  const [catalogRetryKey, setCatalogRetryKey] = useState(0);
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [catalogTotal, setCatalogTotal] = useState(0);
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const isFirstCatalogScopeRef = useRef(true);
+  const catalogScrollSkipRef = useRef(true);
 
   useEffect(() => {
     try {
       const stored = parseStoredViewMode(localStorage.getItem(SITES_VIEW_MODE_KEY));
       if (stored) setViewMode(stored);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = parseStoredListScope(localStorage.getItem(SITES_LIST_SCOPE_KEY));
+      if (stored) setListScope(stored);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const setListScopePersist = useCallback((scope: SitesListScope) => {
+    setListScope(scope);
+    try {
+      localStorage.setItem(SITES_LIST_SCOPE_KEY, scope);
     } catch {
       /* ignore */
     }
@@ -212,6 +271,92 @@ export default function SitesPage() {
     }
     return data;
   }, []);
+
+  /** Debounced server query for "All sites"; resets to page 1 when the query updates. */
+  useEffect(() => {
+    if (listScope !== "all") {
+      isFirstCatalogScopeRef.current = true;
+      return;
+    }
+    const run = () => {
+      setCatalogQuery(search.trim());
+      setCatalogPage(1);
+    };
+    if (isFirstCatalogScopeRef.current) {
+      isFirstCatalogScopeRef.current = false;
+      run();
+      return;
+    }
+    const id = window.setTimeout(run, 300);
+    return () => clearTimeout(id);
+  }, [search, listScope]);
+
+  useEffect(() => {
+    if (listScope !== "all") {
+      setPublicCatalog(null);
+      setCatalogTotal(0);
+      setPublicCatalogLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setPublicCatalogLoading(true);
+    setPublicCatalogError(false);
+    const params = new URLSearchParams({
+      scope: "public",
+      limit: String(CATALOG_PAGE_SIZE),
+      page: String(catalogPage),
+    });
+    if (catalogQuery) params.set("q", catalogQuery);
+    fetch(`/api/sites/search?${params}`, { credentials: "same-origin" })
+      .then(async (r) => {
+        const data: unknown = await r.json();
+        if (!r.ok) throw new Error("failed");
+        if (
+          data &&
+          typeof data === "object" &&
+          "items" in data &&
+          Array.isArray((data as { items: unknown }).items)
+        ) {
+          const body = data as { items: PublicSiteSearchItem[]; total?: unknown };
+          const items = body.items;
+          const total =
+            typeof body.total === "number" ? body.total : items.length;
+          return { items, total };
+        }
+        return { items: [] as PublicSiteSearchItem[], total: 0 };
+      })
+      .then(({ items, total }) => {
+        if (!cancelled) {
+          setPublicCatalog(items);
+          setCatalogTotal(total);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPublicCatalog(null);
+          setCatalogTotal(0);
+          setPublicCatalogError(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setPublicCatalogLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [listScope, catalogRetryKey, catalogPage, catalogQuery]);
+
+  useEffect(() => {
+    if (listScope !== "all") {
+      catalogScrollSkipRef.current = true;
+      return;
+    }
+    if (catalogScrollSkipRef.current) {
+      catalogScrollSkipRef.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [catalogPage, listScope]);
 
   // URL params: new-site build state, post-OAuth, post-Stripe return (clean up + analytics)
   useEffect(() => {
@@ -346,6 +491,7 @@ export default function SitesPage() {
       setSites(updated);
       setBuilding((b) => ({ ...b, [site.id]: false }));
       track("site-unpublished", { subdomain: site.subdomain, template: site.template });
+      if (listScope === "all") setCatalogRetryKey((k) => k + 1);
     } else {
       // Build and publish
       track("site-published", { subdomain: site.subdomain, template: site.template });
@@ -364,6 +510,7 @@ export default function SitesPage() {
         subdomain: site?.subdomain ?? "",
         template: site?.template ?? "",
       });
+      if (listScope === "all") setCatalogRetryKey((k) => k + 1);
     } else {
       track("rebuild-failed", {
         status: res.status,
@@ -380,21 +527,44 @@ export default function SitesPage() {
     if (res.ok) {
       track("site-deleted", { subdomain: site?.subdomain || "", template: site?.template || "" });
       setSites(sites.filter((s) => s.id !== siteId));
+      if (listScope === "all") setCatalogRetryKey((k) => k + 1);
     }
   }
 
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
 
+  const displaySites = useMemo((): Site[] => {
+    if (listScope === "yours") return sites;
+    if (!publicCatalog) return [];
+    const mineById = new Map(sites.map((s) => [s.id, s]));
+    return publicCatalog.map((p) => {
+      const mine = mineById.get(p.id);
+      return {
+        id: p.id,
+        subdomain: p.subdomain,
+        channelSlug: p.channelSlug,
+        channelTitle: p.channelTitle,
+        template: p.template,
+        published: mine ? mine.published : p.published,
+        lastBuiltAt: mine?.lastBuiltAt ?? null,
+        isSelf: p.owner.isSelf,
+        ownerArenaUsername: p.owner.arenaUsername,
+      };
+    });
+  }, [listScope, sites, publicCatalog]);
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return sites;
+    if (listScope === "all") return displaySites;
+    if (!search.trim()) return displaySites;
     const q = search.toLowerCase();
-    return sites.filter(
+    return displaySites.filter(
       (s) =>
         s.channelTitle.toLowerCase().includes(q) ||
         s.subdomain.toLowerCase().includes(q) ||
-        s.template.toLowerCase().includes(q)
+        s.template.toLowerCase().includes(q) ||
+        (s.ownerArenaUsername && s.ownerArenaUsername.toLowerCase().includes(q))
     );
-  }, [sites, search]);
+  }, [displaySites, listScope, search]);
 
   if (loading) {
     return <SitesPageSkeleton viewMode={viewMode} />;
@@ -410,6 +580,8 @@ export default function SitesPage() {
           : account?.betaGated
             ? "0"
             : "3";
+
+  const catalogTotalPages = Math.max(1, Math.ceil(catalogTotal / CATALOG_PAGE_SIZE));
 
   return (
     <main className="min-h-screen w-full min-w-0 max-w-4xl mx-auto px-4 py-16">
@@ -439,15 +611,33 @@ export default function SitesPage() {
           <p className="mt-1 opacity-90">Refresh the page or try again in a moment.</p>
         </div>
       ) : null}
-      <div className="flex items-center justify-between mb-12">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-12">
+        <div className="min-w-0 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg font-medium">Your sites</h1>
-            {account && <PlanTierBadge plan={account.plan} />}
+            <h1 className="text-lg font-medium">
+              {listScope === "yours" ? "Your sites" : "All sites"}
+            </h1>
+            {listScope === "yours" && account && <PlanTierBadge plan={account.plan} />}
           </div>
-          {account && (
-            <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500">
+          <SegmentedControl<SitesListScope>
+            segments={[
+              { value: "yours", label: "Your sites" },
+              { value: "all", label: "All sites" },
+            ]}
+            value={listScope}
+            onChange={setListScopePersist}
+            ariaLabel="Site list"
+            className="w-full max-w-xs sm:max-w-sm"
+            labelClassName="text-xs font-medium"
+          />
+          {listScope === "yours" && account && (
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">
               {sites.length} / {siteLimitLabel}
+            </p>
+          )}
+          {listScope === "all" && (
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+              Published sites across tiny.garden. Manage only the ones you own.
             </p>
           )}
         </div>
@@ -468,7 +658,7 @@ export default function SitesPage() {
         )}
       </div>
 
-      {sites.length === 0 && account?.betaGated ? (
+      {listScope === "yours" && sites.length === 0 && account?.betaGated ? (
         <div className="text-center py-16 space-y-5 max-w-md mx-auto">
           <p className="text-sm text-neutral-600 leading-relaxed dark:text-neutral-400">
             Free beta spots are full. Join the waitlist and we&apos;ll email you when there&apos;s room, or
@@ -482,7 +672,7 @@ export default function SitesPage() {
             Become a supporter
           </Link>
         </div>
-      ) : sites.length === 0 ? (
+      ) : listScope === "yours" && sites.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">No sites yet.</p>
           <Link
@@ -492,59 +682,169 @@ export default function SitesPage() {
             Create your first site
           </Link>
         </div>
+      ) : listScope === "all" && publicCatalogError ? (
+        <div
+          className="rounded-lg border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-950 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-100"
+          role="alert"
+        >
+          <p className="font-medium">Couldn&apos;t load published sites</p>
+          <p className="mt-1 opacity-90">Check your connection and try again.</p>
+          <button
+            type="button"
+            className="mt-3 text-sm font-medium text-red-950 underline underline-offset-2 dark:text-red-50"
+            onClick={() => setCatalogRetryKey((k) => k + 1)}
+          >
+            Try again
+          </button>
+        </div>
+      ) : listScope === "all" && publicCatalogLoading && publicCatalog === null ? (
+        <p className="text-sm text-neutral-500 py-16 text-center dark:text-neutral-400">
+          Loading published sites…
+        </p>
+      ) : listScope === "all" && !publicCatalogLoading && publicCatalog !== null && publicCatalog.length === 0 ? (
+        <p className="text-sm text-neutral-500 py-16 text-center dark:text-neutral-400">
+          {catalogQuery ? (
+            <>
+              No published sites match &ldquo;{catalogQuery}&rdquo;.
+            </>
+          ) : (
+            "No published sites yet."
+          )}
+        </p>
       ) : (
         <>
-          <Toolbar
-            search={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search sites..."
-            viewMode={viewMode}
-            onViewModeChange={setViewModePersist}
-          />
+          <div
+            className={
+              listScope === "all" && publicCatalogLoading && publicCatalog !== null
+                ? "opacity-50 transition-opacity"
+                : undefined
+            }
+            aria-busy={
+              listScope === "all" && publicCatalogLoading && publicCatalog !== null
+                ? true
+                : undefined
+            }
+          >
+            <Toolbar
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search sites..."
+              viewMode={viewMode}
+              onViewModeChange={setViewModePersist}
+            />
 
-          {filtered.length === 0 ? (
-            <p className="text-sm text-neutral-400 py-8 text-center dark:text-neutral-500">
-              No sites match &ldquo;{search}&rdquo;
-            </p>
-          ) : viewMode === "list" ? (
+            {filtered.length === 0 ? (
+              <p className="text-sm text-neutral-400 py-8 text-center dark:text-neutral-500">
+                {listScope === "all" ? (
+                  "No sites on this page."
+                ) : (
+                  <>
+                    No sites match &ldquo;{search}&rdquo;.
+                  </>
+                )}
+              </p>
+            ) : viewMode === "list" ? (
             /* ── List view ── */
             <div className="border border-neutral-200 rounded overflow-hidden divide-y divide-neutral-100 dark:border-neutral-700 dark:divide-neutral-800">
               {filtered.map((site) => {
                 const isBuilding = !!building[site.id];
+                const canManage = listScope === "yours" || site.isSelf === true;
                 return (
                   <div
                     key={site.id}
-                    className={`flex items-center gap-4 px-4 py-3 transition-colors ${
+                    className={`flex flex-wrap items-center gap-4 px-4 py-3 transition-colors ${
                       isBuilding
                         ? "bg-amber-50/30 dark:bg-amber-950/20"
                         : "hover:bg-neutral-50 dark:hover:bg-neutral-900"
                     }`}
                   >
-                    <SitePlantThumb siteId={site.id} size={36} className="shrink-0 size-9 p-1" />
+                    <SitePlantThumb
+                      siteId={site.id}
+                      size={48}
+                      bordered={false}
+                      className="shrink-0 size-12"
+                    />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate text-neutral-950 dark:text-neutral-50">{site.channelTitle}</p>
-                      <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                        {site.subdomain}.{siteDomain} &middot; {site.template}
+                      {site.published && !isBuilding ? (
+                        <a
+                          href={`https://${site.subdomain}.${siteDomain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group/live block min-w-0 max-w-full rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-neutral-500 dark:focus-visible:ring-offset-neutral-950"
+                          aria-label={`Open live site ${site.subdomain}.${siteDomain}`}
+                        >
+                          <span className="flex min-w-0 items-center gap-1">
+                            <span className="min-w-0 truncate text-sm font-medium text-neutral-950 group-hover/live:hidden dark:text-neutral-50">
+                              {site.channelTitle}
+                            </span>
+                            <span className="hidden max-w-full min-w-0 items-center gap-0.5 group-hover/live:inline-flex">
+                              <span className="min-w-0 truncate text-sm font-medium text-neutral-950 dark:text-neutral-50">
+                                {site.subdomain}.
+                              </span>
+                              <span className="shrink-0 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                                {siteDomain}
+                              </span>
+                              <ArrowUpRight
+                                className="size-3.5 shrink-0 text-neutral-500 dark:text-neutral-400"
+                                strokeWidth={2}
+                                aria-hidden
+                              />
+                            </span>
+                          </span>
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium truncate text-neutral-950 dark:text-neutral-50">
+                          {site.channelTitle}
+                        </p>
+                      )}
+                      <p
+                        className="text-xs text-neutral-400 dark:text-neutral-500"
+                        title={`${site.subdomain}.${siteDomain}`}
+                      >
+                        {site.subdomain}.{siteDomain} · {site.template}
+                        {listScope === "all" &&
+                        site.ownerArenaUsername &&
+                        site.isSelf === false
+                          ? ` · @${site.ownerArenaUsername}`
+                          : null}
                       </p>
                     </div>
                     <StatusBadge site={site} isBuilding={isBuilding} />
-                    <Toggle
-                      checked={site.published}
-                      loading={isBuilding}
-                      onChange={() => handleTogglePublish(site)}
-                    />
-                    <Link
-                      href={`/sites/${site.id}`}
-                      className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors shrink-0 dark:hover:bg-neutral-800/80 dark:border-neutral-700"
-                    >
-                      Settings
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(site.id)}
-                      className="text-xs px-2.5 py-1 text-red-500 border border-red-100 dark:border-red-900/40 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0"
-                    >
-                      Delete
-                    </button>
+                    {canManage ? (
+                      <>
+                        <PublishToggle
+                          checked={site.published}
+                          loading={isBuilding}
+                          onChange={() => handleTogglePublish(site)}
+                        />
+                        <Button
+                          href={`/sites/${site.id}`}
+                          variant="secondary"
+                          size="inline"
+                          className="shrink-0"
+                        >
+                          Settings
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="shrink-0"
+                          onClick={() => handleDelete(site.id)}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    ) : site.published && !isBuilding ? (
+                      <Button
+                        href={`https://${site.subdomain}.${siteDomain}`}
+                        variant="secondary"
+                        size="inline"
+                        className="shrink-0"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Visit
+                      </Button>
+                    ) : null}
                   </div>
                 );
               })}
@@ -556,6 +856,7 @@ export default function SitesPage() {
             >
               {filtered.map((site) => {
                 const isBuilding = !!building[site.id];
+                const canManage = listScope === "yours" || site.isSelf === true;
                 return (
                   <div
                     key={site.id}
@@ -616,33 +917,55 @@ export default function SitesPage() {
                               className="text-xs text-neutral-400 truncate dark:text-neutral-500"
                               title={`${site.subdomain}.${siteDomain}`}
                             >
-                              {site.subdomain}.{siteDomain}
+                              {site.subdomain}.{siteDomain} · {site.template}
+                              {listScope === "all" &&
+                              site.ownerArenaUsername &&
+                              site.isSelf === false
+                                ? ` · @${site.ownerArenaUsername}`
+                                : null}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
-                          <Toggle
-                            checked={site.published}
-                            loading={isBuilding}
-                            onChange={() => handleTogglePublish(site)}
-                          />
+                          {canManage ? (
+                            <PublishToggle
+                              checked={site.published}
+                              loading={isBuilding}
+                              onChange={() => handleTogglePublish(site)}
+                            />
+                          ) : null}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                        <Link
-                          href={`/sites/${site.id}`}
-                          className="text-xs px-2.5 py-1 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
-                        >
-                          Settings
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(site.id)}
-                          className="text-xs px-2.5 py-1 text-red-500 border border-red-100 dark:border-red-900/40 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors ml-auto"
-                        >
-                          Delete
-                        </button>
+                        {canManage ? (
+                          <>
+                            <Button
+                              href={`/sites/${site.id}`}
+                              variant="secondary"
+                              size="inline"
+                            >
+                              Settings
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              className="ml-auto"
+                              onClick={() => handleDelete(site.id)}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        ) : site.published && !isBuilding ? (
+                          <Button
+                            href={`https://${site.subdomain}.${siteDomain}`}
+                            variant="secondary"
+                            size="inline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Visit site
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -650,6 +973,50 @@ export default function SitesPage() {
               })}
             </div>
           )}
+          </div>
+
+          {listScope === "all" && catalogTotal > CATALOG_PAGE_SIZE ? (
+            <nav
+              className="mt-8 flex flex-col gap-3 border-t border-neutral-200 pt-6 dark:border-neutral-800 sm:flex-row sm:items-center sm:justify-between"
+              aria-label="Published sites pages"
+            >
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                Showing{" "}
+                <span className="tabular-nums">
+                  {catalogTotal === 0
+                    ? "0"
+                    : `${(catalogPage - 1) * CATALOG_PAGE_SIZE + 1}–${Math.min(
+                        catalogPage * CATALOG_PAGE_SIZE,
+                        catalogTotal
+                      )}`}
+                </span>{" "}
+                of <span className="tabular-nums">{catalogTotal}</span>
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="compact"
+                  type="button"
+                  disabled={catalogPage <= 1 || publicCatalogLoading}
+                  onClick={() => setCatalogPage((p) => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Button>
+                <span className="text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
+                  Page {catalogPage} of {catalogTotalPages}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="compact"
+                  type="button"
+                  disabled={publicCatalogLoading || catalogPage >= catalogTotalPages}
+                  onClick={() => setCatalogPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </nav>
+          ) : null}
         </>
       )}
     </main>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import { FeaturedToggleButton } from "@/components/featured-toggle-button";
+import { PublishStatusBadge } from "@/components/publish-status-badge";
 import { SearchInput } from "@/components/search-input";
 
 interface Site {
@@ -273,19 +275,17 @@ export default function AdminSitesPage() {
                   <td className="px-3 py-2.5">
                     {site.lastBuildError ? (
                       <span
-                        className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-700 rounded block max-w-[140px]"
+                        className="text-[10px] px-1.5 py-0.5 rounded border border-red-200/90 bg-red-50 font-medium text-red-800 block max-w-[140px] dark:border-red-900/50 dark:bg-red-950/45 dark:text-red-300"
                         title={site.lastBuildError}
                       >
                         Build error
                       </span>
-                    ) : site.published ? (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">
-                        Published
-                      </span>
                     ) : (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-400 rounded dark:text-neutral-500 dark:bg-neutral-800">
-                        Draft
-                      </span>
+                      <PublishStatusBadge
+                        published={site.published}
+                        size="compact"
+                        labelFormat="title"
+                      />
                     )}
                   </td>
                   <td className="px-3 py-2.5 text-xs text-neutral-400 dark:text-neutral-500">
@@ -305,17 +305,12 @@ export default function AdminSitesPage() {
                     </button>
                   </td>
                   <td className="px-3 py-2.5 text-right">
-                    <button
-                      onClick={() => toggleFeatured(site.id, !site.featured)}
+                    <FeaturedToggleButton
+                      featured={site.featured}
                       disabled={!!toggling[site.id]}
-                      className={`text-[10px] px-2 py-0.5 rounded transition-colors disabled:opacity-50 ${
-                        site.featured
-                          ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                          : "bg-neutral-100 text-neutral-400 hover:bg-neutral-200"
-                      }`}
-                    >
-                      {site.featured ? "Featured" : "Feature"}
-                    </button>
+                      onClick={() => toggleFeatured(site.id, !site.featured)}
+                      size="compact"
+                    />
                   </td>
                 </tr>
               ))}
