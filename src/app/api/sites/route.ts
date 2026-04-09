@@ -5,6 +5,7 @@ import { buildSite } from "@/lib/build";
 import { isBetaFull } from "@/lib/beta";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { getRequestAuth } from "@/lib/request-auth";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
@@ -27,6 +28,10 @@ export async function POST(req: NextRequest) {
   const auth = await getRequestAuth(req);
   if (!auth) {
     return NextResponse.json({ error: "Unauthorized", code: "unauthorized" }, { status: 401 });
+  }
+  if (auth.method === "session") {
+    const csrfError = requireTrustedRequestOrigin(req);
+    if (csrfError) return csrfError;
   }
 
   const { channelSlug, channelTitle, template, subdomain } = await req.json();

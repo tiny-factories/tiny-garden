@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 export async function GET() {
   const session = await getSession();
@@ -36,6 +37,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const csrfFailure = requireTrustedRequestOrigin(req);
+  if (csrfFailure) return csrfFailure;
+
   const session = await getSession();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -5,14 +5,18 @@ import { prisma } from "@/lib/db";
 import { removeDomainFromVercel } from "@/lib/vercel";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { getRequestAuth } from "@/lib/request-auth";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 export const maxDuration = 120;
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await getRequestAuth(_req);
+  const csrfError = requireTrustedRequestOrigin(req);
+  if (csrfError) return csrfError;
+
+  const auth = await getRequestAuth(req);
   if (!auth) {
     return NextResponse.json(
       { error: "Unauthorized", code: "unauthorized" },
@@ -40,6 +44,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const csrfError = requireTrustedRequestOrigin(req);
+  if (csrfError) return csrfError;
+
   const auth = await getRequestAuth(req);
   if (!auth) {
     return NextResponse.json(

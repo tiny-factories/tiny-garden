@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generatePlantSVGLayered, seedFromSubdomain } from "@/lib/garden-icon";
 import { getRequestAuth } from "@/lib/request-auth";
+import { requireTrustedRequestOrigin } from "@/lib/csrf";
 
 /** GET — Serve the plant icon SVG for a site */
 export async function GET(
@@ -32,6 +33,21 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await getRequestAuth(req);
+  if (!auth) {
+  const csrfFailure = requireTrustedRequestOrigin(req);
+  if (csrfFailure) return csrfFailure;
+
+    return NextResponse.json(
+      { error: "Unauthorized", code: "unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  if (auth.method === "session") {
+    const csrfFailure = requireTrustedRequestOrigin(req);
+    if (csrfFailure) return csrfFailure;
+  }
+
   if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

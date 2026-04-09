@@ -14,6 +14,7 @@ import { prisma } from "./db";
 import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
 import { isKnownTemplateSlug } from "./templates-manifest";
+import { fetchRemoteAsset } from "./remote-asset";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -46,11 +47,10 @@ async function downloadAndUploadAsset(
   blobToken: string
 ): Promise<string | null> {
   try {
-    const res = await fetch(originalUrl);
-    if (!res.ok) return null;
+    const asset = await fetchRemoteAsset(originalUrl);
+    if (!asset) return null;
 
-    const contentType = res.headers.get("content-type") || "application/octet-stream";
-    const buffer = Buffer.from(await res.arrayBuffer());
+    const { buffer, contentType } = asset;
 
     const ext = getExtension(originalUrl, contentType);
     const hash = hashUrl(originalUrl);
