@@ -80,6 +80,7 @@ export async function GET() {
     recentSites: recentSites.map((s) => ({
       id: s.id,
       subdomain: s.subdomain,
+      channelSlug: s.channelSlug,
       channelTitle: s.channelTitle,
       template: s.template,
       published: s.published,

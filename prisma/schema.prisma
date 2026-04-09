@@ -96,3 +96,12 @@ model BuildRequest {
   @@index([userId, createdAt])
   @@index([siteId, createdAt])
 }
+
+/// Per-template Are.na channel used for public /templates previews (see admin → Template examples).
+model TemplateExampleChannel {
+  id            String   @id @default(cuid())
+  templateSlug  String   @unique
+  channelSlug   String
+  channelTitle  String?
+  updatedAt     DateTime @updatedAt
+}

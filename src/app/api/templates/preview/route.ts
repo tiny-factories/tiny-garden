@@ -4,7 +4,10 @@ import fs from "fs/promises";
 import path from "path";
 import { ArenaClient } from "@/lib/arena";
 import { MOCK_SITE_DATA } from "@/lib/mock-data";
-import { channelBlocksForTemplate } from "@/lib/build";
+import {
+  arenaChannelToSiteDataChannel,
+  channelBlocksForTemplate,
+} from "@/lib/build";
 import {
   extractChannelStylesCss,
   isReservedStylesCssTitle,
@@ -13,6 +16,7 @@ import {
 import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
+import { getArenaTokenForTemplateExamples } from "@/lib/template-example-token";
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -116,6 +120,7 @@ export async function GET(request: NextRequest) {
     let previewBlocks = MOCK_SITE_DATA.blocks;
     let siteHead = "";
     let ownerCustomCss = "";
+    let filledPreviewFromSite = false;
 
     if (siteId) {
       const auth = await getRequestAuth(request);
@@ -138,34 +143,9 @@ export async function GET(request: NextRequest) {
               client.getChannel(site.channelSlug),
               client.getAllChannelBlocks(site.channelSlug),
             ]);
-            previewChannel = {
-              title: arenaChannel.title,
-              slug: arenaChannel.slug,
-              description:
-                typeof arenaChannel.description === "string"
-                  ? arenaChannel.description
-                  : "",
-              user: {
-                name:
-                  arenaChannel.owner?.name ||
-                  arenaChannel.owner?.full_name ||
-                  arenaChannel.owner?.username ||
-                  arenaChannel.user?.full_name ||
-                  "",
-                slug:
-                  arenaChannel.owner?.slug || arenaChannel.user?.slug || "",
-                avatar_url:
-                  arenaChannel.owner?.avatar ||
-                  arenaChannel.owner?.avatar_image?.display ||
-                  arenaChannel.user?.avatar_image?.display ||
-                  "",
-              },
-              created_at: arenaChannel.created_at,
-              updated_at: arenaChannel.updated_at,
-              length:
-                arenaChannel.length || arenaChannel.counts?.contents || 0,
-            };
+            previewChannel = arenaChannelToSiteDataChannel(arenaChannel);
             previewBlocks = channelBlocksForTemplate(arenaBlocks);
+            filledPreviewFromSite = true;
             const channelCss = extractChannelStylesCss(arenaBlocks);
             const effectiveCss = resolveSiteCustomCss(
               site.customCss,
@@ -195,6 +175,33 @@ export async function GET(request: NextRequest) {
 <meta name="twitter:description" content="${desc}" />
 <meta name="twitter:image" content="${escapeHtmlAttr(iconUrl)}" />
 `;
+      }
+    }
+
+    if (!filledPreviewFromSite) {
+      const [exampleRow, exampleToken] = await Promise.all([
+        prisma.templateExampleChannel.findUnique({
+          where: { templateSlug: template },
+        }),
+        getArenaTokenForTemplateExamples(),
+      ]);
+      if (exampleRow && exampleToken) {
+        try {
+          const client = new ArenaClient(exampleToken);
+          const [arenaChannel, arenaBlocks] = await Promise.all([
+            client.getChannel(exampleRow.channelSlug),
+            client.getAllChannelBlocks(exampleRow.channelSlug),
+          ]);
+          previewChannel = arenaChannelToSiteDataChannel(arenaChannel);
+          previewBlocks = channelBlocksForTemplate(arenaBlocks);
+          const channelCss = extractChannelStylesCss(arenaBlocks);
+          const effectiveCss = resolveSiteCustomCss(null, channelCss);
+          if (effectiveCss) {
+            ownerCustomCss = `<style id="tiny-garden-site-css">\n${effectiveCss}\n</style>`;
+          }
+        } catch {
+          /* keep mock */
+        }
       }
     }
 
