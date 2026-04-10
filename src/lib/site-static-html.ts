@@ -2,6 +2,20 @@
 const ALLOWED_SITE_HTML = /^(index\.html|block-\d+\.html)$/;
 
 /**
+ * Resolve HTML filename from the visitor path on the wildcard host (e.g. `/`, `/block-7.html`).
+ * Used when middleware forwards `x-tiny-garden-site-path` because `nextUrl.pathname` in the
+ * handler may still reflect the public URL (`/`) after a rewrite.
+ */
+export function filenameFromVisitorPath(visitorPath: string): string | null {
+  const p = visitorPath.trim() || "/";
+  if (p === "/" || p === "") return "index.html";
+  const name = p.replace(/^\//, "").split("/")[0] || "";
+  if (!name) return "index.html";
+  if (!ALLOWED_SITE_HTML.test(name)) return null;
+  return name;
+}
+
+/**
  * Resolve a safe HTML filename from a serve API path (e.g. /api/serve/foo/block-7.html).
  * Returns null if the path is not an allowed static file.
  */

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { blobUrlForSiblingSiteFile, filenameFromServePath } from "@/lib/site-static-html";
+import {
+  blobUrlForSiblingSiteFile,
+  filenameFromServePath,
+  filenameFromVisitorPath,
+} from "@/lib/site-static-html";
 
 export async function GET(
   req: NextRequest,
@@ -8,7 +12,11 @@ export async function GET(
 ) {
   const { domain } = await params;
   const servePrefix = `/api/serve/_custom/${domain}`;
-  const requestedName = filenameFromServePath(req.nextUrl.pathname, servePrefix);
+  const visitorPath = req.headers.get("x-tiny-garden-site-path");
+  const requestedName =
+    visitorPath !== null
+      ? filenameFromVisitorPath(visitorPath)
+      : filenameFromServePath(req.nextUrl.pathname, servePrefix);
   if (requestedName === null) {
     return new NextResponse("Not found", { status: 404 });
   }
