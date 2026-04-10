@@ -34,6 +34,8 @@ tiny.garden turns Are.na channels into static websites. Users log in with Are.na
 ### Templates
 Templates live in `templates/{slug}/` and are decoupled from the app. Adding a folder with `meta.json` is enough for it to appear in **New site**, **`/templates`**, and the site settings template picker (`GET /api/templates` reads the disk via `src/lib/templates-manifest.ts`, sorted by display name).
 
+**Theming, `styles.css`, and channel CSS:** see **`docs/templates-theming.md`** (and root **`AGENTS.md`** for agent-oriented pointers). Follow that when adding templates or wiring dashboard Theme tokens to `style.css`.
+
 ```
 templates/blog/
   index.hbs        — Main layout (Handlebars)

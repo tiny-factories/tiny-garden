@@ -1,91 +1,69 @@
-<a class="sv-fr-card block--{{type}}" href="https://www.are.na/block/{{id}}" target="_blank" rel="noopener">
-
-  <div class="sv-fr-card-votes">
-    <span class="sv-fr-card-votes-count">+{{comment_count}}</span>
-    <span class="sv-fr-card-votes-label">votes</span>
-  </div>
-
-  <div class="sv-fr-card-body">
+<a class="fr-row block--{{type}} fr-row--stat-{{featureRequestStatusKey}}" href="{{featureRequestChildHref}}" data-fr-tags="{{featureRequestTagSlugsAttr}}">
+  <div class="fr-row-main">
     {{#if (eq type "image")}}
-      <div class="sv-fr-card-content">
-        <div class="sv-fr-card-text">
-          {{#if title}}
-            <h2 class="sv-fr-card-title">{{title}}</h2>
-          {{/if}}
-          {{#if description}}
-            <p class="sv-fr-card-description">{{description}}</p>
-          {{/if}}
-        </div>
-        <figure class="sv-fr-card-thumb">
-          <img src="{{image.display}}" alt="{{title}}" loading="lazy">
-        </figure>
-      </div>
+      <span class="fr-cat">{{featureRequestCategoryLabel}}</span>
+      <h2 class="fr-row-title">{{featureRequestRowTitle}}</h2>
+      {{#if (featureRequestRowExcerpt)}}
+        <p class="fr-row-desc">{{featureRequestRowExcerpt}}</p>
+      {{/if}}
     {{/if}}
 
     {{#if (eq type "text")}}
+      <span class="fr-cat">{{featureRequestCategoryLabel}}</span>
       {{#if title}}
-        <h2 class="sv-fr-card-title">{{title}}</h2>
+        <h2 class="fr-row-title">{{featureRequestRowTitle}}</h2>
       {{/if}}
-      {{#if content}}
-        <div class="sv-fr-card-description">{{{content}}}</div>
-      {{else}}
-        {{#if description}}
-          <p class="sv-fr-card-description">{{description}}</p>
-        {{/if}}
+      {{#if (featureRequestRowExcerpt)}}
+        <p class="fr-row-desc">{{featureRequestRowExcerpt}}</p>
       {{/if}}
     {{/if}}
 
     {{#if (eq type "link")}}
-      {{#if title}}
-        <h2 class="sv-fr-card-title">{{title}}</h2>
+      <span class="fr-cat">{{featureRequestCategoryLabel}}</span>
+      <h2 class="fr-row-title">{{featureRequestRowTitle}}</h2>
+      {{#if (featureRequestRowExcerpt)}}
+        <p class="fr-row-desc">{{featureRequestRowExcerpt}}</p>
       {{else}}
-        {{#if link.title}}
-          <h2 class="sv-fr-card-title">{{link.title}}</h2>
-        {{/if}}
-      {{/if}}
-      {{#if description}}
-        <p class="sv-fr-card-description">{{description}}</p>
-      {{else}}
-        {{#if link.description}}
-          <p class="sv-fr-card-description">{{link.description}}</p>
+        {{#if description}}
+          <p class="fr-row-desc">{{description}}</p>
+        {{else}}
+          {{#if link.description}}
+            <p class="fr-row-desc">{{link.description}}</p>
+          {{/if}}
         {{/if}}
       {{/if}}
     {{/if}}
 
     {{#if (eq type "media")}}
+      <span class="fr-cat">{{featureRequestCategoryLabel}}</span>
       {{#if title}}
-        <h2 class="sv-fr-card-title">{{title}}</h2>
+        <h2 class="fr-row-title">{{featureRequestRowTitle}}</h2>
       {{/if}}
-      {{#if description}}
-        <p class="sv-fr-card-description">{{description}}</p>
+      {{#if (featureRequestRowExcerpt)}}
+        <p class="fr-row-desc">{{featureRequestRowExcerpt}}</p>
       {{/if}}
     {{/if}}
 
     {{#if (eq type "attachment")}}
-      {{#if image.display}}
-        <img class="sv-fr-card-img" src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
-      {{else}}
-        {{#if (eq attachment.kind "video")}}
-          <video class="sv-fr-card-img" src="{{attachment.url}}" muted playsinline controls preload="metadata"></video>
-        {{/if}}
-        {{#if (eq attachment.kind "pdf")}}
-          <div class="sv-fr-card-img">PDF</div>
-        {{/if}}
-        {{#if (eq attachment.kind "model")}}
-          <div class="sv-fr-card-img">3D</div>
-        {{/if}}
-      {{/if}}
-      {{#if title}}
-        <h2 class="sv-fr-card-title">{{title}}</h2>
-      {{else}}
-        {{#if attachment.display_name}}
-          <h2 class="sv-fr-card-title">{{attachment.display_name}}</h2>
-        {{/if}}
-      {{/if}}
-      {{#if description}}
-        <p class="sv-fr-card-description">{{description}}</p>
+      <span class="fr-cat">{{featureRequestCategoryLabel}}</span>
+      <h2 class="fr-row-title">{{featureRequestRowTitle}}</h2>
+      {{#if (featureRequestRowExcerpt)}}
+        <p class="fr-row-desc">{{featureRequestRowExcerpt}}</p>
       {{/if}}
     {{/if}}
   </div>
 
+  <div class="fr-row-status" aria-hidden="true">
+    <span class="fr-status fr-status--{{featureRequestStatusKey}}"><span class="fr-status-dot"></span> {{featureRequestStatusLabel}}</span>
+  </div>
+
+  <div class="fr-row-date">
+    <span class="fr-label">Submitted</span>
+    <time datetime="{{created_at}}">{{formatDate created_at}}</time>
+  </div>
+
+  <div class="fr-row-vote">
+    <span class="fr-vote-count">{{comment_count}}</span>
+    <span class="fr-vote-btn" aria-hidden="true">↑</span>
+  </div>
 </a>

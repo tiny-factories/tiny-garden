@@ -5,6 +5,14 @@ import { prisma } from "@/lib/db";
 import { loadTemplatesFromDisk } from "@/lib/templates-manifest";
 import { getArenaTokenForTemplateExamples } from "@/lib/template-example-token";
 
+function humanizeTemplateSlug(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 export async function GET() {
   const session = await getSession();
   if (!session)
@@ -16,30 +24,61 @@ export async function GET() {
   if (!user?.isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [templates, rows, token] = await Promise.all([
+  const [templatesDisk, token] = await Promise.all([
     loadTemplatesFromDisk(),
-    prisma.templateExampleChannel.findMany().catch((err) => {
-      console.error("template-channels: TemplateExampleChannel read failed", err);
-      return [];
-    }),
     getArenaTokenForTemplateExamples(),
   ]);
 
+  let rows = await prisma.templateExampleChannel.findMany().catch((err) => {
+    console.error("template-channels: TemplateExampleChannel read failed", err);
+    return [] as Awaited<ReturnType<typeof prisma.templateExampleChannel.findMany>>;
+  });
+
+  const diskIds = new Set(templatesDisk.map((t) => t.id));
+  const dbSlugs = new Set(rows.map((r) => r.templateSlug));
+  const allSlugs = [...new Set([...diskIds, ...dbSlugs])].sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+  try {
+    if (allSlugs.length > 0) {
+      await prisma.templateExampleChannel.createMany({
+        data: allSlugs.map((templateSlug) => ({
+          templateSlug,
+          channelSlug: null,
+        })),
+        skipDuplicates: true,
+      });
+      rows = await prisma.templateExampleChannel.findMany().catch(() => rows);
+    }
+  } catch (err) {
+    console.error("template-channels: ensure rows from disk + DB slugs", err);
+  }
+
   const bySlug = new Map(rows.map((r) => [r.templateSlug, r]));
+  const diskById = new Map(templatesDisk.map((t) => [t.id, t]));
+
+  const merged = allSlugs.map((slug) => {
+    const d = diskById.get(slug);
+    const row = bySlug.get(slug);
+    const dbOnly = !d;
+    return {
+      id: slug,
+      name: d?.name ?? humanizeTemplateSlug(slug),
+      description:
+        d?.description ??
+        (dbOnly
+          ? "Template folder not available on this server; row comes from the database (e.g. after migrate). Deploy includes templates/ for full names and descriptions."
+          : ""),
+      channelSlug: row?.channelSlug ?? null,
+      channelTitle: row?.channelTitle ?? null,
+      updatedAt: row?.updatedAt.toISOString() ?? null,
+    };
+  });
 
   return NextResponse.json({
     hasExampleToken: !!token,
-    templates: templates.map((t) => {
-      const row = bySlug.get(t.id);
-      return {
-        id: t.id,
-        name: t.name,
-        description: t.description,
-        channelSlug: row?.channelSlug ?? null,
-        channelTitle: row?.channelTitle ?? null,
-        updatedAt: row?.updatedAt.toISOString() ?? null,
-      };
-    }),
+    templates: merged,
   });
 }
 
@@ -67,14 +106,20 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  const templates = await loadTemplatesFromDisk();
-  if (!templates.some((t) => t.id === templateSlug)) {
+  const templatesDisk = await loadTemplatesFromDisk();
+  const existingRow = await prisma.templateExampleChannel.findUnique({
+    where: { templateSlug },
+  });
+  const knownFromDisk = templatesDisk.some((t) => t.id === templateSlug);
+  if (!knownFromDisk && !existingRow) {
     return NextResponse.json({ error: "Unknown template" }, { status: 400 });
   }
 
   if (!rawChannel) {
-    await prisma.templateExampleChannel.deleteMany({
+    await prisma.templateExampleChannel.upsert({
       where: { templateSlug },
+      create: { templateSlug, channelSlug: null, channelTitle: null },
+      update: { channelSlug: null, channelTitle: null },
     });
     return NextResponse.json({ ok: true, templateSlug, channelSlug: null });
   }

@@ -7,7 +7,7 @@ import { FeaturedToggleButton } from "@/components/featured-toggle-button";
 import { PublishStatusBadge } from "@/components/publish-status-badge";
 import { SearchInput } from "@/components/search-input";
 import { SegmentedControl } from "@/components/toolbar";
-import { SITE_CARD_GRID_CLASS } from "@/lib/site-card-grid";
+import { AdminTemplateExamplesTable } from "@/components/admin-template-examples-table";
 
 type AdminTab = "recent" | "templates" | "featured";
 
@@ -654,13 +654,6 @@ export default function AdminPage() {
 
       {activeTab === "templates" && (
         <section className="space-y-6">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 max-w-xl">
-            Choose an Are.na channel for each template preview (same picker as creating a site). Public{" "}
-            <Link href="/templates" className="underline hover:text-neutral-600 dark:hover:text-neutral-300">
-              /templates
-            </Link>{" "}
-            uses this data.
-          </p>
           {!hasExampleToken && (
             <div className="p-3 rounded border border-amber-200 bg-amber-50 text-sm text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
               No Are.na token for examples: set{" "}
@@ -668,45 +661,14 @@ export default function AdminPage() {
               account&apos;s OAuth token in development.
             </div>
           )}
-          <div className={SITE_CARD_GRID_CLASS}>
-            {filteredTemplateRows.length === 0 ? (
-              <p className="col-span-full text-sm text-neutral-400 dark:text-neutral-500">
-                {templateExamples.length === 0
-                  ? "No templates found."
-                  : "No templates match your search."}
-              </p>
-            ) : (
-            filteredTemplateRows.map((t) => (
-              <Link
-                key={t.id}
-                href={`/admin/template-channels/${encodeURIComponent(t.id)}`}
-                className="group block border rounded overflow-hidden border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50/80 transition-colors dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900/40"
-              >
-                <div className="p-4">
-                  <p className="text-sm font-medium text-neutral-950 dark:text-neutral-50">{t.name}</p>
-                  <p className="text-xs text-neutral-400 mt-1 line-clamp-2 dark:text-neutral-500">
-                    {t.description}
-                  </p>
-                  <p className="text-[11px] text-neutral-400 mt-2 font-mono dark:text-neutral-500">
-                    {t.id}
-                  </p>
-                  <p className="text-xs mt-3 text-neutral-600 dark:text-neutral-300">
-                    {t.channelTitle ? (
-                      <>
-                        Example: <span className="font-medium">{t.channelTitle}</span>
-                      </>
-                    ) : (
-                      <span className="text-neutral-400 dark:text-neutral-500">No example channel yet</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-neutral-400 mt-2 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">
-                    Choose channel →
-                  </p>
-                </div>
-              </Link>
-            ))
-            )}
-          </div>
+          <AdminTemplateExamplesTable
+            rows={filteredTemplateRows}
+            emptyMessage={
+              templateExamples.length === 0
+                ? "No templates yet. Run prisma migrate deploy and ensure the API can read templates or TemplateExampleChannel rows."
+                : "No templates match your search."
+            }
+          />
         </section>
       )}
 

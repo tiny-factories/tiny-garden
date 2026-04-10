@@ -101,7 +101,8 @@ model BuildRequest {
 model TemplateExampleChannel {
   id            String   @id @default(cuid())
   templateSlug  String   @unique
-  channelSlug   String
+  /// Null until an admin links an Are.na channel in Admin → Templates.
+  channelSlug   String?
   channelTitle  String?
   updatedAt     DateTime @updatedAt
 }

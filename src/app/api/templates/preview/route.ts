@@ -7,6 +7,10 @@ import { MOCK_SITE_DATA } from "@/lib/mock-data";
 import {
   arenaChannelToSiteDataChannel,
   channelBlocksForTemplate,
+  finderOpenUrl,
+  finderThumbContain,
+  finderThumbUrl,
+  type TemplateBlock,
 } from "@/lib/build";
 import {
   extractChannelStylesCss,
@@ -17,6 +21,13 @@ import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
 import { getArenaTokenForTemplateExamples } from "@/lib/template-example-token";
+import { registerFeatureRequestHandlebarsHelpers } from "@/lib/feature-request-status";
+import {
+  enrichFeatureRequestSiteData,
+  registerFeatureRequestRowHelpers,
+} from "@/lib/feature-request-tags";
+
+const MAX_PREVIEW_CUSTOM_CSS = 60_000;
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -25,9 +36,16 @@ function escapeHtmlAttr(value: string): string {
     .replace(/</g, "&lt;");
 }
 
+/** Avoid breaking out of &lt;style&gt; when previewing unsaved CSS. */
+function stripUnsafeForStyleInjection(css: string): string {
+  return css.replace(/</g, "");
+}
+
 // Register helpers (keep in sync with src/lib/build.ts)
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+registerFeatureRequestHandlebarsHelpers(Handlebars);
+registerFeatureRequestRowHelpers(Handlebars);
 Handlebars.registerHelper("isReservedStylesCssTitle", (title: unknown) =>
   typeof title === "string" && isReservedStylesCssTitle(title)
 );
@@ -42,25 +60,43 @@ Handlebars.registerHelper("formatDate", (dateStr: string) => {
     return dateStr;
   }
 });
+Handlebars.registerHelper("finderThumbUrl", function (this: TemplateBlock) {
+  return finderThumbUrl(this);
+});
+Handlebars.registerHelper("finderOpenUrl", function (this: TemplateBlock) {
+  return finderOpenUrl(this);
+});
+Handlebars.registerHelper("finderThumbContain", function (this: TemplateBlock) {
+  return finderThumbContain(this);
+});
 
-export async function GET(request: NextRequest) {
-  const template = request.nextUrl.searchParams.get("template");
-  if (!template) {
-    return NextResponse.json(
-      { error: "Missing ?template= param" },
-      { status: 400 }
-    );
-  }
+export type TemplatePreviewInput = {
+  template: string;
+  bg?: string | null;
+  text?: string | null;
+  accent?: string | null;
+  border?: string | null;
+  headingFont?: string | null;
+  bodyFont?: string | null;
+  siteId?: string | null;
+  /** Unsaved layout CSS (e.g. AI draft) — injected after channel/site CSS */
+  previewCustomCss?: string | null;
+};
 
-  // Optional theme overrides via query params
-  const bg = request.nextUrl.searchParams.get("bg");
-  const text = request.nextUrl.searchParams.get("text");
-  const accent = request.nextUrl.searchParams.get("accent");
-  const border = request.nextUrl.searchParams.get("border");
-  const headingFont = request.nextUrl.searchParams.get("headingFont");
-  const bodyFont = request.nextUrl.searchParams.get("bodyFont");
-  const siteId = request.nextUrl.searchParams.get("siteId");
-
+async function buildPreviewResponse(
+  request: NextRequest,
+  {
+    template,
+    bg,
+    text,
+    accent,
+    border,
+    headingFont,
+    bodyFont,
+    siteId,
+    previewCustomCss,
+  }: TemplatePreviewInput
+): Promise<NextResponse> {
   const templateDir = path.join(process.cwd(), "templates", template);
 
   try {
@@ -79,19 +115,16 @@ export async function GET(request: NextRequest) {
       Handlebars.registerPartial("block", blockPartialSource);
     }
 
-    // Inline the CSS so previews work without a separate style.css endpoint
     const inlinedSource = templateSource.replace(
       /<link\s+rel="stylesheet"\s+href="style\.css"\s*\/?>/i,
       `<style>${styleContent}</style>`
     );
 
-    // Build theme override CSS if any params provided
     const hasTheme = bg || text || accent || border || headingFont || bodyFont;
     let themeCSS = "";
     let fontLinks = "";
 
     if (hasTheme) {
-      // Google Fonts <link> tags
       const fontValues = [headingFont, bodyFont].filter(Boolean) as string[];
       fontLinks = googleFontsLinkTag(fontValues);
 
@@ -100,10 +133,12 @@ export async function GET(request: NextRequest) {
 
       themeCSS = `<style>
         :root {
-          ${bg ? `--color-background: ${bg};` : ""}
+          ${bg ? `--color-bg: ${bg}; --color-background: ${bg};` : ""}
           ${text ? `--color-text: ${text};` : ""}
           ${accent ? `--color-accent: ${accent};` : ""}
           ${border ? `--color-border: ${border};` : ""}
+          ${headingCSS ? `--tg-font-heading: ${headingCSS};` : ""}
+          ${bodyCSS ? `--tg-font-body: ${bodyCSS};` : ""}
           ${headingCSS ? `--font-heading: ${headingCSS};` : ""}
           ${bodyCSS ? `--font-body: ${bodyCSS};` : ""}
         }
@@ -185,12 +220,13 @@ export async function GET(request: NextRequest) {
         }),
         getArenaTokenForTemplateExamples(),
       ]);
-      if (exampleRow && exampleToken) {
+      if (exampleRow?.channelSlug && exampleToken) {
         try {
           const client = new ArenaClient(exampleToken);
+          const slug = exampleRow.channelSlug;
           const [arenaChannel, arenaBlocks] = await Promise.all([
-            client.getChannel(exampleRow.channelSlug),
-            client.getAllChannelBlocks(exampleRow.channelSlug),
+            client.getChannel(slug),
+            client.getAllChannelBlocks(slug),
           ]);
           previewChannel = arenaChannelToSiteDataChannel(arenaChannel);
           previewBlocks = channelBlocksForTemplate(arenaBlocks);
@@ -205,16 +241,26 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    let previewInlineCss = "";
+    if (previewCustomCss?.trim()) {
+      const raw =
+        previewCustomCss.length > MAX_PREVIEW_CUSTOM_CSS
+          ? previewCustomCss.slice(0, MAX_PREVIEW_CUSTOM_CSS)
+          : previewCustomCss;
+      const safe = stripUnsafeForStyleInjection(raw);
+      previewInlineCss = `<style id="tiny-garden-preview-custom">\n${safe}\n</style>`;
+    }
+
     const compiledTemplate = Handlebars.compile(inlinedSource);
-    const siteData = {
+    const siteData = enrichFeatureRequestSiteData({
       channel: previewChannel,
       blocks: previewBlocks,
       site: { ...MOCK_SITE_DATA.site, template },
-    };
+    });
     let html = compiledTemplate({ ...siteData, styles: styleContent });
 
-    // Inject font links + theme overrides + site icon / OG + owner customCss before </head> or at start
-    const injection = fontLinks + themeCSS + siteHead + ownerCustomCss;
+    const injection =
+      fontLinks + themeCSS + siteHead + ownerCustomCss + previewInlineCss;
     if (injection) {
       if (html.includes("</head>")) {
         html = html.replace("</head>", `${injection}</head>`);
@@ -235,4 +281,60 @@ export async function GET(request: NextRequest) {
       { status: 404 }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  const template = request.nextUrl.searchParams.get("template");
+  if (!template) {
+    return NextResponse.json(
+      { error: "Missing ?template= param" },
+      { status: 400 }
+    );
+  }
+
+  return buildPreviewResponse(request, {
+    template,
+    bg: request.nextUrl.searchParams.get("bg"),
+    text: request.nextUrl.searchParams.get("text"),
+    accent: request.nextUrl.searchParams.get("accent"),
+    border: request.nextUrl.searchParams.get("border"),
+    headingFont: request.nextUrl.searchParams.get("headingFont"),
+    bodyFont: request.nextUrl.searchParams.get("bodyFont"),
+    siteId: request.nextUrl.searchParams.get("siteId"),
+    previewCustomCss: null,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+  const o = body as Record<string, unknown>;
+  const template = typeof o.template === "string" ? o.template.trim() : "";
+  if (!template) {
+    return NextResponse.json({ error: "Missing template" }, { status: 400 });
+  }
+
+  const str = (v: unknown) => (typeof v === "string" ? v : undefined);
+
+  const previewCustomCss =
+    typeof o.customCss === "string" ? o.customCss : null;
+
+  return buildPreviewResponse(request, {
+    template,
+    bg: str(o.bg),
+    text: str(o.text),
+    accent: str(o.accent),
+    border: str(o.border),
+    headingFont: str(o.headingFont),
+    bodyFont: str(o.bodyFont),
+    siteId: str(o.siteId) ?? null,
+    previewCustomCss,
+  });
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { SITE_CARD_GRID_CLASS } from "@/lib/site-card-grid";
+import { AdminTemplateExamplesTable } from "@/components/admin-template-examples-table";
 
 interface Row {
   id: string;
@@ -52,15 +52,8 @@ export default function AdminTemplateChannelsPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8 gap-4">
-        <div>
+        <div className="min-w-0 flex-1 space-y-4">
           <h1 className="text-lg font-medium">Template example channels</h1>
-          <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500 max-w-xl">
-            Choose a template, then pick an Are.na channel — same picker as creating a site. Public{" "}
-            <Link href="/templates" className="underline hover:text-neutral-600 dark:hover:text-neutral-300">
-              /templates
-            </Link>{" "}
-            previews use that channel.
-          </p>
         </div>
         <Link
           href="/admin"
@@ -78,37 +71,7 @@ export default function AdminTemplateChannelsPage() {
         </div>
       )}
 
-      <div className={SITE_CARD_GRID_CLASS}>
-        {templates.map((t) => (
-          <Link
-            key={t.id}
-            href={`/admin/template-channels/${encodeURIComponent(t.id)}`}
-            className="group block border rounded overflow-hidden border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50/80 transition-colors dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900/40"
-          >
-            <div className="p-4">
-              <p className="text-sm font-medium text-neutral-950 dark:text-neutral-50">{t.name}</p>
-              <p className="text-xs text-neutral-400 mt-1 line-clamp-2 dark:text-neutral-500">
-                {t.description}
-              </p>
-              <p className="text-[11px] text-neutral-400 mt-2 font-mono dark:text-neutral-500">
-                {t.id}
-              </p>
-              <p className="text-xs mt-3 text-neutral-600 dark:text-neutral-300">
-                {t.channelTitle ? (
-                  <>
-                    Example: <span className="font-medium">{t.channelTitle}</span>
-                  </>
-                ) : (
-                  <span className="text-neutral-400 dark:text-neutral-500">No example channel yet</span>
-                )}
-              </p>
-              <p className="text-xs text-neutral-400 mt-2 group-hover:text-neutral-600 dark:group-hover:text-neutral-300">
-                Choose channel →
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      <AdminTemplateExamplesTable rows={templates} />
     </main>
   );
 }

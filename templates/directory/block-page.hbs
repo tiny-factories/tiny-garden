@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{directoryLabel block}} — {{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="dir-body dir-body--child">
+  <div class="dir-wrap">
+    <nav class="dir-child-nav" aria-label="Back to archive">
+      <a href="index.html" class="dir-child-back">← {{channel.title}}</a>
+    </nav>
+    {{#with block}}
+    {{> blockDetail}}
+    {{/with}}
+  </div>
+</body>
+</html>

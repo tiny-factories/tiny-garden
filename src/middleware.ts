@@ -5,6 +5,26 @@ import {
 } from "@/lib/session-crypto";
 import { sessionCookieBaseOptions } from "@/lib/session-cookie-options";
 
+/**
+ * Wildcard hosts that serve generated static sites (e.g. channel.tiny.garden, channel.localhost).
+ * `*.localhost` is supported in modern browsers for local multi-tenant testing without /etc/hosts.
+ */
+function wildcardSiteSubdomain(hostname: string, siteDomain: string): string | null {
+  if (
+    hostname.endsWith(`.${siteDomain}`) &&
+    hostname !== siteDomain &&
+    hostname !== `www.${siteDomain}`
+  ) {
+    const sub = hostname.slice(0, -(`.${siteDomain}`).length);
+    return sub || null;
+  }
+  if (hostname.endsWith(".localhost") && hostname !== "localhost") {
+    const sub = hostname.replace(/\.localhost$/i, "");
+    if (sub && sub.toLowerCase() !== "www") return sub;
+  }
+  return null;
+}
+
 export function middleware(req: NextRequest) {
   const rawHost = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "").toLowerCase();
   const host = rawHost.split(",")[0].trim();
@@ -20,13 +40,16 @@ export function middleware(req: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  // Check if this is a subdomain request (e.g. my-site.tiny.garden)
-  if (hostname.endsWith(`.${siteDomain}`) && hostname !== siteDomain && hostname !== `www.${siteDomain}`) {
-    const subdomain = hostname.replace(`.${siteDomain}`, "");
+  const pathname = req.nextUrl.pathname;
+  const siteSub = wildcardSiteSubdomain(hostname, siteDomain);
 
-    return NextResponse.rewrite(
-      new URL(`/api/serve/${subdomain}${req.nextUrl.pathname}`, req.url)
-    );
+  // Subdomain / *.localhost static sites: rewrite to the serve handler, but let real App Router
+  // API routes through (otherwise /api/account etc. are mis-handled as static paths → 404).
+  if (siteSub) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.next();
+    }
+    return NextResponse.rewrite(new URL(`/api/serve/${siteSub}${pathname}`, req.url));
   }
 
   // Check if this is the main app domain

@@ -1,0 +1,67 @@
+<div class="dir-child-block dir-child-block--{{type}}">
+  {{#if (eq type "image")}}
+    <figure class="dir-child-figure">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+    </figure>
+    {{#if title}}<h1 class="dir-child-title">{{title}}</h1>{{/if}}
+    {{#if description}}<p class="dir-child-lead">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}<h1 class="dir-child-title">{{title}}</h1>{{/if}}
+    <div class="dir-child-body">{{{content}}}</div>
+    {{#if description}}<p class="dir-child-lead">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a href="{{link.url}}" class="dir-child-outbound" target="_blank" rel="noopener noreferrer">
+      {{#if link.thumbnail}}
+      <figure class="dir-child-figure">
+        <img src="{{link.thumbnail}}" alt="" loading="lazy">
+      </figure>
+      {{/if}}
+      <h1 class="dir-child-title">{{link.title}}</h1>
+      {{#if link.description}}<p class="dir-child-lead">{{link.description}}</p>{{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h1 class="dir-child-title">{{title}}</h1>{{/if}}
+    <div class="dir-child-embed">{{{embed.html}}}</div>
+    {{#if description}}<p class="dir-child-lead">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if (eq attachment.kind "video")}}
+    <div class="dir-child-embed">
+      <video controls preload="metadata" src="{{attachment.url}}"></video>
+    </div>
+    {{/if}}
+    {{#if (eq attachment.kind "pdf")}}
+    <div class="dir-child-embed dir-child-embed--pdf">
+      <iframe src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+    </div>
+    {{/if}}
+    {{#if attachment.preview_image_url}}
+      {{#if (eq attachment.kind "image")}}
+      <figure class="dir-child-figure">
+        <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+      </figure>
+      {{/if}}
+      {{#if (eq attachment.kind "gif")}}
+      <figure class="dir-child-figure">
+        <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+      </figure>
+      {{/if}}
+    {{/if}}
+    <h1 class="dir-child-title">{{attachment.display_name}}</h1>
+    {{#if description}}<p class="dir-child-lead">{{description}}</p>{{/if}}
+    <p class="dir-child-actions">
+      <a href="{{attachment.url}}" class="dir-child-download" download>Download</a>
+    </p>
+  {{/if}}
+
+  <p class="dir-child-arena">
+    <a href="{{arena_url}}" class="dir-child-arena-link" target="_blank" rel="noopener noreferrer">View on Are.na</a>
+  </p>
+</div>

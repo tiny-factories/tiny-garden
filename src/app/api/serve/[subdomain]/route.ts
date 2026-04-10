@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-import { head } from "@vercel/blob";
 import { prisma } from "@/lib/db";
+import { blobUrlForSiblingSiteFile, filenameFromServePath } from "@/lib/site-static-html";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ subdomain: string }> }
 ) {
   const { subdomain } = await params;
+  const servePrefix = `/api/serve/${subdomain}`;
+  const requestedName = filenameFromServePath(req.nextUrl.pathname, servePrefix);
+  if (requestedName === null) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
   // Check if site exists and is published
   const site = await prisma.site.findUnique({
@@ -21,9 +26,13 @@ export async function GET(
   }
 
   if (site?.blobUrl) {
-    // Fetch from Vercel Blob (private store requires auth header)
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    const res = await fetch(site.blobUrl, {
+    const targetUrl =
+      requestedName === "index.html"
+        ? site.blobUrl
+        : blobUrlForSiblingSiteFile(site.blobUrl, requestedName);
+
+    const res = await fetch(targetUrl, {
       headers: blobToken ? { Authorization: `Bearer ${blobToken}` } : {},
     });
     if (!res.ok) return new NextResponse("Not found", { status: 404 });
@@ -31,7 +40,7 @@ export async function GET(
     const html = await res.text();
     return new NextResponse(html, {
       headers: {
-        "Content-Type": "text/html",
+        "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=300",
       },
     });
@@ -40,9 +49,7 @@ export async function GET(
   // Fallback: serve from local filesystem (dev)
   const generatedDir = path.join(process.cwd(), "generated", subdomain);
 
-  let filePath = req.nextUrl.pathname.replace(`/api/serve/${subdomain}`, "");
-  if (!filePath || filePath === "/") filePath = "/index.html";
-
+  let filePath = `/${requestedName}`;
   const fullPath = path.join(generatedDir, filePath);
 
   if (!fullPath.startsWith(generatedDir)) {
@@ -53,7 +60,7 @@ export async function GET(
     const content = await fs.readFile(fullPath);
     const ext = path.extname(fullPath);
     const contentTypes: Record<string, string> = {
-      ".html": "text/html",
+      ".html": "text/html; charset=utf-8",
       ".css": "text/css",
       ".js": "application/javascript",
       ".json": "application/json",

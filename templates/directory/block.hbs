@@ -1,34 +1,12 @@
-<article class="dir-card dir-card--{{type}}" data-type="{{type}}">
-  {{#if (eq type "image")}}
-    <figure class="dir-figure">
-      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
-    </figure>
-    {{#if title}}<h3>{{title}}</h3>{{/if}}
-    {{#if description}}<p>{{description}}</p>{{/if}}
-  {{/if}}
-
-  {{#if (eq type "text")}}
-    {{#if title}}<h3>{{title}}</h3>{{/if}}
-    <div class="dir-body">{{{content}}}</div>
-  {{/if}}
-
-  {{#if (eq type "link")}}
-    <h3>{{link.title}}</h3>
-    {{#if link.description}}<p>{{link.description}}</p>{{/if}}
-    <a class="dir-link" href="{{link.url}}" target="_blank" rel="noopener">Visit resource</a>
-  {{/if}}
-
-  {{#if (eq type "media")}}
-    {{#if title}}<h3>{{title}}</h3>{{/if}}
-    <div class="dir-body">{{{embed.html}}}</div>
-  {{/if}}
-
-  {{#if (eq type "attachment")}}
-    {{#if attachment.preview_image_url}}
-      <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+<a class="dir-row__link" href="{{directoryChildHref}}"{{#if (directoryRowExternal)}} target="_blank" rel="noopener noreferrer"{{/if}}>
+  <span class="dir-row__main">
+    <span class="dir-row__label">{{directoryLabel this}}</span>
+  </span>
+  <span class="dir-row__arrow" aria-hidden="true">
+    {{#if (directoryLinkIsOffArena)}}
+    <svg class="dir-row__arrow-svg dir-row__arrow-svg--external" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+    {{else}}
+    <span class="dir-row__arrow-char">→</span>
     {{/if}}
-    <h3>{{attachment.display_name}}</h3>
-    <p>{{attachment.type_label}}</p>
-    <a class="dir-link" href="{{attachment.url}}" download>Download</a>
-  {{/if}}
-</article>
+  </span>
+</a>

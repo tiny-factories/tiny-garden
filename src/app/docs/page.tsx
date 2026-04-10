@@ -141,6 +141,18 @@ const templates: {
     ],
   },
   {
+    id: "directory",
+    name: "Directory",
+    summary:
+      "Single continuous list with client-side search; a four-button sort toolbar (inline Lucide SVGs) defaults to A–Z by row title label.",
+    notes: [
+      "Each block is one row: Link blocks open their outbound URL (upper-right arrow when off are.na); all other block types open a static child page on the same site (`block-{id}.html`) with full content and a “View on Are.na” link. Child pages are emitted at build time next to `index.html` and are served from blob storage or `generated/` like the home page.",
+      "Hovering a row shows a large floating preview that follows the pointer: images and link thumbnails as before; Text blocks show a plain-text excerpt; PDF attachments embed in a small viewer; other types fall back to a type chip when there is no visual.",
+      "Search filters rows client-side. Alphabetical sorts use the same label as the list row (`directoryLabel` / `data-sort-label`): A–Z restores the server build order; Z–A re-sorts those labels in reverse with a stable tie-break on block id. Date sorts order by `created_at` only.",
+      "Sort toolbar icons match Lucide v1 paths inlined in `templates/directory/index.hbs` (stroke, `currentColor`): ArrowDownAZ → A–Z, ArrowDownZA → Z–A, CalendarArrowDown → newest first, CalendarArrowUp → oldest first. Titles and `aria-label` describe each action for tooltips and AT.",
+    ],
+  },
+  {
     id: "homepage",
     name: "Homepage",
     summary: "Landing page: hero, link list, then supporting blocks.",
@@ -189,12 +201,14 @@ const templates: {
   {
     id: "feature-requests",
     name: "Feature Requests",
-    summary: "Each block is a card linking to the block on Are.na; comment count is shown as votes.",
+    summary:
+      "Registry rows link to static child pages (block-{id}.html) with full content; each page links to Are.na. Comment count is votes.",
     notes: [
+      "Tags: put labels in square brackets in titles or descriptions, e.g. `[Navigation]` `[in progress]` `[done]`. The build finds bracket labels that recur across the channel (or that you list in the channel description) and turns them into filter chips; each row’s category column is the first non-status bracket, and status comes from the first status-like bracket (`[in progress]`, `[done]`, …), a `Status:` line, or comment count.",
       "Image: title, description, and thumbnail image.",
       "Text: title plus HTML body, or description if there is no body.",
-      "Link: prefers block title/description, falls back to link title/description; the card does not surface the URL (whole card goes to Are.na).",
-      "Media: only title and description — embed HTML is not rendered in this template.",
+      "Link: prefers block title/description, falls back to link title/description; the card links to the child page (open the outbound link on the detail page).",
+      "Media: title and description on the index row; embed HTML appears on the child page.",
       "Attachment: preview when available, title/description-aware label, description.",
     ],
   },

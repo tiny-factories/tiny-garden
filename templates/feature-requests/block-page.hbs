@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{#with block}}{{#if title}}{{title}}{{else}}{{#if (eq type "link")}}{{link.title}}{{else}}Request{{/if}}{{/if}}{{/with}} — {{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="fr-body fr-body--child">
+  <nav class="fr-child-nav" aria-label="Back to registry">
+    <a href="index.html" class="fr-child-back">← {{channel.title}}</a>
+  </nav>
+  <div class="fr-child-wrap">
+    {{#with block}}
+      {{> blockDetail}}
+    {{/with}}
+  </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
-<article class="finder-item finder-item--{{type}}" id="finder-item-{{@index}}">
-  <header class="finder-item-head">
-    <strong>{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}</strong>
+<div class="finder-block finder-block--{{type}}">
+  <header class="finder-block-head">
+    <h2 class="finder-block-title">{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}</h2>
     <span class="finder-type">{{#if (eq type "attachment")}}{{attachment.type_label}}{{else}}{{type}}{{/if}}</span>
   </header>
 
@@ -13,8 +13,8 @@
   {{/if}}
 
   {{#if (eq type "link")}}
-    <p><a href="{{link.url}}" target="_blank" rel="noopener">{{link.title}}</a></p>
-    {{#if link.description}}<p>{{link.description}}</p>{{/if}}
+    <p><a class="finder-link" href="{{link.url}}" target="_blank" rel="noopener">{{link.title}}</a></p>
+    {{#if link.description}}<p class="finder-link-desc">{{link.description}}</p>{{/if}}
   {{/if}}
 
   {{#if (eq type "media")}}
@@ -22,15 +22,43 @@
   {{/if}}
 
   {{#if (eq type "attachment")}}
-    {{#if attachment.preview_image_url}}
-      <img class="finder-img" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
-    {{/if}}
-    {{#if attachment.is_video}}
-      <video class="finder-media-el" src="{{attachment.url}}" controls preload="metadata"></video>
-    {{/if}}
     {{#if attachment.is_pdf}}
-      <iframe class="finder-pdf" src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+      <div class="finder-pdf-wrap">
+        <div class="finder-pdf-gate">
+          {{#if attachment.preview_image_url}}
+            <img class="finder-img finder-pdf-poster" src="{{attachment.preview_image_url}}" alt="" loading="lazy">
+          {{else}}
+            <div class="finder-pdf-fallback" aria-hidden="true">PDF</div>
+          {{/if}}
+          <button type="button" class="finder-pdf-open-btn" data-pdf-url="{{attachment.url}}" aria-expanded="false">
+            Open PDF
+          </button>
+        </div>
+        <iframe class="finder-pdf-frame" title="{{attachment.display_name}}" tabindex="-1" hidden></iframe>
+      </div>
+    {{else}}
+      {{#if attachment.is_model}}
+        <div class="finder-model-wrap">
+          {{#if attachment.preview_image_url}}
+            <img class="finder-img finder-model-poster" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+          {{/if}}
+          <div
+            class="finder-model-mount"
+            data-model-url="{{attachment.url}}"
+            data-model-ext="{{attachment.extension}}"
+            data-model-name="{{attachment.display_name}}"
+          ></div>
+          <p class="finder-model-fallback-msg" hidden>Interactive preview isn’t available for this file type in the browser. Use “Open” or the link below.</p>
+        </div>
+      {{else}}
+        {{#if attachment.preview_image_url}}
+          <img class="finder-img finder-attach-preview" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+        {{/if}}
+        {{#if attachment.is_video}}
+          <video class="finder-media-el" src="{{attachment.url}}" controls preload="metadata" playsinline></video>
+        {{/if}}
+      {{/if}}
     {{/if}}
-    <p><a href="{{attachment.url}}" download>{{attachment.display_name}}</a></p>
+    <p><a class="finder-attachment" href="{{attachment.url}}" download>{{attachment.display_name}}</a></p>
   {{/if}}
-</article>
+</div>

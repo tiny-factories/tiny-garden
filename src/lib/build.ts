@@ -14,6 +14,11 @@ import { prisma } from "./db";
 import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
 import { isKnownTemplateSlug } from "./templates-manifest";
+import { registerFeatureRequestHandlebarsHelpers } from "./feature-request-status";
+import {
+  enrichFeatureRequestSiteData,
+  registerFeatureRequestRowHelpers,
+} from "./feature-request-tags";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -145,6 +150,10 @@ export interface SiteData {
     custom_css: string;
     built_at: string;
   };
+  /** Feature Requests template: recurring `[bracket]` tags for filter chips. */
+  feature_request_registry?: {
+    filterTags: Array<{ slug: string; label: string; count: number }>;
+  };
 }
 
 /** Maps Are.na API channel JSON to template `channel` root — used by builds and template previews. */
@@ -189,6 +198,9 @@ export interface TemplateBlock {
     large: string;
     square: string;
     display: string;
+    /** From Are.na when available — used for photography bento layout by aspect ratio. */
+    width?: number;
+    height?: number;
   };
   content?: string;
   link?: {
@@ -231,6 +243,11 @@ export interface TemplateBlock {
   source_url: string | null;
   comment_count: number;
   arena_url: string;
+  /** Feature Requests template: filled at build from `[tag]` patterns. */
+  feature_request?: {
+    tagSlugs: string[];
+    categoryLabel: string;
+  };
 }
 
 function pickFirstNonEmpty(...values: Array<string | null | undefined>): string {
@@ -247,6 +264,44 @@ function getFileExtension(value: string): string {
   const cleaned = value.split("#")[0]?.split("?")[0] || "";
   const ext = path.extname(cleaned).toLowerCase().replace(/^\./, "");
   return ext;
+}
+
+function coercePositiveInt(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+  if (typeof value === "string") {
+    const n = parseInt(value, 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return undefined;
+}
+
+/** Read width/height from Are.na v3 image object and block (original pixels when present). */
+function extractImagePixelDimensions(
+  img: Record<string, unknown>,
+  block: ArenaBlock
+): { width?: number; height?: number } {
+  let width = coercePositiveInt(img.width);
+  let height = coercePositiveInt(img.height);
+
+  const tryNested = (key: string) => {
+    const sub = img[key];
+    if (sub && typeof sub === "object") {
+      const o = sub as Record<string, unknown>;
+      if (!width) width = coercePositiveInt(o.width);
+      if (!height) height = coercePositiveInt(o.height);
+    }
+  };
+  for (const k of ["original", "large", "medium", "display", "square"]) {
+    tryNested(k);
+  }
+
+  const br = block as unknown as Record<string, unknown>;
+  if (!width) width = coercePositiveInt(br.width);
+  if (!height) height = coercePositiveInt(br.height);
+
+  return { width, height };
 }
 
 type AttachmentKind = TemplateBlock["attachment"] extends infer A
@@ -351,7 +406,12 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
     const square = getSrc(img.square) || getSrc(img.medium) || original;
     const display = getSrc(img.medium) || large || original;
 
+    const dims = extractImagePixelDimensions(img, block);
     normalized.image = { original, large, square, display };
+    if (dims.width && dims.height) {
+      normalized.image.width = dims.width;
+      normalized.image.height = dims.height;
+    }
     normalized.source_url = original || display;
   }
 
@@ -514,6 +574,63 @@ function directoryPreviewUrl(block: TemplateBlock): string {
     default:
       return "";
   }
+}
+
+/** Finder grid/list thumbnails — uses Are.na previews when present (incl. PDF poster frames). */
+export function finderThumbUrl(block: TemplateBlock): string {
+  switch (block.type) {
+    case "image":
+      return block.image?.display || "";
+    case "link":
+      return pickFirstNonEmpty(block.link?.thumbnail, block.image?.display);
+    case "media":
+      return block.image?.display || "";
+    case "text":
+      return "";
+    case "attachment": {
+      const a = block.attachment;
+      if (!a) return "";
+      if (a.is_image || a.is_gif) {
+        return pickFirstNonEmpty(
+          block.image?.display,
+          a.preview_image_url,
+          a.preview_image,
+          a.url
+        );
+      }
+      if (a.is_video) {
+        return pickFirstNonEmpty(
+          a.preview_image_url,
+          a.preview_image,
+          block.image?.display
+        );
+      }
+      if (a.is_pdf) {
+        return pickFirstNonEmpty(a.preview_image_url, a.preview_image);
+      }
+      return pickFirstNonEmpty(
+        a.preview_image_url,
+        a.preview_image,
+        block.image?.display
+      );
+    }
+    default:
+      return "";
+  }
+}
+
+/** URL opened when double-clicking a Finder item (new tab). */
+export function finderOpenUrl(block: TemplateBlock): string {
+  if (block.type === "link" && block.link?.url) return block.link.url;
+  if (block.type === "attachment" && block.attachment?.url) return block.attachment.url;
+  return block.arena_url;
+}
+
+/** Finder grid/list thumbs: use object-fit contain for PDF / 3D / video posters so previews are not cropped. */
+export function finderThumbContain(block: TemplateBlock): boolean {
+  if (block.type !== "attachment" || !block.attachment) return false;
+  const a = block.attachment;
+  return a.is_pdf || a.is_model || a.is_video;
 }
 
 function directoryPreviewTextExcerpt(block: TemplateBlock): string {
@@ -688,8 +805,121 @@ async function emitDirectoryBlockPages(params: {
   }
 }
 
+async function emitFeatureRequestsBlockPages(params: {
+  siteTemplate: string;
+  templateDir: string;
+  siteData: SiteData;
+  styleContent: string;
+  faviconURI: string;
+  gardenFooter: string;
+  themeFontLinks: string;
+  themeOverrideCss: string;
+  effectiveCustomCss: string;
+  assetMap: AssetMap;
+  appUrl: string;
+  blobToken: string | undefined;
+  blobSitePrefix: string;
+  outputDir: string | null;
+}): Promise<void> {
+  if (params.siteTemplate !== "feature-requests") return;
+  const detailPath = path.join(params.templateDir, "block-detail.hbs");
+  const pagePath = path.join(params.templateDir, "block-page.hbs");
+  const detailSrc = await fs.readFile(detailPath, "utf-8").catch(() => null);
+  const pageSrc = await fs.readFile(pagePath, "utf-8").catch(() => null);
+  if (!detailSrc || !pageSrc) return;
+  Handlebars.registerPartial("blockDetail", detailSrc);
+  const pageTemplate = Handlebars.compile(pageSrc);
+  const finishOpts = {
+    styleContent: params.styleContent,
+    faviconURI: params.faviconURI,
+    gardenFooter: params.gardenFooter,
+    themeFontLinks: params.themeFontLinks,
+    themeOverrideCss: params.themeOverrideCss,
+    effectiveCustomCss: params.effectiveCustomCss,
+  };
+  for (const block of params.siteData.blocks) {
+    let pageHtml = pageTemplate({ ...params.siteData, block, styles: params.styleContent });
+    pageHtml = applyStaticPageFinishes(pageHtml, finishOpts);
+    if (params.assetMap.size > 0) {
+      pageHtml = rewriteUrls(pageHtml, params.assetMap, params.appUrl);
+    }
+    const filename = `block-${block.id}.html`;
+    if (params.blobToken) {
+      await put(`${params.blobSitePrefix}/${filename}`, pageHtml, {
+        access: "private",
+        contentType: "text/html",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        token: params.blobToken,
+      });
+    }
+    if (params.outputDir) {
+      await fs.writeFile(path.join(params.outputDir, filename), pageHtml);
+    }
+  }
+}
+
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+registerFeatureRequestHandlebarsHelpers(Handlebars);
+registerFeatureRequestRowHelpers(Handlebars);
+
+/**
+ * When Are.na omits image pixel dimensions, photography layout falls back to this cycle
+ * (otherwise layout uses {@link photoCellClassFromDimensions}).
+ */
+const PHOTO_CELL_FALLBACK_LAYOUTS = [
+  "wide",
+  "tall",
+  "square",
+  "wide",
+  "square",
+  "tall",
+  "square",
+  "wide",
+] as const;
+
+/** Map intrinsic aspect ratio → CSS cell modifier (12-column bento). */
+function photoCellClassFromDimensions(width: number, height: number): string {
+  const r = width / height;
+  if (r >= 1.95) return "hero";
+  if (r >= 1.2) return "wide";
+  if (r <= 0.82) return "tall";
+  return "square";
+}
+
+function photoImageIndexInChannel(blocks: TemplateBlock[], block: TemplateBlock): number {
+  let imageIndex = 0;
+  for (const item of blocks) {
+    if (item.type !== "image") continue;
+    if (item.id === block.id) return imageIndex;
+    imageIndex++;
+  }
+  return 0;
+}
+
+/** Photography template: bento cell from image aspect ratio when width/height exist; else fallback cycle. */
+Handlebars.registerHelper("photoCellClass", (blocks: unknown, block: unknown) => {
+  if (!block || typeof block !== "object") return "square";
+  const b = block as TemplateBlock;
+  if (b.type !== "image" || !b.image) return "square";
+  const w = b.image.width;
+  const h = b.image.height;
+  if (typeof w === "number" && typeof h === "number" && w > 0 && h > 0) {
+    return photoCellClassFromDimensions(w, h);
+  }
+  if (!Array.isArray(blocks)) return "square";
+  const idx = photoImageIndexInChannel(blocks as TemplateBlock[], b);
+  return PHOTO_CELL_FALLBACK_LAYOUTS[idx % PHOTO_CELL_FALLBACK_LAYOUTS.length] ?? "square";
+});
+
+/** Sequence label e.g. `001/A` for stamp metadata on photography template image cells. */
+Handlebars.registerHelper("photoImageSeq", (blocks: unknown, block: unknown) => {
+  if (!Array.isArray(blocks) || !block || typeof block !== "object") return "001/A";
+  const idx = photoImageIndexInChannel(blocks as TemplateBlock[], block as TemplateBlock);
+  return `${String(idx + 1).padStart(3, "0")}/A`;
+});
+
 Handlebars.registerHelper("isReservedStylesCssTitle", (title: unknown) =>
   typeof title === "string" && isReservedStylesCssTitle(title)
 );
@@ -698,6 +928,12 @@ function parseDate(dateStr: string): Date | null {
   const parsed = new Date(dateStr);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
+
+Handlebars.registerHelper("formatYear", (dateStr: unknown) => {
+  if (typeof dateStr !== "string") return "";
+  const parsed = parseDate(dateStr);
+  return parsed ? String(parsed.getUTCFullYear()) : "";
+});
 
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
@@ -743,6 +979,15 @@ Handlebars.registerHelper("directoryLabel", function (
 });
 Handlebars.registerHelper("directorySearchText", function (this: TemplateBlock) {
   return directorySearchText(this);
+});
+Handlebars.registerHelper("finderThumbUrl", function (this: TemplateBlock) {
+  return finderThumbUrl(this);
+});
+Handlebars.registerHelper("finderOpenUrl", function (this: TemplateBlock) {
+  return finderOpenUrl(this);
+});
+Handlebars.registerHelper("finderThumbContain", function (this: TemplateBlock) {
+  return finderThumbContain(this);
 });
 Handlebars.registerHelper("directoryPreviewUrl", function (this: TemplateBlock) {
   return directoryPreviewUrl(this);
@@ -809,7 +1054,7 @@ async function runBuild(siteId: string): Promise<string> {
     throw new Error(`Unknown template "${site.template}".`);
   }
 
-  const siteData: SiteData = {
+  let siteData: SiteData = {
     channel: arenaChannelToSiteDataChannel(channel),
     blocks: channelBlocksForTemplate(blocks),
     site: {
@@ -820,6 +1065,7 @@ async function runBuild(siteId: string): Promise<string> {
       built_at: new Date().toISOString(),
     },
   };
+  siteData = enrichFeatureRequestSiteData(siteData);
 
   // Load template
   const templateDir = path.join(process.cwd(), "templates", site.template);
@@ -856,6 +1102,13 @@ async function runBuild(siteId: string): Promise<string> {
   if (site.themeFonts) {
     try {
       const f = JSON.parse(site.themeFonts);
+      const heading = f.heading || "system";
+      const body = f.body || "system";
+      themeOverrideCss += `:root {
+  --tg-font-heading: ${fontFamilyCSS(heading)};
+  --tg-font-body: ${fontFamilyCSS(body)};
+}
+`;
       if (f.heading && f.heading !== "system") {
         themeOverrideCss += `h1, h2, h3, h4, h5, h6 { font-family: ${fontFamilyCSS(f.heading)}; }\n`;
       }
@@ -925,6 +1178,22 @@ async function runBuild(siteId: string): Promise<string> {
       blobSitePrefix,
       outputDir: null,
     });
+    await emitFeatureRequestsBlockPages({
+      siteTemplate: site.template,
+      templateDir,
+      siteData,
+      styleContent,
+      faviconURI,
+      gardenFooter,
+      themeFontLinks,
+      themeOverrideCss,
+      effectiveCustomCss,
+      assetMap,
+      appUrl,
+      blobToken,
+      blobSitePrefix,
+      outputDir: null,
+    });
 
     const blob = await put(`${blobSitePrefix}/index.html`, html, {
       access: "private",
@@ -954,6 +1223,22 @@ async function runBuild(siteId: string): Promise<string> {
 
     const emptyAssets: AssetMap = new Map();
     await emitDirectoryBlockPages({
+      siteTemplate: site.template,
+      templateDir,
+      siteData,
+      styleContent,
+      faviconURI,
+      gardenFooter,
+      themeFontLinks,
+      themeOverrideCss,
+      effectiveCustomCss,
+      assetMap: emptyAssets,
+      appUrl,
+      blobToken: undefined,
+      blobSitePrefix,
+      outputDir,
+    });
+    await emitFeatureRequestsBlockPages({
       siteTemplate: site.template,
       templateDir,
       siteData,

@@ -40,6 +40,8 @@ export interface ArenaBlock {
     large: { url: string };
     square: { url: string };
     display: { url: string };
+    width?: number | null;
+    height?: number | null;
   } | null;
   source: {
     url: string;
@@ -61,6 +63,9 @@ export interface ArenaBlock {
   comment_count: number;
   created_at: string;
   updated_at: string;
+  /** v3 Image blocks: original dimensions in pixels (when known). */
+  width?: number | null;
+  height?: number | null;
 }
 
 function sleep(ms: number): Promise<void> {
