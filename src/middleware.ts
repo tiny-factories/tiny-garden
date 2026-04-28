@@ -52,7 +52,7 @@ export function middleware(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-tiny-garden-site-path", pathname);
     return NextResponse.rewrite(
-      new URL(`/api/serve/${siteSub}${pathname}`, req.url),
+      new URL(`/api/serve/${siteSub}`, req.url),
       { request: { headers: requestHeaders } }
     );
   }
@@ -68,9 +68,9 @@ export function middleware(req: NextRequest) {
   // If not the app domain and not a subdomain, treat as custom domain
   if (!isAppDomain) {
     const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-tiny-garden-site-path", req.nextUrl.pathname);
+    requestHeaders.set("x-tiny-garden-site-path", pathname);
     return NextResponse.rewrite(
-      new URL(`/api/serve/_custom/${hostname}${req.nextUrl.pathname}`, req.url),
+      new URL(`/api/serve/_custom/${hostname}`, req.url),
       { request: { headers: requestHeaders } }
     );
   }
