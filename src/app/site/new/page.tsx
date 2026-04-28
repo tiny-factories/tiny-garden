@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowBigLeft } from "lucide-react";
 import { track } from "@/lib/track";
-import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 import { SegmentedControl } from "@/components/toolbar";
 import { SitePreviewColumn } from "@/components/site-preview-column";
 import {
@@ -51,11 +50,8 @@ function timeAgo(dateStr: string): string {
   return `${months}mo ago`;
 }
 
-type AccessGate = "loading" | "ok" | "gated";
-
 export default function NewSitePage() {
   const router = useRouter();
-  const [accessGate, setAccessGate] = useState<AccessGate>("loading");
   const [isAdmin, setIsAdmin] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
@@ -95,12 +91,10 @@ export default function NewSitePage() {
   useEffect(() => {
     fetch("/api/account")
       .then((r) => (r.ok ? r.json() : {}))
-      .then((data: { betaGated?: boolean; isAdmin?: boolean }) => {
-        if (data.betaGated) setAccessGate("gated");
-        else setAccessGate("ok");
+      .then((data: { isAdmin?: boolean }) => {
         if (data.isAdmin) setIsAdmin(true);
       })
-      .catch(() => setAccessGate("ok"));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -322,40 +316,6 @@ export default function NewSitePage() {
       setError(data.error || "Failed to create site");
       setCreating(false);
     }
-  }
-
-  if (accessGate === "loading") {
-    return (
-      <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center px-4 py-16 text-center">
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Checking access…</p>
-      </main>
-    );
-  }
-
-  if (accessGate === "gated") {
-    return (
-      <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col px-4 py-16 max-w-md mx-auto">
-        <h1 className="text-lg font-medium text-center">Beta is full</h1>
-        <p className="text-sm text-neutral-500 mt-3 text-center leading-relaxed dark:text-neutral-400">
-          Free beta spots are full. Get notified when we open more, or become a supporter for lifetime access.
-        </p>
-        <div className="mt-6">
-          <ButtondownWaitlistForm idPrefix="new-site-gate" />
-        </div>
-        <Link
-          href="/account"
-          className="mt-6 text-center text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
-        >
-          Become a supporter
-        </Link>
-        <Link
-          href="/sites"
-          className="mt-4 text-center text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
-        >
-          Back to sites
-        </Link>
-      </main>
-    );
   }
 
   if (!selectedChannel) {

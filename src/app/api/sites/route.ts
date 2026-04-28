@@ -2,10 +2,10 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/db";
 import { seedFromSubdomain } from "@/lib/garden-icon";
 import { buildSite } from "@/lib/build";
-import { isBetaFull } from "@/lib/beta";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { getRequestAuth } from "@/lib/request-auth";
 import { themeToDbFields } from "@/lib/ai-site-theme";
+import { discordTeamNotify } from "@/lib/discord-team-notify";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
@@ -48,22 +48,6 @@ export async function POST(req: NextRequest) {
   });
 
   const plan = user.subscription?.plan || "free";
-
-  if (
-    (await isBetaFull()) &&
-    !user.isAdmin &&
-    !user.isFriend &&
-    plan === "free"
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "Beta is full for free accounts. Join the waitlist on the homepage, or log in and become a supporter for lifetime access.",
-        code: "beta_full",
-      },
-      { status: 403 }
-    );
-  }
 
   const limits: Record<string, number> = { free: 3, pro: Infinity, studio: 50 };
   const limit = limits[plan] ?? 3;
@@ -120,6 +104,23 @@ export async function POST(req: NextRequest) {
       }),
     },
   });
+
+  const appBase = req.nextUrl.origin;
+  const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
+  const liveUrl = `https://${site.subdomain}.${siteDomain}`;
+
+  after(() =>
+    discordTeamNotify({
+      title: "New tiny.garden site",
+      description: `**${site.subdomain}** · channel \`${site.channelSlug}\` · \`${site.template}\``,
+      url: `${appBase}/sites/${site.id}`,
+      color: 0x5865f2,
+      fields: [
+        { name: "Owner", value: user.arenaUsername, inline: true },
+        { name: "Live", value: liveUrl, inline: false },
+      ],
+    })
+  );
 
   after(() =>
     buildSite(site.id).catch((err) => {

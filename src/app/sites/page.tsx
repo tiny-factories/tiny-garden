@@ -8,7 +8,6 @@ import { track } from "@/lib/track";
 import { PlanTierBadge } from "@/components/PlanTierBadge";
 import { SegmentedControl, Toolbar, type ViewMode } from "@/components/toolbar";
 import { SitesPageSkeleton } from "@/components/sites-dashboard-skeletons";
-import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 import { Button } from "@/components/button";
 import { SITE_CARD_GRID_CLASS } from "@/lib/site-card-grid";
 
@@ -202,8 +201,6 @@ interface AccountInfo {
   plan: string;
   isAdmin: boolean;
   isFriend: boolean;
-  betaFull?: boolean;
-  betaGated?: boolean;
 }
 
 export default function SitesPage() {
@@ -577,9 +574,7 @@ export default function SitesPage() {
         ? "50"
         : account?.plan === "pro"
           ? "∞"
-          : account?.betaGated
-            ? "0"
-            : "3";
+          : "3";
 
   const catalogTotalPages = Math.max(1, Math.ceil(catalogTotal / CATALOG_PAGE_SIZE));
 
@@ -612,7 +607,8 @@ export default function SitesPage() {
         </div>
       ) : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-12">
-        <div className="min-w-0 space-y-3">
+        {/* Fixed max width so the scope toggle track does not grow/shrink when the helper line changes length */}
+        <div className="min-w-0 w-full max-w-sm space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg font-medium">
               {listScope === "yours" ? "Your sites" : "All sites"}
@@ -627,7 +623,7 @@ export default function SitesPage() {
             value={listScope}
             onChange={setListScopePersist}
             ariaLabel="Site list"
-            className="w-full max-w-xs sm:max-w-sm"
+            className="w-full"
             labelClassName="text-xs font-medium"
           />
           {listScope === "yours" && account && (
@@ -641,38 +637,15 @@ export default function SitesPage() {
             </p>
           )}
         </div>
-        {account?.betaGated ? (
-          <span
-            className="text-sm px-3 py-1.5 border border-neutral-100 rounded text-neutral-400 cursor-not-allowed dark:border-neutral-800 dark:text-neutral-500"
-            title="Free beta is full. Become a supporter from Account, or join the waitlist on the homepage."
-          >
-            New site
-          </span>
-        ) : (
-          <Link
-            href="/site/new"
-            className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
-          >
-            New site
-          </Link>
-        )}
+        <Link
+          href="/site/new"
+          className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
+        >
+          New site
+        </Link>
       </div>
 
-      {listScope === "yours" && sites.length === 0 && account?.betaGated ? (
-        <div className="text-center py-16 space-y-5 max-w-md mx-auto">
-          <p className="text-sm text-neutral-600 leading-relaxed dark:text-neutral-400">
-            Free beta spots are full. Join the waitlist and we&apos;ll email you when there&apos;s room, or
-            become a supporter for lifetime access.
-          </p>
-          <ButtondownWaitlistForm idPrefix="sites-dashboard-waitlist" className="text-left" />
-          <Link
-            href="/account"
-            className="inline-block text-sm px-4 py-2 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
-          >
-            Become a supporter
-          </Link>
-        </div>
-      ) : listScope === "yours" && sites.length === 0 ? (
+      {listScope === "yours" && sites.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">No sites yet.</p>
           <Link

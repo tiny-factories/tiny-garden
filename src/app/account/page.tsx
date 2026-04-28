@@ -63,6 +63,12 @@ export default function AccountPage() {
   const [dangerTyped, setDangerTyped] = useState(0);
   const [caretVisible, setCaretVisible] = useState(true);
   const typeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<
+    "idle" | "loading" | "ok" | "err"
+  >("idle");
+  const [newsletterMessage, setNewsletterMessage] = useState("");
 
   useEffect(() => {
     fetch("/api/account")
@@ -228,6 +234,46 @@ export default function AccountPage() {
     router.push("/");
   }
 
+  async function handleNewsletterSubscribe(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!newsletterOptIn) return;
+    const email = newsletterEmail.trim();
+    if (!email) {
+      setNewsletterStatus("err");
+      setNewsletterMessage("Enter your email.");
+      return;
+    }
+    setNewsletterStatus("loading");
+    setNewsletterMessage("");
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (res.ok && data.ok) {
+        track("newsletter-subscribed");
+        setNewsletterStatus("ok");
+        setNewsletterMessage("You're subscribed. Check your inbox to confirm.");
+        return;
+      }
+      setNewsletterStatus("err");
+      setNewsletterMessage(
+        data.error ||
+          (res.status === 503
+            ? "Newsletter isn't configured yet."
+            : "Something went wrong. Try again.")
+      );
+    } catch {
+      setNewsletterStatus("err");
+      setNewsletterMessage("Network error. Try again.");
+    }
+  }
+
   async function handleDelete() {
     const confirmed = prompt(
       'This will permanently delete your account and all your sites. Type "delete" to confirm.'
@@ -318,6 +364,83 @@ export default function AccountPage() {
                 >
                   View Are.na profile
                 </a>
+              </section>
+
+              <section className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-3">
+                  Email updates
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4 leading-relaxed max-w-xl">
+                  Occasional updates on new templates, features, and changes. Off by default —
+                  opt in and we&apos;ll send you an email whenever we have something worth sharing.
+                </p>
+                <form onSubmit={handleNewsletterSubscribe} className="space-y-3">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newsletterOptIn}
+                      onChange={(e) => {
+                        setNewsletterOptIn(e.target.checked);
+                        if (!e.target.checked) {
+                          setNewsletterStatus("idle");
+                          setNewsletterMessage("");
+                        }
+                      }}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-neutral-900 dark:accent-neutral-100"
+                    />
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                      Subscribe to tiny.garden updates
+                    </span>
+                  </label>
+                  {newsletterOptIn && (
+                    <div className="flex flex-col sm:flex-row gap-2 pl-6">
+                      <label htmlFor="newsletter-email" className="sr-only">
+                        Email
+                      </label>
+                      <input
+                        id="newsletter-email"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        placeholder="you@email.com"
+                        value={newsletterEmail}
+                        onChange={(e) => setNewsletterEmail(e.target.value)}
+                        disabled={
+                          newsletterStatus === "loading" ||
+                          newsletterStatus === "ok"
+                        }
+                        className="flex-1 px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded outline-none focus:border-neutral-400 dark:focus:border-neutral-500 bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                      />
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="xs"
+                        disabled={
+                          newsletterStatus === "loading" ||
+                          newsletterStatus === "ok" ||
+                          !newsletterEmail.trim()
+                        }
+                      >
+                        {newsletterStatus === "loading"
+                          ? "…"
+                          : newsletterStatus === "ok"
+                            ? "Subscribed"
+                            : "Subscribe"}
+                      </Button>
+                    </div>
+                  )}
+                  {newsletterMessage && (
+                    <p
+                      className={`text-xs pl-6 ${
+                        newsletterStatus === "ok"
+                          ? "text-emerald-700 dark:text-emerald-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {newsletterMessage}
+                    </p>
+                  )}
+                </form>
               </section>
 
               <section

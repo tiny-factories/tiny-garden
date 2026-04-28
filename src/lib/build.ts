@@ -23,6 +23,46 @@ import {
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
 
+/** Single-asset ceiling before buffering (parallel batches multiply memory). */
+const MAX_MIRROR_ASSET_BYTES = 35 * 1024 * 1024;
+
+function truncateForLog(url: string, max = 100): string {
+  const u = url.replace(/\s+/g, "");
+  if (u.length <= max) return u;
+  return `${u.slice(0, max)}…`;
+}
+
+type AttachmentMirrorDecision =
+  | { mirror: true }
+  | { mirror: false; skipReason: string };
+
+/**
+ * Only mirror “small” attachments to Blob. Videos and similar files are fetched
+ * as full bodies in {@link downloadAndUploadAsset}; buffering several in parallel
+ * OOMs Vercel cron/serverless (1GB).
+ */
+function attachmentBlobMirrorDecision(
+  att: NonNullable<TemplateBlock["attachment"]>
+): AttachmentMirrorDecision {
+  const { kind, file_size: size } = att;
+  if (kind === "video" || kind === "audio" || kind === "model" || kind === "archive") {
+    return { mirror: false, skipReason: `kind_not_mirrored:${kind}` };
+  }
+  if (kind === "pdf") {
+    if (typeof size === "number" && size > 0 && size <= 15 * 1024 * 1024) {
+      return { mirror: true };
+    }
+    return {
+      mirror: false,
+      skipReason: `pdf_size_policy_bytes=${typeof size === "number" ? size : "unknown"}`,
+    };
+  }
+  if (typeof size === "number" && size > MAX_MIRROR_ASSET_BYTES) {
+    return { mirror: false, skipReason: `file_size_cap_bytes=${size}` };
+  }
+  return { mirror: true };
+}
+
 function hashUrl(url: string): string {
   return crypto.createHash("sha256").update(url).digest("hex").slice(0, 16);
 }
@@ -48,11 +88,44 @@ function getExtension(url: string, contentType?: string): string {
 async function downloadAndUploadAsset(
   originalUrl: string,
   blobPath: string,
-  blobToken: string
+  blobToken: string,
+  logSite?: string
 ): Promise<string | null> {
+  const log = (msg: string, extra?: Record<string, string | number>) => {
+    if (!logSite) return;
+    const tail = extra
+      ? ` ${Object.entries(extra)
+          .map(([k, v]) => `${k}=${v}`)
+          .join(" ")}`
+      : "";
+    console.info(`[build/assets] site=${logSite} ${msg}${tail}`);
+  };
+
   try {
     const res = await fetch(originalUrl);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      log("action=http_skip", {
+        reason: "non_ok_status",
+        status: res.status,
+        url: truncateForLog(originalUrl),
+      });
+      return null;
+    }
+
+    const lenHdr = res.headers.get("content-length");
+    if (lenHdr) {
+      const n = parseInt(lenHdr, 10);
+      if (Number.isFinite(n) && n > MAX_MIRROR_ASSET_BYTES) {
+        await res.body?.cancel?.();
+        log("action=http_skip", {
+          reason: "content_length_over_cap",
+          content_length_bytes: n,
+          cap_bytes: MAX_MIRROR_ASSET_BYTES,
+          url: truncateForLog(originalUrl),
+        });
+        return null;
+      }
+    }
 
     const contentType = res.headers.get("content-type") || "application/octet-stream";
     const buffer = Buffer.from(await res.arrayBuffer());
@@ -71,7 +144,14 @@ async function downloadAndUploadAsset(
 
     return blob.url;
   } catch (error) {
-    console.error(`Failed to download asset: ${originalUrl}`, error);
+    if (logSite) {
+      console.error(
+        `[build/assets] site=${logSite} action=download_error url=${truncateForLog(originalUrl)}`,
+        error
+      );
+    } else {
+      console.error(`Failed to download asset: ${originalUrl}`, error);
+    }
     return null;
   }
 }
@@ -80,10 +160,12 @@ async function processAssets(
   blocks: TemplateBlock[],
   avatarUrl: string,
   blobPath: string,
-  blobToken: string
+  blobToken: string,
+  logSite?: string
 ): Promise<AssetMap> {
   const assetMap: AssetMap = new Map();
   const urls: string[] = [];
+  const attachmentSkipReasons: Record<string, number> = {};
 
   // Collect all asset URLs from blocks
   for (const block of blocks) {
@@ -92,7 +174,16 @@ async function processAssets(
       if (block.image.original && block.image.original !== block.image.display) urls.push(block.image.original);
     }
     if (block.link?.thumbnail) urls.push(block.link.thumbnail);
-    if (block.attachment?.url) urls.push(block.attachment.url);
+    const att = block.attachment;
+    if (att?.url) {
+      const d = attachmentBlobMirrorDecision(att);
+      if (d.mirror) {
+        urls.push(att.url);
+      } else if (logSite) {
+        attachmentSkipReasons[d.skipReason] =
+          (attachmentSkipReasons[d.skipReason] || 0) + 1;
+      }
+    }
   }
 
   // Include avatar
@@ -101,17 +192,23 @@ async function processAssets(
   // Deduplicate
   const unique = [...new Set(urls.filter(Boolean))];
 
-  // Download and upload in batches of 10
-  for (let i = 0; i < unique.length; i += 10) {
-    const batch = unique.slice(i, i + 10);
+  // Download and upload in small batches to cap peak memory (serverless ~1GB).
+  for (let i = 0; i < unique.length; i += 5) {
+    const batch = unique.slice(i, i + 5);
     const results = await Promise.all(
-      batch.map((url) => downloadAndUploadAsset(url, blobPath, blobToken))
+      batch.map((url) => downloadAndUploadAsset(url, blobPath, blobToken, logSite))
     );
     batch.forEach((url, idx) => {
       if (results[idx]) {
         assetMap.set(url, results[idx]!);
       }
     });
+  }
+
+  if (logSite && (Object.keys(attachmentSkipReasons).length > 0 || unique.length > 0)) {
+    console.info(
+      `[build/assets] site=${logSite} phase=summary source_urls=${unique.length} mirrored_to_blob=${assetMap.size} attachment_mirror_skips=${JSON.stringify(attachmentSkipReasons)}`
+    );
   }
 
   return assetMap;
@@ -1154,7 +1251,8 @@ async function runBuild(siteId: string): Promise<string> {
       siteData.blocks,
       siteData.channel.user.avatar_url,
       blobPath,
-      blobToken
+      blobToken,
+      site.subdomain
     );
 
     // Rewrite all Are.na CDN URLs to our proxied blob URLs

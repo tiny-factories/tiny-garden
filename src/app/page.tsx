@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { BetaCtaLink, BetaLandingShell } from "@/components/beta-landing-shell";
 import { LandingFeatures } from "@/components/landing-features";
 import {
   HowItWorksConnectIllustration,
@@ -11,7 +10,6 @@ import {
 import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
-import { BETA_SPOTS, getBetaSpotsRemaining, isBetaFull } from "@/lib/beta";
 import { getTemplateDisplayNames } from "@/lib/template-display-names";
 import { FeaturedSitesGallery } from "@/components/featured-sites-gallery";
 
@@ -86,10 +84,7 @@ export default async function Home() {
     getFeaturedSites(),
     getTemplateDisplayNames(),
   ]);
-  const betaFull = await isBetaFull();
-  const spotsRemaining = await getBetaSpotsRemaining();
   return (
-    <BetaLandingShell isBetaFull={betaFull}>
     <main className="min-h-screen">
       {/* Hero — global Nav + Footer come from root layout */}
       <section className="max-w-3xl mx-auto px-4 pt-16 pb-20 text-center">
@@ -104,12 +99,12 @@ export default async function Home() {
           setup. Your Are.na content, published in seconds.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
-          <BetaCtaLink
-            hrefWhenOpen="/login"
+          <Link
+            href="/login"
             className="px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors"
           >
-            {betaFull ? "Get notified" : "Get started free"}
-          </BetaCtaLink>
+            Get started free
+          </Link>
           <a
             href="#templates"
             className="px-4 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
@@ -407,25 +402,20 @@ export default async function Home() {
       {/* Pricing */}
       <section
         id="pricing"
-        className="max-w-3xl mx-auto px-4 py-16 border-t border-neutral-100 dark:border-neutral-800"
+        className="max-w-3xl mx-auto px-4 py-10 border-t border-neutral-100 dark:border-neutral-800"
       >
         <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-2">
           Pricing
         </h2>
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-10 max-w-xl leading-relaxed">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-6 max-w-xl leading-relaxed">
           <span className="text-neutral-600 dark:text-neutral-400">Individual</span> always includes a real{" "}
           <span className="text-neutral-600 dark:text-neutral-400">$0</span> tier — publish from Are.na for free; pay only
           if you want extras like daily rebuilds and more sites.{" "}
-          <span className="text-neutral-600 dark:text-neutral-400">Small studio</span> is for heavier use. The cards below
-          are a preview (checkout isn&apos;t live yet). Beta is limited to {BETA_SPOTS} spots; the
-          card above shows availability, or join the waitlist when we&apos;re full.
+          <span className="text-neutral-600 dark:text-neutral-400">Small studio</span> is for heavier use — collectives,
+          freelancers, and teams running several sites at once.
         </p>
 
-        <PayWhatYouCanPricing
-          spotsRemaining={spotsRemaining}
-          betaFull={betaFull}
-          betaSpots={BETA_SPOTS}
-        />
+        <PayWhatYouCanPricing />
       </section>
 
       <FeaturedSitesGallery
@@ -442,15 +432,14 @@ export default async function Home() {
         <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-2">
           You just haven&apos;t published it yet.
         </p>
-        <BetaCtaLink
-          hrefWhenOpen="/login"
+        <Link
+          href="/login"
           className="inline-block mt-6 px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors"
         >
-          {betaFull ? "Get notified" : "Get started free"}
-        </BetaCtaLink>
+          Get started free
+        </Link>
       </section>
 
     </main>
-    </BetaLandingShell>
   );
 }

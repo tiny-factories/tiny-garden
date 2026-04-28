@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/db";
 import { setSession } from "@/lib/session";
-import { BETA_SPOTS, getBetaAccessCount } from "@/lib/beta";
+import { discordTeamNotify } from "@/lib/discord-team-notify";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
@@ -51,18 +51,11 @@ export async function GET(req: NextRequest) {
 
   const arenaUser = await userRes.json();
 
-  // Check if this is a new user and if beta spots are available
   const existingUser = await prisma.user.findUnique({
     where: { arenaId: arenaUser.id },
+    select: { id: true },
   });
 
-  let grantFriend = false;
-  if (!existingUser) {
-    const betaAccessCount = await getBetaAccessCount();
-    grantFriend = betaAccessCount < BETA_SPOTS;
-  }
-
-  // Upsert user
   const user = await prisma.user.upsert({
     where: { arenaId: arenaUser.id },
     update: {
@@ -75,12 +68,24 @@ export async function GET(req: NextRequest) {
       arenaUsername: arenaUser.slug,
       arenaToken: access_token,
       avatarUrl: arenaUser.avatar_image?.display || null,
-      isFriend: grantFriend,
       subscription: {
         create: { plan: "free" },
       },
     },
   });
+
+  if (!existingUser) {
+    const origin = req.nextUrl.origin;
+    after(() =>
+      discordTeamNotify({
+        title: "New tiny.garden user",
+        description: `First login — Are.na **@${arenaUser.slug}**`,
+        url: `https://www.are.na/${arenaUser.slug}`,
+        color: 0x57f287,
+        fields: [{ name: "Open", value: `${origin}/sites`, inline: false }],
+      })
+    );
+  }
 
   await setSession({
     userId: user.id,

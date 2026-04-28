@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { BUTTONDOWN_WAITLIST_TAG } from "@/lib/buttondown-waitlist";
 
 export function Footer() {
   const pub = process.env.NEXT_PUBLIC_BUTTONDOWN_USER?.trim();
   const newsletterSlug = pub || "TinyFactories";
-  const newsletterHref = `https://buttondown.com/${encodeURIComponent(newsletterSlug)}?tag=${encodeURIComponent(BUTTONDOWN_WAITLIST_TAG)}`;
+  const newsletterHref = `https://buttondown.com/${encodeURIComponent(newsletterSlug)}`;
 
   return (
     <footer className="flex w-full items-center justify-between gap-2 px-4 py-4 border-t border-neutral-100 dark:border-neutral-800">

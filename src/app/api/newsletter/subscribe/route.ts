@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
-import { BUTTONDOWN_WAITLIST_TAG } from "@/lib/buttondown-waitlist";
+import { NEWSLETTER_TAG } from "@/lib/newsletter";
 
 /**
  * Proxies Buttondown embed-subscribe from the server so:
  * - No browser CORS issues / false "network error" on success
  * - 302 redirects from Buttondown are treated as success (fetch default makes res.ok false)
  * - Tag is always sent as application/x-www-form-urlencoded `tag`
+ *
+ * Used by the opt-in "Email updates" toggle on /account. Strictly opt-in — never
+ * called automatically during OAuth sign-up / sign-in.
  */
 export async function POST(req: Request) {
   const publication = process.env.NEXT_PUBLIC_BUTTONDOWN_USER?.trim();
   if (!publication) {
     return NextResponse.json(
-      { ok: false, error: "Waitlist isn’t configured (NEXT_PUBLIC_BUTTONDOWN_USER)." },
+      { ok: false, error: "Newsletter isn’t configured (NEXT_PUBLIC_BUTTONDOWN_USER)." },
       { status: 503 }
     );
   }
@@ -30,7 +33,7 @@ export async function POST(req: Request) {
 
   const upstream = new URLSearchParams();
   upstream.set("email", email);
-  upstream.append("tag", BUTTONDOWN_WAITLIST_TAG);
+  upstream.append("tag", NEWSLETTER_TAG);
 
   const url = `https://buttondown.com/api/emails/embed-subscribe/${encodeURIComponent(publication)}`;
 

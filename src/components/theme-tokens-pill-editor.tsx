@@ -51,8 +51,8 @@ function ColorValuePill({
   const pickerValue = expandThemeHex(text) ?? expandThemeHex(hex) ?? "#808080";
 
   return (
-    <span className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-1.5 py-0.5 align-middle shadow-sm dark:border-neutral-600 dark:bg-neutral-800/90">
-      <label className="relative size-5 shrink-0 cursor-pointer overflow-hidden rounded border border-neutral-200 dark:border-neutral-600">
+    <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-neutral-300 bg-white px-1 py-[1px] align-middle transition-shadow hover:shadow-sm dark:border-neutral-600 dark:bg-neutral-800/90">
+      <label className="relative size-4 shrink-0 cursor-pointer overflow-hidden rounded-full border border-neutral-200 dark:border-neutral-600">
         <input
           type="color"
           value={pickerValue}
@@ -84,7 +84,7 @@ function ColorValuePill({
           }
         }}
         spellCheck={false}
-        className="w-[6.25rem] shrink-0 border-0 bg-transparent p-0 font-mono text-[12px] text-neutral-800 outline-none dark:text-neutral-200"
+        className="w-[5.5rem] shrink-0 border-0 bg-transparent p-0 font-mono text-[11px] text-neutral-800 outline-none dark:text-neutral-200"
         aria-label={`${ariaLabel}, hex value`}
       />
     </span>

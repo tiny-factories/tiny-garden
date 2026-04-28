@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { TerminalSquare, Search, RefreshCw, Download } from "lucide-react";
-import { BetaCtaLink, BetaLandingShell } from "@/components/beta-landing-shell";
 import { CliTerminalDemo } from "@/components/cli-terminal-demo";
-import { isBetaFull } from "@/lib/beta";
 
 function CliFeature({
   icon: Icon,
@@ -30,11 +28,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CliPage() {
-  const betaFull = await isBetaFull();
-
   return (
-    <BetaLandingShell isBetaFull={betaFull}>
-      <main className="min-h-screen">
+    <main className="min-h-screen">
         <section className="max-w-3xl mx-auto px-4 pt-16 pb-20 text-center">
           <h1 className="text-3xl font-medium tracking-tight text-neutral-950 dark:text-neutral-50">
             tiny.garden CLI
@@ -47,12 +42,12 @@ export default async function CliPage() {
             line.
           </p>
           <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
-            <BetaCtaLink
-              hrefWhenOpen="/login"
+            <Link
+              href="/login"
               className="px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors"
             >
               Generate API token
-            </BetaCtaLink>
+            </Link>
             <a
               href="#terminal-demo"
               className="px-4 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
@@ -131,12 +126,12 @@ npm --prefix cli run start -- site backup my-subdomain --out ~/Sites/my-backup`}
             Same tiny.garden flow, optimized for CLI-first customers.
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <BetaCtaLink
-              hrefWhenOpen="/login"
+            <Link
+              href="/login"
               className="inline-block px-4 py-2 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors"
             >
               Create token
-            </BetaCtaLink>
+            </Link>
             <Link
               href="/"
               className="inline-block px-4 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
@@ -146,6 +141,5 @@ npm --prefix cli run start -- site backup my-subdomain --out ~/Sites/my-backup`}
           </div>
         </section>
       </main>
-    </BetaLandingShell>
   );
 }

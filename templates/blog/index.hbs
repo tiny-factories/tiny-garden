@@ -12,11 +12,7 @@
   <!-- Sticky nav bar — hidden by default, fades in on scroll -->
   <nav class="sv-blog-nav" id="sv-blog-nav">
     <div class="sv-blog-nav-inner">
-      <a href="/" class="sv-blog-nav-logo" aria-label="Home">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="20" height="20" rx="4" fill="currentColor"/>
-        </svg>
-      </a>
+      <a href="/" class="sv-blog-nav-logo" aria-label="Home"></a>
       <span class="sv-blog-nav-title">{{channel.title}}</span>
       <div class="sv-blog-nav-links">
         <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
@@ -24,20 +20,16 @@
     </div>
   </nav>
 
-  <!-- Hero intro -->
+  <!-- Masthead -->
   <header class="sv-blog-intro" id="sv-blog-intro">
     <div class="sv-blog-intro-inner">
-      <div class="sv-blog-intro-logo">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="48" height="48" rx="10" fill="currentColor"/>
-        </svg>
-      </div>
+      <span class="sv-blog-intro-logo" aria-hidden="true"></span>
       <h1 class="sv-blog-intro-title">{{channel.title}}</h1>
       {{#if channel.description}}
         <p class="sv-blog-intro-description">{{channel.description}}</p>
       {{/if}}
       <p class="sv-blog-intro-meta">
-        {{channel.length}} entries &middot; by <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+        {{channel.length}} Entries &nbsp;/&nbsp; <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
       </p>
     </div>
   </header>
@@ -53,7 +45,6 @@
   <footer class="sv-blog-footer">
     <div class="sv-blog-footer-items">
       <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
-      <span class="sv-blog-footer-sep">&middot;</span>
       <a href="https://tiny.garden">Built with tiny.garden</a>
     </div>
   </footer>

@@ -102,6 +102,56 @@ function mergeLayers(stem: Grid, foliage: Grid, bloom: Grid): Grid {
   return out;
 }
 
+/**
+ * Tight square viewBox around the plant pixels so rendered output reads as
+ * chunky pixel art (each grid pixel takes up more of the favicon/icon area)
+ * instead of floating small inside the 16×16 canvas.
+ *
+ * Padding keeps 1 grid unit of breathing room. A minimum side prevents tiny
+ * plants (short stems, small blooms) from zooming absurdly large.
+ */
+const VIEWBOX_PADDING = 1;
+const VIEWBOX_MIN_SIDE = 9;
+
+function computeBBox(
+  grid: Grid
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  let minX = SIZE;
+  let minY = SIZE;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      if (grid[y][x]) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return null;
+  return { minX, minY, maxX, maxY };
+}
+
+function tightSquareViewBox(grid: Grid): string {
+  const bb = computeBBox(grid);
+  if (!bb) return `0 0 ${SIZE} ${SIZE}`;
+  const contentW = bb.maxX - bb.minX + 1;
+  const contentH = bb.maxY - bb.minY + 1;
+  const side = Math.max(
+    VIEWBOX_MIN_SIDE,
+    Math.max(contentW, contentH) + VIEWBOX_PADDING * 2
+  );
+  // Center on the content bbox midpoint (rects are at integer coords; crispEdges
+  // keeps them sharp even with fractional viewBox origins).
+  const cx = (bb.minX + bb.maxX + 1) / 2;
+  const cy = (bb.minY + bb.maxY + 1) / 2;
+  const vx = cx - side / 2;
+  const vy = cy - side / 2;
+  return `${vx} ${vy} ${side} ${side}`;
+}
+
 function generatePlantLayers(seed: number): PlantLayerModel {
   const rand = mulberry32(seed);
   const stem: Grid = emptyGrid();
@@ -226,7 +276,8 @@ function generatePlantLayers(seed: number): PlantLayerModel {
 export function generatePlantSVG(seed: number): string {
   const layers = generatePlantLayers(seed);
   const grid = mergeLayers(layers.stem, layers.foliage, layers.bloom);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" shape-rendering="crispEdges">${gridToRects(grid)}</svg>`;
+  const viewBox = tightSquareViewBox(grid);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" shape-rendering="crispEdges">${gridToRects(grid)}</svg>`;
 }
 
 /**
@@ -235,6 +286,8 @@ export function generatePlantSVG(seed: number): string {
  */
 export function generatePlantSVGLayered(seed: number): string {
   const L = generatePlantLayers(seed);
+  const merged = mergeLayers(L.stem, L.foliage, L.bloom);
+  const viewBox = tightSquareViewBox(merged);
   const stemR = gridToRects(L.stem);
   const foliageR = gridToRects(L.foliage);
   const bloomR = gridToRects(L.bloom);
@@ -253,7 +306,7 @@ export function generatePlantSVGLayered(seed: number): string {
     ? `<g class="plant-foliage" style="${foliageStyle}">${foliageR}</g>`
     : `<g class="plant-foliage">${foliageR}</g>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" shape-rendering="crispEdges"><g class="plant-stem" style="transform-origin:${so.x}px ${so.y}px">${stemR}</g>${foliageGroup}<g class="plant-bloom" style="transform-origin:${bo.x}px ${bo.y}px">${bloomR}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" shape-rendering="crispEdges"><g class="plant-stem" style="transform-origin:${so.x}px ${so.y}px">${stemR}</g>${foliageGroup}<g class="plant-bloom" style="transform-origin:${bo.x}px ${bo.y}px">${bloomR}</g></svg>`;
 }
 
 /** Generate as a data URI for use in <link rel="icon"> or <img> */

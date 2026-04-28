@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { isBetaFull } from "@/lib/beta";
 import { getRequestAuth } from "@/lib/request-auth";
 
 export async function GET(req: NextRequest) {
@@ -17,9 +16,6 @@ export async function GET(req: NextRequest) {
   });
 
   const plan = user.subscription?.plan || "free";
-  const betaFull = await isBetaFull();
-  const betaGated =
-    betaFull && !user.isAdmin && !user.isFriend && plan === "free";
 
   return NextResponse.json({
     id: user.id,
@@ -31,7 +27,5 @@ export async function GET(req: NextRequest) {
     subscriptionStatus: user.subscription?.status || "active",
     siteCount: user.sites.length,
     createdAt: user.createdAt,
-    betaFull,
-    betaGated,
   });
 }
