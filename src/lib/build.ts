@@ -1047,6 +1047,7 @@ async function runBuild(siteId: string): Promise<string> {
   const blocks = await client.getAllChannelBlocks(site.channelSlug);
   const channelCss = extractChannelStylesCss(blocks);
   const effectiveCustomCss = resolveSiteCustomCss(site.customCss, channelCss);
+  const templateCustomCss = escapeStyleTagContent(effectiveCustomCss);
 
   const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
@@ -1062,7 +1063,7 @@ async function runBuild(siteId: string): Promise<string> {
       subdomain: site.subdomain,
       url: `${protocol}://${site.subdomain}.${siteDomain}`,
       template: site.template,
-      custom_css: effectiveCustomCss,
+      custom_css: templateCustomCss,
       built_at: new Date().toISOString(),
     },
   };

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import Handlebars from "handlebars";
 
 import {
   DEFAULT_THEME_FONTS,
@@ -25,6 +26,21 @@ describe("escapeStyleTagContent", () => {
     );
     assert.equal(/<\/style/i.test(escaped), false);
     assert.match(escaped, /<script>alert\(1\)<\/script>/);
+  });
+
+  it("keeps custom CSS safe when rendered through templates' raw style slots", () => {
+    const template = Handlebars.compile("<style>{{{site.custom_css}}}</style>");
+    const payload = 'body::before { content: "</style><script>alert(1)</script>"; }';
+
+    const html = template({
+      site: { custom_css: escapeStyleTagContent(payload) },
+    });
+
+    assert.equal(
+      html,
+      '<style>body::before { content: "<\\/style><script>alert(1)</script>"; }</style>'
+    );
+    assert.equal(html.match(/<\/style/gi)?.length, 1);
   });
 });
 
