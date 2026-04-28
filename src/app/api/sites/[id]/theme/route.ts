@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
+import {
+  normalizeThemeColorsInput,
+  normalizeThemeFontsInput,
+} from "@/lib/theme-css-tokens";
 
 export async function GET(
   req: NextRequest,
@@ -63,12 +67,20 @@ export async function PUT(
   }
 
   const { colors, fonts } = await req.json();
+  const normalizedColors = colors ? normalizeThemeColorsInput(colors) : null;
+  const normalizedFonts = fonts ? normalizeThemeFontsInput(fonts) : null;
+  if ((colors && !normalizedColors) || (fonts && !normalizedFonts)) {
+    return NextResponse.json(
+      { error: "Invalid theme payload" },
+      { status: 400 }
+    );
+  }
 
   await prisma.site.update({
     where: { id },
     data: {
-      themeColors: colors ? JSON.stringify(colors) : null,
-      themeFonts: fonts ? JSON.stringify(fonts) : null,
+      themeColors: normalizedColors ? JSON.stringify(normalizedColors) : null,
+      themeFonts: normalizedFonts ? JSON.stringify(normalizedFonts) : null,
     },
   });
 

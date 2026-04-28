@@ -19,6 +19,7 @@ import {
   enrichFeatureRequestSiteData,
   registerFeatureRequestRowHelpers,
 } from "./feature-request-tags";
+import { escapeStyleTagContent } from "./theme-css-tokens";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -726,7 +727,7 @@ function applyStaticPageFinishes(
   if (opts.styleContent) {
     out = out.replace(
       /<link[^>]*rel=["']stylesheet["'][^>]*href=["']style\.css["'][^>]*\/?>/i,
-      `<style>${opts.styleContent}</style>`
+      `<style>${escapeStyleTagContent(opts.styleContent)}</style>`
     );
   }
   out = out.replace("</head>", `<link rel="icon" type="image/svg+xml" href="${opts.faviconURI}">\n</head>`);
@@ -736,12 +737,12 @@ function applyStaticPageFinishes(
     out += opts.gardenFooter;
   }
   const themeInjection =
-    opts.themeFontLinks + (opts.themeOverrideCss ? `<style>${opts.themeOverrideCss}</style>\n` : "");
+    opts.themeFontLinks + (opts.themeOverrideCss ? `<style>${escapeStyleTagContent(opts.themeOverrideCss)}</style>\n` : "");
   if (themeInjection) {
     out = out.replace("</head>", `${themeInjection}</head>`);
   }
   if (opts.effectiveCustomCss) {
-    const siteCssInjection = `<style id="tiny-garden-site-css">\n${opts.effectiveCustomCss}\n</style>\n`;
+    const siteCssInjection = `<style id="tiny-garden-site-css">\n${escapeStyleTagContent(opts.effectiveCustomCss)}\n</style>\n`;
     if (out.includes("</head>")) {
       out = out.replace("</head>", `${siteCssInjection}</head>`);
     } else {

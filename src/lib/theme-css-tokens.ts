@@ -24,6 +24,10 @@ export const DEFAULT_THEME_FONTS: ThemeFonts = {
   body: "system",
 };
 
+export function escapeStyleTagContent(css: string): string {
+  return css.replace(/<\/style/gi, "<\\/style");
+}
+
 export function expandThemeHex(raw: string): string | null {
   let v = raw.trim();
   if (!v) return null;
@@ -63,11 +67,33 @@ export function normalizeFontToken(raw: string): string | null {
     const name = t.slice(3).trim();
     if (!name) return null;
     const exact = GOOGLE_FONTS.find((g) => g.toLowerCase() === name.toLowerCase());
-    return `gf:${exact ?? name}`;
+    return exact ? `gf:${exact}` : null;
   }
   const exactGoogle = GOOGLE_FONTS.find((g) => g.toLowerCase() === lower);
   if (exactGoogle) return `gf:${exactGoogle}`;
   return null;
+}
+
+export function normalizeThemeColorsInput(input: unknown): ThemeColors | null {
+  if (!input || typeof input !== "object") return null;
+  const o = input as Record<string, unknown>;
+  const background =
+    typeof o.background === "string" ? expandThemeHex(o.background) : null;
+  const text = typeof o.text === "string" ? expandThemeHex(o.text) : null;
+  const accent = typeof o.accent === "string" ? expandThemeHex(o.accent) : null;
+  const border = typeof o.border === "string" ? expandThemeHex(o.border) : null;
+  if (!background || !text || !accent || !border) return null;
+  return { background, text, accent, border };
+}
+
+export function normalizeThemeFontsInput(input: unknown): ThemeFonts | null {
+  if (!input || typeof input !== "object") return null;
+  const o = input as Record<string, unknown>;
+  const heading =
+    typeof o.heading === "string" ? normalizeFontToken(o.heading) : null;
+  const body = typeof o.body === "string" ? normalizeFontToken(o.body) : null;
+  if (!heading || !body) return null;
+  return { heading, body };
 }
 
 export function formatThemeCss(c: ThemeColors, f: ThemeFonts): string {

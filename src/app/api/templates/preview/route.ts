@@ -18,6 +18,12 @@ import {
   resolveSiteCustomCss,
 } from "@/lib/channel-styles";
 import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
+import {
+  escapeStyleTagContent,
+  expandThemeHex,
+  normalizeFontToken,
+} from "@/lib/theme-css-tokens";
+import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
 import { getArenaTokenForTemplateExamples } from "@/lib/template-example-token";
@@ -34,11 +40,6 @@ function escapeHtmlAttr(value: string): string {
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
     .replace(/</g, "&lt;");
-}
-
-/** Avoid breaking out of &lt;style&gt; when previewing unsaved CSS. */
-function stripUnsafeForStyleInjection(css: string): string {
-  return css.replace(/</g, "");
 }
 
 // Register helpers (keep in sync with src/lib/build.ts)
@@ -97,6 +98,13 @@ async function buildPreviewResponse(
     previewCustomCss,
   }: TemplatePreviewInput
 ): Promise<NextResponse> {
+  if (!(await isKnownTemplateSlug(template))) {
+    return NextResponse.json(
+      { error: `Template "${template}" not found` },
+      { status: 404 }
+    );
+  }
+
   const templateDir = path.join(process.cwd(), "templates", template);
 
   try {
@@ -117,37 +125,49 @@ async function buildPreviewResponse(
 
     const inlinedSource = templateSource.replace(
       /<link\s+rel="stylesheet"\s+href="style\.css"\s*\/?>/i,
-      `<style>${styleContent}</style>`
+      `<style>${escapeStyleTagContent(styleContent)}</style>`
     );
 
-    const hasTheme = bg || text || accent || border || headingFont || bodyFont;
+    const safeBg = bg ? expandThemeHex(bg) : null;
+    const safeText = text ? expandThemeHex(text) : null;
+    const safeAccent = accent ? expandThemeHex(accent) : null;
+    const safeBorder = border ? expandThemeHex(border) : null;
+    const safeHeadingFont = headingFont ? normalizeFontToken(headingFont) : null;
+    const safeBodyFont = bodyFont ? normalizeFontToken(bodyFont) : null;
+    const hasTheme =
+      safeBg ||
+      safeText ||
+      safeAccent ||
+      safeBorder ||
+      safeHeadingFont ||
+      safeBodyFont;
     let themeCSS = "";
     let fontLinks = "";
 
     if (hasTheme) {
-      const fontValues = [headingFont, bodyFont].filter(Boolean) as string[];
+      const fontValues = [safeHeadingFont, safeBodyFont].filter(Boolean) as string[];
       fontLinks = googleFontsLinkTag(fontValues);
 
-      const headingCSS = headingFont ? fontFamilyCSS(headingFont) : null;
-      const bodyCSS = bodyFont ? fontFamilyCSS(bodyFont) : null;
+      const headingCSS = safeHeadingFont ? fontFamilyCSS(safeHeadingFont) : null;
+      const bodyCSS = safeBodyFont ? fontFamilyCSS(safeBodyFont) : null;
 
       themeCSS = `<style>
         :root {
-          ${bg ? `--color-bg: ${bg}; --color-background: ${bg};` : ""}
-          ${text ? `--color-text: ${text};` : ""}
-          ${accent ? `--color-accent: ${accent};` : ""}
-          ${border ? `--color-border: ${border};` : ""}
+          ${safeBg ? `--color-bg: ${safeBg}; --color-background: ${safeBg};` : ""}
+          ${safeText ? `--color-text: ${safeText};` : ""}
+          ${safeAccent ? `--color-accent: ${safeAccent};` : ""}
+          ${safeBorder ? `--color-border: ${safeBorder};` : ""}
           ${headingCSS ? `--tg-font-heading: ${headingCSS};` : ""}
           ${bodyCSS ? `--tg-font-body: ${bodyCSS};` : ""}
           ${headingCSS ? `--font-heading: ${headingCSS};` : ""}
           ${bodyCSS ? `--font-body: ${bodyCSS};` : ""}
         }
-        ${bg ? `body { background-color: ${bg} !important; }` : ""}
-        ${text ? `body { color: ${text} !important; }` : ""}
+        ${safeBg ? `body { background-color: ${safeBg} !important; }` : ""}
+        ${safeText ? `body { color: ${safeText} !important; }` : ""}
         ${headingCSS ? `h1, h2, h3, h4, h5, h6 { font-family: ${headingCSS} !important; }` : ""}
         ${bodyCSS ? `body, p, span, li, td { font-family: ${bodyCSS} !important; }` : ""}
-        ${accent ? `a { color: ${accent} !important; }` : ""}
-        ${border ? `hr, .border, [class*="border"] { border-color: ${border} !important; }` : ""}
+        ${safeAccent ? `a { color: ${safeAccent} !important; }` : ""}
+        ${safeBorder ? `hr, .border, [class*="border"] { border-color: ${safeBorder} !important; }` : ""}
       </style>`;
     }
 
@@ -187,7 +207,7 @@ async function buildPreviewResponse(
               channelCss
             );
             if (effectiveCss) {
-              ownerCustomCss = `<style id="tiny-garden-site-css">\n${effectiveCss}\n</style>`;
+              ownerCustomCss = `<style id="tiny-garden-site-css">\n${escapeStyleTagContent(effectiveCss)}\n</style>`;
             }
           } catch {
             /* mock channel/blocks; preview still works */
@@ -233,7 +253,7 @@ async function buildPreviewResponse(
           const channelCss = extractChannelStylesCss(arenaBlocks);
           const effectiveCss = resolveSiteCustomCss(null, channelCss);
           if (effectiveCss) {
-            ownerCustomCss = `<style id="tiny-garden-site-css">\n${effectiveCss}\n</style>`;
+            ownerCustomCss = `<style id="tiny-garden-site-css">\n${escapeStyleTagContent(effectiveCss)}\n</style>`;
           }
         } catch {
           /* keep mock */
@@ -247,7 +267,7 @@ async function buildPreviewResponse(
         previewCustomCss.length > MAX_PREVIEW_CUSTOM_CSS
           ? previewCustomCss.slice(0, MAX_PREVIEW_CUSTOM_CSS)
           : previewCustomCss;
-      const safe = stripUnsafeForStyleInjection(raw);
+      const safe = escapeStyleTagContent(raw);
       previewInlineCss = `<style id="tiny-garden-preview-custom">\n${safe}\n</style>`;
     }
 
