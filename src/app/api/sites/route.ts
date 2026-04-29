@@ -6,6 +6,7 @@ import { isBetaFull } from "@/lib/beta";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { getRequestAuth } from "@/lib/request-auth";
 import { themeToDbFields } from "@/lib/ai-site-theme";
+import { normalizeSiteSubdomain } from "@/lib/subdomain";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
@@ -32,9 +33,16 @@ export async function POST(req: NextRequest) {
 
   const { channelSlug, channelTitle, template, subdomain, initialTheme } =
     await req.json();
+  const normalizedSubdomain = normalizeSiteSubdomain(subdomain);
 
   if (!channelSlug || !template || !subdomain) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+  if (!normalizedSubdomain) {
+    return NextResponse.json(
+      { error: "Subdomain must be a DNS-safe name using letters, numbers, and hyphens." },
+      { status: 400 }
+    );
   }
 
   if (!(await isKnownTemplateSlug(template))) {
@@ -76,7 +84,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Check subdomain availability
-  const existing = await prisma.site.findUnique({ where: { subdomain } });
+  const existing = await prisma.site.findUnique({
+    where: { subdomain: normalizedSubdomain },
+  });
   if (existing) {
     return NextResponse.json({ error: "Subdomain taken" }, { status: 409 });
   }
@@ -105,11 +115,11 @@ export async function POST(req: NextRequest) {
 
   const site = await prisma.site.create({
     data: {
-      subdomain,
+      subdomain: normalizedSubdomain,
       channelSlug,
       channelTitle: channelTitle || channelSlug,
       template,
-      iconSeed: seedFromSubdomain(subdomain),
+      iconSeed: seedFromSubdomain(normalizedSubdomain),
       userId: auth.userId,
       ...(themePayload && {
         themeColors: themePayload.themeColors,

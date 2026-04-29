@@ -20,6 +20,7 @@ import {
   registerFeatureRequestRowHelpers,
 } from "./feature-request-tags";
 import { escapeStyleTagContent } from "./theme-css-tokens";
+import { normalizeSiteSubdomain } from "./subdomain";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -1041,6 +1042,10 @@ async function runBuild(siteId: string): Promise<string> {
     where: { id: siteId },
     include: { user: true },
   });
+  const subdomain = normalizeSiteSubdomain(site.subdomain);
+  if (!subdomain) {
+    throw new Error(`Invalid site subdomain "${site.subdomain}".`);
+  }
 
   const client = new ArenaClient(site.user.arenaToken);
   const channel = await client.getChannel(site.channelSlug);
@@ -1060,8 +1065,8 @@ async function runBuild(siteId: string): Promise<string> {
     channel: arenaChannelToSiteDataChannel(channel),
     blocks: channelBlocksForTemplate(blocks),
     site: {
-      subdomain: site.subdomain,
-      url: `${protocol}://${site.subdomain}.${siteDomain}`,
+      subdomain,
+      url: `${protocol}://${subdomain}.${siteDomain}`,
       template: site.template,
       custom_css: templateCustomCss,
       built_at: new Date().toISOString(),
@@ -1122,7 +1127,7 @@ async function runBuild(siteId: string): Promise<string> {
     } catch {}
   }
 
-  const iconSeed = site.iconSeed ?? seedFromSubdomain(site.subdomain);
+  const iconSeed = site.iconSeed ?? seedFromSubdomain(subdomain);
   const faviconURI = generatePlantDataURI(iconSeed);
   const plantSVGInline = generatePlantSVG(iconSeed).replace(/"/g, "'");
   const gardenFooter = `<footer style="margin-top:3rem;padding:1rem 0;border-top:1px solid #e5e5e5;text-align:center;font-size:11px;color:#999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
@@ -1143,7 +1148,7 @@ async function runBuild(siteId: string): Promise<string> {
     effectiveCustomCss,
   });
 
-  const blobSitePrefix = `users/${site.user.arenaUsername}/sites/${site.subdomain}`;
+  const blobSitePrefix = `users/${site.user.arenaUsername}/sites/${subdomain}`;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tiny.garden";
 
   // Upload to Vercel Blob if token available, otherwise write to filesystem
@@ -1151,7 +1156,7 @@ async function runBuild(siteId: string): Promise<string> {
 
   if (blobToken) {
     // Download all assets and upload to blob storage
-    const blobPath = `users/${site.user.arenaUsername}/sites/${site.subdomain}/assets`;
+    const blobPath = `users/${site.user.arenaUsername}/sites/${subdomain}/assets`;
     const assetMap = await processAssets(
       siteData.blocks,
       siteData.channel.user.avatar_url,
@@ -1219,7 +1224,7 @@ async function runBuild(siteId: string): Promise<string> {
   } else {
     // Use /tmp on Vercel (read-only fs), or generated/ locally
     const base = process.env.VERCEL ? "/tmp" : path.join(process.cwd(), "generated");
-    const outputDir = path.join(base, site.subdomain);
+    const outputDir = path.join(base, subdomain);
     await fs.mkdir(outputDir, { recursive: true });
     await fs.writeFile(path.join(outputDir, "index.html"), html);
 
