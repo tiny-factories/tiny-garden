@@ -1,16 +1,27 @@
-# Agent notes (Cursor / coding assistants)
+# AGENTS.md
 
-Short pointers for this repo. For **template authoring, theming, and styles.css behavior**, read **`docs/templates-theming.md`** first—especially before adding templates or changing dashboard theme/CSS.
+## Cursor Cloud specific instructions
 
-## Essentials
+### Services
 
-- **Stack:** Next.js 15 (App Router), Prisma, Handlebars static sites under `templates/{slug}/`. Product overview: `CLAUDE.md`.
-- **New template:** folder + `meta.json`; data shape `SiteData` in `src/lib/build.ts`. Full checklist: `docs/templates-theming.md`.
-- **Theme vs custom CSS:** Saved site CSS and channel `styles.css` block precedence, plus `--color-*` / `--tg-font-*` injection: `docs/templates-theming.md`.
-- **User “skills”** for Cursor live in the user’s skills directory, not in this repo—use **`docs/templates-theming.md`** here for template conventions instead of a separate `skills.md`.
+| Service | How to start | Notes |
+|---------|-------------|-------|
+| **PostgreSQL** | `sudo pg_ctlcluster 16 main start` | Must be running before the dev server. Local DB: `postgresql://tinygarden:tinygarden@localhost:5432/tinygarden` |
+| **Next.js dev server** | `npx next dev --port 3000` | Use `npx next dev` instead of `npm run dev` to skip the `predev` script which calls an external API. The `--experimental-https` flag in `npm run dev` requires `mkcert`; omit it for plain HTTP. |
 
-## When touching templates or theme
+### Quick reference
 
-1. Confirm build injection in `src/lib/build.ts` matches what `style.css` expects.
-2. If the template preview should match production, align `:root` tokens in `src/app/api/templates/preview/route.ts`.
-3. If the styles.css editor needs a template-specific default, add a branch to `formatStylesCssPlaceholder()` in `src/lib/theme-css-tokens.ts` (do **not** duplicate `formatThemeCss` — theme.css owns colors/fonts).
+- **Lint:** `npm run lint`
+- **Build:** `npm run build`
+- **Prisma push:** `DATABASE_URL="postgresql://tinygarden:tinygarden@localhost:5432/tinygarden" npx prisma db push`
+- **Prisma studio:** `DATABASE_URL="postgresql://tinygarden:tinygarden@localhost:5432/tinygarden" npx prisma studio`
+
+### Gotchas
+
+- The `npm run dev` script includes a `predev` hook that calls `scripts/sync-feature-requests.mjs` (fetches from an external Are.na channel). It fails silently but adds startup latency. Use `npx next dev --port 3000` directly to skip it.
+- The Prisma schema uses PostgreSQL (not SQLite). `CLAUDE.md` mentions SQLite commands for `prisma db push` / `prisma studio` with `DATABASE_URL="file:./dev.db"` — those are outdated. Use the PostgreSQL URL above.
+- Are.na OAuth credentials (`ARENA_CLIENT_ID`, `ARENA_CLIENT_SECRET`) are required to test login/dashboard flows. Without them the app boots and serves public pages (homepage, `/templates`, `/docs`, `/login`) but OAuth redirects will fail.
+- Stripe keys are optional; billing endpoints return 503 gracefully when unconfigured.
+- `BLOB_READ_WRITE_TOKEN` is optional; without it, built sites fall back to local `generated/` directory.
+- `.env.local` must include `DATABASE_URL` pointing to the running PostgreSQL instance.
+
