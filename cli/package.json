@@ -1,0 +1,47 @@
+{
+  "name": "@tiny-garden/cli",
+  "version": "0.1.0",
+  "description": "tiny.garden command line client",
+  "private": false,
+  "license": "UNLICENSED",
+  "type": "module",
+  "keywords": [
+    "tiny.garden",
+    "arena",
+    "cli",
+    "site-generator"
+  ],
+  "homepage": "https://tiny.garden/cli",
+  "bugs": {
+    "url": "https://github.com/tiny-factories/tiny-garden/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiny-factories/tiny-garden.git",
+    "directory": "cli"
+  },
+  "files": [
+    "dist",
+    "tg.mjs",
+    "README.md"
+  ],
+  "bin": {
+    "tg": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "prepack": "npm run build",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.8",
+    "typescript": "^5.9.3"
+  }
+}

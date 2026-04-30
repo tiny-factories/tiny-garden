@@ -1,0 +1,27 @@
+{{#if (eq type "image")}}
+  <figure class="lib-card lib-card--image">
+    <img src="{{#if image.square}}{{image.square}}{{else}}{{image.display}}{{/if}}" alt="{{title}}" loading="lazy">
+    {{#if title}}<figcaption>{{title}}</figcaption>{{/if}}
+  </figure>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <section class="lib-card lib-card--text">
+    {{#if title}}<h2>{{title}}</h2>{{/if}}
+    <div class="lib-prose">{{{content}}}</div>
+  </section>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <section class="lib-card lib-card--media">
+    {{#if title}}<h2>{{title}}</h2>{{/if}}
+    <div class="lib-embed">{{{embed.html}}}</div>
+  </section>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <a class="lib-link lib-link--file" href="{{attachment.url}}" download>
+    <span>{{attachment.display_name}}</span>
+    {{#if attachment.type_label}}<small>{{attachment.type_label}}</small>{{/if}}
+  </a>
+{{/if}}

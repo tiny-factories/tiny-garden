@@ -23,11 +23,13 @@
   {{/if}}
 
   {{#if (eq type "attachment")}}
-    {{#if image.display}}
-      <img class="sv-feed-item-img" src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+    {{#if attachment.preview_url}}
+      {{#if attachment.is_image}}
+        <img class="sv-feed-item-img" src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{/if}}
     {{/if}}
     <a href="{{attachment.url}}" class="sv-feed-item-attachment" download>
-      <span class="sv-feed-item-attachment-name">{{attachment.file_name}}</span>
+      <span class="sv-feed-item-attachment-name">{{attachment.display_name}}</span>
     </a>
   {{/if}}
 

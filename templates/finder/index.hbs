@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="finder-body">
+  <div class="browser-container">
+    <header class="toolbar">
+      <div class="nav-controls">
+        <div class="window-dots" aria-hidden="true">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <h1 class="location-title">{{channel.title}}</h1>
+      </div>
+
+      <div class="toolbar-center">
+        <label class="finder-search-label">
+          <span class="visually-hidden">Search</span>
+          <input id="finder-search" class="finder-toolbar-search" type="search" placeholder="Search…" autocomplete="off" enterkeyhint="search">
+        </label>
+      </div>
+
+      <div class="view-switcher" role="tablist" aria-label="View mode">
+        <button type="button" class="view-btn active" data-finder-view="icons" role="tab" aria-selected="true">Icons</button>
+        <button type="button" class="view-btn" data-finder-view="list" role="tab" aria-selected="false">List</button>
+        <button type="button" class="view-btn" data-finder-view="columns" role="tab" aria-selected="false">Columns</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-group-title">Favorites</div>
+          <div class="sidebar-item active">{{channel.title}}</div>
+          {{#if channel.description}}
+          <div class="sidebar-item sidebar-item--muted">{{channel.description}}</div>
+          {{/if}}
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-group-title">Locations</div>
+          <div class="sidebar-item sidebar-item--muted">Are.na channel</div>
+        </div>
+      </aside>
+
+      <div class="finder-workspace finder-view--icons" id="finder-workspace">
+        <div class="finder-top-region" id="finder-top-region">
+          <div class="finder-pane finder-pane-icons" id="finder-pane-icons">
+            <div class="icon-grid">
+              {{#each blocks}}
+              <button type="button" class="file-card finder-selectable{{#if @first}} active{{/if}}" data-block-index="{{@index}}" data-target="doc-{{@index}}" data-open-url="{{finderOpenUrl}}" data-title="{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}">
+                <div class="finder-file-icon finder-file-icon--{{type}}{{#if (finderThumbUrl)}} finder-file-icon--thumb{{/if}}{{#if (finderThumbContain)}} finder-file-icon--thumb-contain{{/if}}">
+                  {{#if (finderThumbUrl)}}
+                  <img class="finder-file-thumb{{#if (finderThumbContain)}} finder-file-thumb--contain{{/if}}" src="{{finderThumbUrl}}" alt="" loading="lazy" decoding="async">
+                  {{/if}}
+                </div>
+                <div class="file-label">{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}</div>
+                <div class="file-meta">{{formatDate created_at}}</div>
+              </button>
+              {{/each}}
+            </div>
+          </div>
+
+          <div class="finder-pane finder-pane-list" id="finder-pane-list" hidden>
+            <ul class="finder-list-rows">
+              {{#each blocks}}
+              <li>
+                <button type="button" class="finder-row finder-selectable{{#if @first}} active{{/if}}" data-block-index="{{@index}}" data-target="doc-{{@index}}" data-open-url="{{finderOpenUrl}}" data-title="{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}">
+                  <span class="finder-row-icon finder-file-icon finder-file-icon--sm finder-file-icon--{{type}}{{#if (finderThumbUrl)}} finder-file-icon--thumb{{/if}}{{#if (finderThumbContain)}} finder-file-icon--thumb-contain{{/if}}">
+                    {{#if (finderThumbUrl)}}
+                    <img class="finder-file-thumb{{#if (finderThumbContain)}} finder-file-thumb--contain{{/if}}" src="{{finderThumbUrl}}" alt="" loading="lazy" decoding="async">
+                    {{/if}}
+                  </span>
+                  <span class="finder-row-title">{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}</span>
+                  <span class="finder-row-kind">{{#if (eq type "attachment")}}{{attachment.type_label}}{{else}}{{type}}{{/if}}</span>
+                  <span class="finder-row-meta">{{formatDate created_at}}</span>
+                </button>
+              </li>
+              {{/each}}
+            </ul>
+          </div>
+
+          <div class="finder-pane finder-pane-columns" id="finder-pane-columns" hidden>
+            <ul class="finder-col-list" id="finder-col-list">
+              {{#each blocks}}
+              <li>
+                <button type="button" class="finder-col-item finder-selectable{{#if @first}} active{{/if}}" data-block-index="{{@index}}" data-target="doc-{{@index}}" data-open-url="{{finderOpenUrl}}" data-title="{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}">
+                  {{#if (finderThumbUrl)}}
+                  <span class="finder-col-thumb-wrap{{#if (finderThumbContain)}} finder-col-thumb-wrap--contain{{/if}}"><img class="finder-col-thumb{{#if (finderThumbContain)}} finder-col-thumb--contain{{/if}}" src="{{finderThumbUrl}}" alt="" loading="lazy" decoding="async"></span>
+                  {{/if}}
+                  <span class="finder-col-label">{{#if title}}{{title}}{{else}}{{#if (eq type "attachment")}}{{attachment.display_name}}{{else}}{{type}}{{/if}}{{/if}}</span>
+                </button>
+              </li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+
+        <section class="finder-preview" id="finder-preview" aria-label="Preview" hidden aria-hidden="true">
+          {{#each blocks}}
+          <article class="finder-doc finder-doc--{{type}}{{#if @first}} active{{/if}}" id="doc-{{@index}}">
+            {{> block}}
+          </article>
+          {{/each}}
+        </section>
+      </div>
+    </div>
+
+    <footer class="status-bar">
+      <span id="finder-status">{{blocks.length}} items — {{channel.slug}}</span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var workspace = document.getElementById('finder-workspace');
+      var search = document.getElementById('finder-search');
+      var viewBtns = document.querySelectorAll('[data-finder-view]');
+      var selectables = document.querySelectorAll('.finder-selectable');
+      var docs = document.querySelectorAll('.finder-doc');
+      var previewEl = document.getElementById('finder-preview');
+      var statusEl = document.getElementById('finder-status');
+      var total = document.querySelectorAll('#finder-pane-icons .finder-selectable').length;
+      var baseStatus = statusEl ? statusEl.textContent : '';
+      if (!workspace) return;
+
+      function notifyFinderModelPreview() {
+        try {
+          window.dispatchEvent(new CustomEvent('finder-model-activate'));
+        } catch (e) {}
+      }
+
+      function revealPdfFromWrap(wrap) {
+        if (!wrap) return;
+        var btn = wrap.querySelector('.finder-pdf-open-btn');
+        var url = btn && btn.getAttribute('data-pdf-url');
+        var frame = wrap.querySelector('.finder-pdf-frame');
+        var gate = wrap.querySelector('.finder-pdf-gate');
+        if (!frame || !url) return;
+        if (!frame.getAttribute('src')) frame.setAttribute('src', url);
+        frame.removeAttribute('hidden');
+        if (gate) gate.setAttribute('hidden', '');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
+
+      function autoOpenActivePdfInColumns() {
+        if (!previewEl || previewEl.hidden) return;
+        var doc = previewEl.querySelector('.finder-doc.active');
+        if (!doc) return;
+        var wrap = doc.querySelector('.finder-pdf-wrap');
+        if (wrap) revealPdfFromWrap(wrap);
+      }
+
+      function openDoc(id) {
+        docs.forEach(function (d) {
+          d.classList.toggle('active', d.id === id);
+        });
+        selectables.forEach(function (el) {
+          el.classList.toggle('active', el.getAttribute('data-target') === id);
+        });
+        if (previewEl && !previewEl.hidden) {
+          notifyFinderModelPreview();
+          autoOpenActivePdfInColumns();
+        }
+      }
+
+      function setView(mode) {
+        workspace.className = 'finder-workspace finder-view--' + mode;
+        viewBtns.forEach(function (btn) {
+          var on = btn.getAttribute('data-finder-view') === mode;
+          btn.classList.toggle('active', on);
+          btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        var iconsPane = document.getElementById('finder-pane-icons');
+        var listPane = document.getElementById('finder-pane-list');
+        var colPane = document.getElementById('finder-pane-columns');
+        if (iconsPane) iconsPane.hidden = mode !== 'icons';
+        if (listPane) listPane.hidden = mode !== 'list';
+        if (colPane) colPane.hidden = mode !== 'columns';
+        if (previewEl) {
+          var showPreview = mode === 'columns';
+          previewEl.hidden = !showPreview;
+          previewEl.setAttribute('aria-hidden', showPreview ? 'false' : 'true');
+          if (showPreview) {
+            notifyFinderModelPreview();
+            autoOpenActivePdfInColumns();
+          }
+        }
+      }
+
+      viewBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setView(btn.getAttribute('data-finder-view') || 'icons');
+        });
+      });
+
+      function openInNewTab(url) {
+        if (!url || typeof url !== 'string') return;
+        var w = window.open(url, '_blank', 'noopener,noreferrer');
+        if (w) w.opener = null;
+      }
+
+      selectables.forEach(function (el) {
+        el.addEventListener('click', function () {
+          openDoc(el.getAttribute('data-target'));
+        });
+        el.addEventListener('dblclick', function (e) {
+          e.preventDefault();
+          openInNewTab(el.getAttribute('data-open-url'));
+        });
+      });
+
+      if (search) {
+        search.addEventListener('input', function () {
+          var q = search.value.toLowerCase().trim();
+          var shown = {};
+          var seeds = document.querySelectorAll('#finder-pane-icons .finder-selectable');
+          seeds.forEach(function (btn) {
+            var idx = btn.getAttribute('data-block-index');
+            var t = (btn.getAttribute('data-title') || '').toLowerCase();
+            shown[idx] = !q || t.indexOf(q) !== -1;
+          });
+          var n = 0;
+          Object.keys(shown).forEach(function (k) { if (shown[k]) n++; });
+          selectables.forEach(function (el) {
+            var idx = el.getAttribute('data-block-index');
+            var ok = shown[idx] !== false;
+            el.style.display = ok ? '' : 'none';
+            var li = el.closest('li');
+            if (li) li.style.display = ok ? '' : 'none';
+          });
+          if (statusEl) {
+            statusEl.textContent = !q
+              ? baseStatus
+              : (n + ' of ' + total + ' items — filtered');
+          }
+        });
+      }
+
+      setView('icons');
+
+      if (previewEl) {
+        previewEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.finder-pdf-open-btn');
+          if (!btn) return;
+          var wrap = btn.closest('.finder-pdf-wrap');
+          revealPdfFromWrap(wrap);
+        });
+      }
+    })();
+  </script>
+  <script type="module">
+    (function () {
+      function showFallback(mount) {
+        var wrap = mount.closest(".finder-model-wrap");
+        if (!wrap) return;
+        var msg = wrap.querySelector(".finder-model-fallback-msg");
+        if (msg) msg.hidden = false;
+      }
+
+      async function mountGlbLike(mount, url, name) {
+        await import("https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js");
+        var mv = document.createElement("model-viewer");
+        mv.setAttribute("src", url);
+        mv.setAttribute("alt", name || "");
+        mv.setAttribute("camera-controls", "");
+        mv.setAttribute("touch-action", "pan-y");
+        mv.setAttribute("crossorigin", "anonymous");
+        mv.setAttribute("environment-image", "neutral");
+        mv.className = "finder-model-viewer";
+        mount.appendChild(mv);
+      }
+
+      async function mountThree(mount, url, ext) {
+        var THREE = await import("https://unpkg.com/three@0.160.0/build/three.module.js");
+        var { OrbitControls } = await import("https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js");
+        var scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe8e8ea);
+        var camera = new THREE.PerspectiveCamera(45, 1, 0.001, 1e9);
+        var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "low-power" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        mount.appendChild(renderer.domElement);
+        var controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        var amb = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(amb);
+        var dir = new THREE.DirectionalLight(0xffffff, 1.0);
+        dir.position.set(4, 10, 6);
+        scene.add(dir);
+        var model;
+        if (ext === "stl") {
+          var { STLLoader } = await import("https://unpkg.com/three@0.160.0/examples/jsm/loaders/STLLoader.js");
+          var geom = await new STLLoader().loadAsync(url);
+          geom.computeVertexNormals();
+          geom.center();
+          var mat = new THREE.MeshStandardMaterial({
+            color: 0x9a9aa0,
+            metalness: 0.12,
+            roughness: 0.62,
+            flatShading: false,
+          });
+          model = new THREE.Mesh(geom, mat);
+        } else {
+          var { OBJLoader } = await import("https://unpkg.com/three@0.160.0/examples/jsm/loaders/OBJLoader.js");
+          model = await new OBJLoader().loadAsync(url);
+        }
+        scene.add(model);
+        var box = new THREE.Box3().setFromObject(model);
+        var center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+        box.setFromObject(model);
+        var size = box.getSize(new THREE.Vector3());
+        var maxDim = Math.max(size.x, size.y, size.z, 1e-6);
+        camera.position.set(maxDim * 1.35, maxDim * 0.95, maxDim * 1.55);
+        camera.near = maxDim / 1e4;
+        camera.far = maxDim * 50;
+        camera.lookAt(0, 0, 0);
+        controls.target.set(0, 0, 0);
+        function resize() {
+          var w = mount.clientWidth || 320;
+          var h = mount.clientHeight || 320;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+        var ro = new ResizeObserver(function () {
+          resize();
+        });
+        ro.observe(mount);
+        resize();
+        function tick() {
+          requestAnimationFrame(tick);
+          controls.update();
+          renderer.render(scene, camera);
+        }
+        tick();
+      }
+
+      async function initMount(mount) {
+        if (mount.dataset.finderModelInit) return;
+        var url = mount.getAttribute("data-model-url");
+        var rawExt = mount.getAttribute("data-model-ext") || "";
+        var ext = rawExt.replace(/^\./, "").toLowerCase();
+        var name = mount.getAttribute("data-model-name") || "";
+        if (!url || !ext) {
+          showFallback(mount);
+          return;
+        }
+        mount.dataset.finderModelInit = "1";
+        try {
+          if (ext === "glb" || ext === "gltf") {
+            await mountGlbLike(mount, url, name);
+            return;
+          }
+          if (ext === "stl" || ext === "obj") {
+            await mountThree(mount, url, ext);
+            return;
+          }
+        } catch (e) {
+          showFallback(mount);
+          return;
+        }
+        showFallback(mount);
+      }
+
+      function activateModelInPreview() {
+        var prev = document.getElementById("finder-preview");
+        if (!prev || prev.hidden) return;
+        var doc = prev.querySelector(".finder-doc.active");
+        if (!doc) return;
+        var mount = doc.querySelector(".finder-model-mount[data-model-url]");
+        if (mount) initMount(mount);
+      }
+
+      window.addEventListener("finder-model-activate", activateModelInPreview);
+    })();
+  </script>
+</body>
+</html>

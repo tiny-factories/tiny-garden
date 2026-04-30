@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { isBetaFull } from "@/lib/beta";
+import { getRequestAuth } from "@/lib/request-auth";
 
-export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const auth = await getRequestAuth(req);
+  if (!auth)
+    return NextResponse.json(
+      { error: "Unauthorized", code: "unauthorized" },
+      { status: 401 }
+    );
 
   const user = await prisma.user.findUniqueOrThrow({
-    where: { id: session.userId },
+    where: { id: auth.userId },
     include: { subscription: true, sites: { select: { id: true } } },
   });
 

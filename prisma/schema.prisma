@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -21,6 +22,8 @@ model User {
 
   sites         Site[]
   subscription  Subscription?
+  apiTokens     ApiToken[]
+  buildRequests BuildRequest[]
 }
 
 model Site {
@@ -45,6 +48,7 @@ model Site {
 
   userId        String
   user          User     @relation(fields: [userId], references: [id])
+  buildRequests BuildRequest[]
 }
 
 model Subscription {
@@ -58,4 +62,47 @@ model Subscription {
 
   userId            String   @unique
   user              User     @relation(fields: [userId], references: [id])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  tokenHash  String    @unique
+  prefix     String
+  scopes     String    @default("all")
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+}
+
+model BuildRequest {
+  id        String   @id @default(cuid())
+  siteId    String
+  userId    String
+  trigger   String
+  status    String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([siteId, createdAt])
+}
+
+/// Per-template Are.na channel used for public /templates previews (see admin → Template examples).
+model TemplateExampleChannel {
+  id            String   @id @default(cuid())
+  templateSlug  String   @unique
+  /// Null until an admin links an Are.na channel in Admin → Templates.
+  channelSlug   String?
+  channelTitle  String?
+  updatedAt     DateTime @updatedAt
 }

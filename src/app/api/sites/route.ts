@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { seedFromSubdomain } from "@/lib/garden-icon";
 import { buildSite } from "@/lib/build";
 import { isBetaFull } from "@/lib/beta";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
+import { getRequestAuth } from "@/lib/request-auth";
+import { themeToDbFields } from "@/lib/ai-site-theme";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
 
-export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const auth = await getRequestAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized", code: "unauthorized" }, { status: 401 });
+  }
 
   const sites = await prisma.site.findMany({
-    where: { userId: session.userId },
+    where: { userId: auth.userId },
     orderBy: { createdAt: "desc" },
   });
 
@@ -22,10 +25,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized", code: "unauthorized" }, { status: 401 });
+  }
 
-  const { channelSlug, channelTitle, template, subdomain } = await req.json();
+  const { channelSlug, channelTitle, template, subdomain, initialTheme } =
+    await req.json();
 
   if (!channelSlug || !template || !subdomain) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -37,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   // Check site limit based on plan
   const user = await prisma.user.findUniqueOrThrow({
-    where: { id: session.userId },
+    where: { id: auth.userId },
     include: { subscription: true, sites: true },
   });
 
@@ -75,6 +81,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Subdomain taken" }, { status: 409 });
   }
 
+  let themePayload: {
+    themeColors: string;
+    themeFonts: string;
+    customCss?: string;
+  } | undefined;
+  if (initialTheme !== undefined && initialTheme !== null) {
+    if (!user.isAdmin) {
+      return NextResponse.json(
+        { error: "Initial theme is only available for admins." },
+        { status: 403 }
+      );
+    }
+    const parsed = themeToDbFields(initialTheme);
+    if (!parsed) {
+      return NextResponse.json(
+        { error: "Invalid initial theme payload" },
+        { status: 400 }
+      );
+    }
+    themePayload = parsed;
+  }
+
   const site = await prisma.site.create({
     data: {
       subdomain,
@@ -82,7 +110,14 @@ export async function POST(req: NextRequest) {
       channelTitle: channelTitle || channelSlug,
       template,
       iconSeed: seedFromSubdomain(subdomain),
-      userId: session.userId,
+      userId: auth.userId,
+      ...(themePayload && {
+        themeColors: themePayload.themeColors,
+        themeFonts: themePayload.themeFonts,
+        ...(themePayload.customCss
+          ? { customCss: themePayload.customCss }
+          : {}),
+      }),
     },
   });
 

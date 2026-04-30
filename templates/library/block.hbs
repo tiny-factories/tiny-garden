@@ -1,0 +1,43 @@
+<article class="lib-item lib-item--{{type}}">
+  {{#if (eq type "image")}}
+    <figure class="lib-figure">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+      <figcaption>{{#if title}}{{title}}{{else}}Image{{/if}}</figcaption>
+    </figure>
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    <h2>{{#if title}}{{title}}{{else}}Note{{/if}}</h2>
+    <div class="lib-prose">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <h2>{{#if title}}{{title}}{{else}}{{link.title}}{{/if}}</h2>
+    <p><a href="{{link.url}}" target="_blank" rel="noopener">{{link.title}}</a></p>
+    {{#if link.description}}<p>{{link.description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    <h2>{{#if title}}{{title}}{{else}}Media{{/if}}</h2>
+    <div class="lib-media">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    <h2>{{#if title}}{{title}}{{else}}{{attachment.display_name}}{{/if}}</h2>
+    {{#if attachment.preview_image_url}}
+      <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{else}}
+      {{#if attachment.is_video}}
+        <video controls preload="metadata">
+          <source src="{{attachment.url}}" type="{{attachment.content_type}}">
+        </video>
+      {{/if}}
+      {{#if attachment.is_pdf}}
+        <iframe src="{{attachment.url}}" title="{{attachment.alt_text}}" loading="lazy"></iframe>
+      {{/if}}
+    {{/if}}
+    <p><a href="{{attachment.url}}" download>{{attachment.display_name}}</a> <small>({{attachment.type_label}})</small></p>
+  {{/if}}
+
+  <small class="lib-meta">{{formatDateTime24 created_at}} · {{type}}</small>
+</article>

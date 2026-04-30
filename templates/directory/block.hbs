@@ -1,0 +1,12 @@
+<a class="dir-row__link" href="{{directoryChildHref}}"{{#if (directoryRowExternal)}} target="_blank" rel="noopener noreferrer"{{/if}}>
+  <span class="dir-row__main">
+    <span class="dir-row__label">{{directoryLabel this}}</span>
+  </span>
+  <span class="dir-row__arrow" aria-hidden="true">
+    {{#if (directoryLinkIsOffArena)}}
+    <svg class="dir-row__arrow-svg dir-row__arrow-svg--external" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+    {{else}}
+    <span class="dir-row__arrow-char">→</span>
+    {{/if}}
+  </span>
+</a>

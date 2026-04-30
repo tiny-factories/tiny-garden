@@ -3,7 +3,7 @@
     <span class="sv-tl-entry-dot"></span>
   </div>
   <div class="sv-tl-entry-content">
-    <time class="sv-tl-entry-date" datetime="{{created_at}}">{{created_at}}</time>
+    <time class="sv-tl-entry-date" datetime="{{created_at}}">{{formatDateTime24 created_at}}</time>
 
     {{#if (eq type "image")}}
       <figure class="sv-tl-entry-image">
@@ -53,14 +53,27 @@
 
     {{#if (eq type "attachment")}}
       {{#if image.display}}
-        <img class="sv-tl-entry-img" src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+        <img class="sv-tl-entry-img" src="{{image.display}}" alt="{{attachment.alt_text}}" loading="lazy">
+      {{else}}
+        {{#if attachment.preview_url}}
+          {{#if (eq attachment.kind "video")}}
+            <video class="sv-tl-entry-img" src="{{attachment.preview_url}}" controls preload="metadata"></video>
+          {{/if}}
+          {{#if (eq attachment.kind "pdf")}}
+            <iframe class="sv-tl-entry-img" src="{{attachment.preview_url}}" title="{{attachment.alt_text}}" loading="lazy"></iframe>
+          {{/if}}
+          {{#if (eq attachment.kind "image")}}
+            <img class="sv-tl-entry-img" src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+          {{/if}}
+        {{/if}}
       {{/if}}
       <a href="{{attachment.url}}" class="sv-tl-entry-attachment" download>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span>{{attachment.file_name}}</span>
+        <span>{{attachment.display_name}}</span>
       </a>
+      <p class="sv-tl-entry-description">{{attachment.type}}</p>
       {{#if description}}
         <p class="sv-tl-entry-description">{{description}}</p>
       {{/if}}

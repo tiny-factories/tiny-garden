@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #fff;
+  color: #111;
+}
+
+.pk-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 16px 80px;
+}
+
+.pk-head h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.6vw, 2.5rem);
+}
+
+.pk-head p {
+  margin-top: 10px;
+  color: #555;
+}
+
+.pk-grid {
+  margin-top: 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.pk-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.pk-item--text .pk-body {
+  margin-top: 8px;
+}
+
+.pk-item--image img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.pk-item--link a,
+.pk-item--attachment a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.pk-embed {
+  margin-top: 10px;
+}

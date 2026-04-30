@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { getRequestAuth } from "@/lib/request-auth";
 import { ArenaClient } from "@/lib/arena";
 
 export async function GET(req: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const source = req.nextUrl.searchParams.get("source") || "own";
 
   try {
-    const client = new ArenaClient(session.arenaToken);
+    const client = new ArenaClient(auth.arenaToken);
 
     if (source === "own") {
-      const channels = await client.getUserChannels(session.arenaUserId);
+      const channels = await client.getUserChannels(auth.arenaUserId);
       return NextResponse.json(channels);
     }
 
     if (source === "groups") {
-      const groups = await client.getUserGroups(session.arenaUserId);
+      const groups = await client.getUserGroups(auth.arenaUserId);
       const groupData = await Promise.all(
         groups.map(async (g) => {
           const channels = await client.getGroupChannels(g.slug);
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (source === "following") {
-      const channels = await client.getFollowingChannels(session.arenaUserId);
+      const channels = await client.getFollowingChannels(auth.arenaUserId);
       return NextResponse.json(channels);
     }
 

@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #0b0f19;
+  color: #e6ecff;
+}
+
+.cl-header {
+  padding: 28px 22px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cl-header h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+}
+
+.cl-header p {
+  margin: 8px 0 0;
+  color: #b2bddb;
+}
+
+.cl-list {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 56px;
+}
+
+.cl-item {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(19, 27, 46, 0.62);
+  margin-bottom: 12px;
+}
+
+.cl-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #9db0e7;
+  font-size: 0.83rem;
+  margin-bottom: 8px;
+}
+
+.cl-title {
+  margin: 0 0 7px;
+}
+
+.cl-title a {
+  color: #f2f5ff;
+  text-decoration: none;
+}
+
+.cl-body {
+  color: #c8d2f0;
+}
+
+.cl-chip {
+  border: 1px solid rgba(93, 153, 255, 0.5);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.74rem;
+  color: #bad5ff;
+}

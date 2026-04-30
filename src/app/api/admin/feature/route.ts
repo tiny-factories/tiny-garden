@@ -3,6 +3,16 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
+  const session = await getSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const adminUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+  });
+  if (!adminUser?.isAdmin)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const sites = await prisma.site.findMany({
     where: { featured: true, published: true },
     include: {
@@ -15,6 +25,7 @@ export async function GET() {
     sites.map((s) => ({
       id: s.id,
       subdomain: s.subdomain,
+      channelSlug: s.channelSlug,
       channelTitle: s.channelTitle,
       template: s.template,
       published: s.published,

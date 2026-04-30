@@ -1,20 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { NextRequest, NextResponse, after } from "next/server";
+import { ArenaClient } from "@/lib/arena";
+import { buildSite } from "@/lib/build";
 import { prisma } from "@/lib/db";
 import { removeDomainFromVercel } from "@/lib/vercel";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
+import { getRequestAuth } from "@/lib/request-auth";
+
+export const maxDuration = 120;
 
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(_req);
+  if (!auth) {
+    return NextResponse.json(
+      { error: "Unauthorized", code: "unauthorized" },
+      { status: 401 }
+    );
+  }
 
   const { id } = await params;
 
   const site = await prisma.site.findUnique({ where: { id } });
-  if (!site || site.userId !== session.userId) {
+  if (!site || site.userId !== auth.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -31,14 +40,19 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) {
+    return NextResponse.json(
+      { error: "Unauthorized", code: "unauthorized" },
+      { status: 401 }
+    );
+  }
 
   const { id } = await params;
   const body = await req.json();
 
   const site = await prisma.site.findUnique({ where: { id } });
-  if (!site || site.userId !== session.userId) {
+  if (!site || site.userId !== auth.userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -51,10 +65,44 @@ export async function PATCH(
     data.template = body.template;
   }
 
+  let channelChanged = false;
+  if (typeof body.channelSlug === "string" && body.channelSlug.trim()) {
+    const nextSlug = body.channelSlug.trim();
+    if (nextSlug !== site.channelSlug) {
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: auth.userId },
+        select: { arenaToken: true },
+      });
+      try {
+        const client = new ArenaClient(user.arenaToken);
+        const channel = await client.getChannel(nextSlug);
+        data.channelSlug = channel.slug;
+        data.channelTitle = channel.title;
+        channelChanged = true;
+      } catch {
+        return NextResponse.json(
+          {
+            error:
+              "That channel could not be loaded. Check the slug or your access on Are.na.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+  }
+
   const updated = await prisma.site.update({
     where: { id },
     data,
   });
+
+  if (channelChanged) {
+    after(() =>
+      buildSite(id).catch((err) => {
+        console.error("Rebuild after channel change failed", id, err);
+      })
+    );
+  }
 
   return NextResponse.json(updated);
 }

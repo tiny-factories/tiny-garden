@@ -51,6 +51,26 @@ export const GOOGLE_FONTS = [
   "General Sans",
 ];
 
+/** Flat list for theme UI: built-ins first (system, then A–Z), then Google as `gf:Name`. */
+export type FontPickerOption = { token: string; label: string };
+
+export const FONT_PICKER_OPTIONS: FontPickerOption[] = (() => {
+  const builtins: FontPickerOption[] = Object.keys(BUILTIN_FONTS).map((k) => ({
+    token: k,
+    label: k,
+  }));
+  builtins.sort((a, b) => {
+    if (a.token === "system") return -1;
+    if (b.token === "system") return 1;
+    return a.token.localeCompare(b.token);
+  });
+  const google: FontPickerOption[] = GOOGLE_FONTS.map((g) => ({
+    token: `gf:${g}`,
+    label: `gf:${g}`,
+  }));
+  return [...builtins, ...google];
+})();
+
 /**
  * Returns true if the font value is a Google Font (not a built-in).
  * Font values prefixed with "gf:" are Google Fonts.

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import {
   addDomainToVercel,
@@ -7,6 +6,7 @@ import {
   getProjectDomain,
   getDomainConfig,
 } from "@/lib/vercel";
+import { getRequestAuth } from "@/lib/request-auth";
 
 async function getSiteForUser(id: string, userId: string) {
   const site = await prisma.site.findUnique({
@@ -30,11 +30,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const site = await getSiteForUser(id, session.userId);
+  const site = await getSiteForUser(id, auth.userId);
   if (!site) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (!canUseDomains(site.user)) {
@@ -87,14 +87,14 @@ export async function POST(
 
 // GET — Check domain status
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const site = await getSiteForUser(id, session.userId);
+  const site = await getSiteForUser(id, auth.userId);
   if (!site) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (!site.customDomain) {
@@ -141,14 +141,14 @@ export async function GET(
 
 // DELETE — Remove custom domain
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getRequestAuth(req);
+  if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const site = await getSiteForUser(id, session.userId);
+  const site = await getSiteForUser(id, auth.userId);
   if (!site) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (!site.customDomain) {

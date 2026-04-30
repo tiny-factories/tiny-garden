@@ -1,8 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FeaturedToggleButton } from "@/components/featured-toggle-button";
+import { PublishStatusBadge } from "@/components/publish-status-badge";
+import { SearchInput } from "@/components/search-input";
+import { SegmentedControl } from "@/components/toolbar";
+import { AdminTemplateExamplesTable } from "@/components/admin-template-examples-table";
+
+type AdminTab = "recent" | "templates" | "featured";
+
+interface AdminTemplateExampleRow {
+  id: string;
+  name: string;
+  description: string;
+  channelSlug: string | null;
+  channelTitle: string | null;
+  updatedAt: string | null;
+}
 
 interface TimelinePoint {
   date: string;
@@ -39,12 +55,23 @@ interface BillingStats {
 interface RecentSite {
   id: string;
   subdomain: string;
+  channelSlug: string;
   channelTitle: string;
   template: string;
   published: boolean;
   featured: boolean;
   arenaUsername: string;
   createdAt: string;
+}
+
+async function readJsonBody<T>(r: Response, fallback: T): Promise<T> {
+  const text = await r.text();
+  if (!text.trim()) return fallback;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 // Simple SVG sparkline bar chart
@@ -171,30 +198,159 @@ function StatCard({
   );
 }
 
+/** Mirrors loaded admin layout (excludes billing-only blocks to avoid layout shift). */
+function AdminPageSkeleton() {
+  return (
+    <main
+      className="max-w-4xl mx-auto px-4 py-8"
+      aria-busy="true"
+      aria-label="Loading admin dashboard"
+    >
+      <div className="animate-pulse">
+        <div className="mb-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="h-7 w-24 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+          <div className="h-4 w-16 rounded bg-neutral-100 dark:bg-neutral-800" />
+        </div>
+
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-4 border border-neutral-100 rounded dark:border-neutral-800"
+            >
+              <div className="h-3 w-14 rounded bg-neutral-200 dark:bg-neutral-800" />
+              <div className="mt-2 flex items-baseline gap-2">
+                <div className="h-8 w-12 rounded bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-3 w-16 rounded bg-neutral-100 dark:bg-neutral-800" />
+              </div>
+              <div className="mt-3 h-16 w-full rounded bg-neutral-100 dark:bg-neutral-900" />
+            </div>
+          ))}
+        </section>
+
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="h-9 min-w-0 flex-1 rounded border border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900" />
+          <div className="h-8 w-full shrink-0 rounded-md border border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 sm:max-w-[19rem]" />
+        </div>
+
+        <section className="mb-8">
+          <div className="mb-4 h-3 w-28 rounded bg-neutral-200 dark:bg-neutral-800" />
+          <div className="overflow-hidden rounded border border-neutral-100 dark:border-neutral-800">
+            <div className="flex gap-2 border-b border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:border-neutral-800 dark:bg-neutral-900">
+              {["w-[22%]", "w-[18%]", "w-14", "w-16", "w-14", "w-14", "w-16"].map(
+                (w, j) => (
+                  <div
+                    key={j}
+                    className={`h-3 shrink-0 rounded bg-neutral-200 dark:bg-neutral-800 ${w}`}
+                  />
+                )
+              )}
+            </div>
+            {Array.from({ length: 6 }).map((_, r) => (
+              <div
+                key={r}
+                className="flex items-center gap-2 border-b border-neutral-50 px-3 py-2.5 last:border-0 dark:border-neutral-800/50"
+              >
+                <div className="h-3 w-20 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 min-w-0 flex-1 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-5 w-[4.5rem] shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-3 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+                <div className="h-6 w-14 shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-4 h-3 w-36 rounded bg-neutral-200 dark:bg-neutral-800" />
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-4 border border-neutral-100 rounded p-3 dark:border-neutral-800"
+              >
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-4 max-w-md rounded bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="h-3 max-w-sm rounded bg-neutral-100 dark:bg-neutral-800" />
+                </div>
+                <div className="h-7 w-[4.5rem] shrink-0 rounded bg-neutral-100 dark:bg-neutral-800" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [billing, setBilling] = useState<BillingStats | null>(null);
   const [featuredSites, setFeaturedSites] = useState<RecentSite[]>([]);
+  const [templateExamples, setTemplateExamples] = useState<AdminTemplateExampleRow[]>([]);
+  const [hasExampleToken, setHasExampleToken] = useState(false);
+  const [activeTab, setActiveTab] = useState<AdminTab>("recent");
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
+  const [listSearch, setListSearch] = useState("");
 
   useEffect(() => {
+    setListSearch("");
+  }, [activeTab]);
+
+  useEffect(() => {
+    let cancelled = false;
+
     Promise.all([
-      fetch("/api/admin/stats").then((r) => {
-        if (r.status === 401) { router.push("/login"); return null; }
-        if (r.status === 403) { router.push("/sites"); return null; }
-        return r.json();
+      fetch("/api/admin/stats", { credentials: "same-origin" }).then(async (r) => {
+        if (r.status === 401) {
+          router.push("/login");
+          return null;
+        }
+        if (r.status === 403) {
+          router.push("/sites");
+          return null;
+        }
+        if (!r.ok) return null;
+        return readJsonBody<Stats | null>(r, null);
       }),
-      fetch("/api/admin/feature").then((r) => r.json()),
-      fetch("/api/admin/billing").then((r) => r.ok ? r.json() : null),
+      fetch("/api/admin/feature", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return [] as RecentSite[];
+        const data = await readJsonBody<unknown>(r, []);
+        return Array.isArray(data) ? (data as RecentSite[]) : [];
+      }),
+      fetch("/api/admin/billing", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return null;
+        return readJsonBody<BillingStats | null>(r, null);
+      }),
+      fetch("/api/admin/template-channels", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return { templates: [] as AdminTemplateExampleRow[], hasExampleToken: false };
+        return readJsonBody<{ templates?: AdminTemplateExampleRow[]; hasExampleToken?: boolean }>(
+          r,
+          { templates: [], hasExampleToken: false }
+        );
+      }),
     ])
-      .then(([statsData, featuredData, billingData]) => {
+      .then(([statsData, featuredData, billingData, templateData]) => {
+        if (cancelled) return;
         if (statsData) setStats(statsData);
         setFeaturedSites(featuredData);
         if (billingData) setBilling(billingData);
+        setTemplateExamples(
+          Array.isArray(templateData.templates) ? templateData.templates : []
+        );
+        setHasExampleToken(!!templateData.hasExampleToken);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleToggleFeatured(site: RecentSite) {
@@ -206,27 +362,54 @@ export default function AdminPage() {
     });
 
     const [statsData, featuredData] = await Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/feature").then((r) => r.json()),
+      fetch("/api/admin/stats", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return null;
+        return readJsonBody<Stats | null>(r, null);
+      }),
+      fetch("/api/admin/feature", { credentials: "same-origin" }).then(async (r) => {
+        if (!r.ok) return [] as RecentSite[];
+        const data = await readJsonBody<unknown>(r, []);
+        return Array.isArray(data) ? (data as RecentSite[]) : [];
+      }),
     ]);
-    setStats(statsData);
+    if (statsData) setStats(statsData);
     setFeaturedSites(featuredData);
     setToggling((t) => ({ ...t, [site.id]: false }));
   }
 
-  if (loading) {
-    return (
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 w-32 bg-neutral-100 rounded dark:bg-neutral-800" />
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-neutral-50 rounded dark:bg-neutral-900" />
-            ))}
-          </div>
-        </div>
-      </main>
+  const filteredRecentSites = useMemo(() => {
+    if (!stats) return [];
+    const q = listSearch.trim().toLowerCase();
+    if (!q) return stats.recentSites;
+    return stats.recentSites.filter((s) =>
+      [s.subdomain, s.channelSlug, s.channelTitle, s.template, s.arenaUsername].some((field) =>
+        field.toLowerCase().includes(q)
+      )
     );
+  }, [stats, listSearch]);
+
+  const filteredTemplateRows = useMemo(() => {
+    const q = listSearch.trim().toLowerCase();
+    if (!q) return templateExamples;
+    return templateExamples.filter((t) =>
+      [t.id, t.name, t.description, t.channelTitle ?? ""].some((field) =>
+        field.toLowerCase().includes(q)
+      )
+    );
+  }, [templateExamples, listSearch]);
+
+  const filteredFeaturedSites = useMemo(() => {
+    const q = listSearch.trim().toLowerCase();
+    if (!q) return featuredSites;
+    return featuredSites.filter((s) =>
+      [s.subdomain, s.channelTitle, s.arenaUsername].some((field) =>
+        field.toLowerCase().includes(q)
+      )
+    );
+  }, [featuredSites, listSearch]);
+
+  if (loading) {
+    return <AdminPageSkeleton />;
   }
 
   if (!stats) return null;
@@ -234,14 +417,22 @@ export default function AdminPage() {
   const signupData = stats.userSignups.map((d) => d.count);
   const siteData = stats.siteCreations.map((d) => d.count);
   const revenueData = billing?.revenueTimeline.map((d) => d.amount) || [];
+  const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
+
+  const searchPlaceholder =
+    activeTab === "recent"
+      ? "Search subdomain, channel, template, user…"
+      : activeTab === "templates"
+        ? "Search templates…"
+        : "Search featured sites…";
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <main className="mx-auto w-full min-w-0 max-w-4xl overflow-x-clip px-4 py-8 [scrollbar-gutter:stable]">
+      <div className="mb-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h1 className="text-lg font-medium">Admin</h1>
         <Link
           href="/admin/sites"
-          className="text-sm px-3 py-1.5 border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
+          className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
         >
           All sites
         </Link>
@@ -309,6 +500,30 @@ export default function AdminPage() {
         )}
       </section>
 
+      <div className="mb-6 flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <SearchInput
+          value={listSearch}
+          onChange={(e) => setListSearch(e.target.value)}
+          placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
+          className="min-h-9 min-w-0 w-full !flex-1 basis-0 sm:min-w-[min(100%,18rem)]"
+        />
+        <SegmentedControl<AdminTab>
+          segments={[
+            { value: "recent", label: "Recent Sites" },
+            { value: "templates", label: "Templates" },
+            { value: "featured", label: "Featured" },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Admin sections"
+          className="w-full shrink-0 sm:max-w-[19rem] sm:!h-8 !min-h-8 !py-1"
+          labelClassName="px-1.5 py-1 text-[11px] font-medium leading-none"
+        />
+      </div>
+
+      {activeTab === "recent" && (
+        <>
       {/* Stripe subscriptions */}
       {billing && (
         <section className="mb-8 p-4 border border-neutral-100 rounded dark:border-neutral-800">
@@ -358,12 +573,9 @@ export default function AdminPage() {
       )}
 
       {/* Recent sites table */}
-      <section className="mb-8">
-        <h2 className="text-xs text-neutral-400 uppercase tracking-wider mb-4 dark:text-neutral-500">
-          Recent Sites
-        </h2>
-        <div className="border border-neutral-100 rounded overflow-hidden dark:border-neutral-800">
-          <table className="w-full text-sm">
+      <section className="mb-8 min-w-0">
+        <div className="overflow-x-auto rounded border border-neutral-100 dark:border-neutral-800">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-neutral-100 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
                 <th className="text-left text-xs font-medium text-neutral-400 px-3 py-2 dark:text-neutral-500">Subdomain</th>
@@ -376,76 +588,125 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {stats.recentSites.map((site) => (
-                <tr key={site.id} className="border-b border-neutral-50 last:border-0">
-                  <td className="px-3 py-2 text-xs font-medium">{site.subdomain}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">{site.channelTitle}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.template}</td>
-                  <td className="px-3 py-2">
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      site.published ? "bg-green-50 text-green-600" : "bg-neutral-50 text-neutral-400"
-                    }`}>
-                      {site.published ? "published" : "draft"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.arenaUsername}</td>
-                  <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">
-                    {new Date(site.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-3 py-2">
-                    <button
-                      onClick={() => handleToggleFeatured(site)}
-                      disabled={!!toggling[site.id]}
-                      className={`text-xs px-2 py-0.5 rounded border transition-colors ${
-                        toggling[site.id] ? "opacity-50 cursor-wait" : "cursor-pointer"
-                      } ${
-                        site.featured
-                          ? "bg-amber-50 border-amber-200 text-amber-700"
-                          : "bg-white border-neutral-200 text-neutral-400 hover:text-neutral-600"
-                      }`}
-                    >
-                      {site.featured ? "Featured" : "Feature"}
-                    </button>
+              {filteredRecentSites.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-3 py-8 text-center text-sm text-neutral-400 dark:text-neutral-500"
+                  >
+                    {stats.recentSites.length === 0
+                      ? "No sites yet."
+                      : "No rows match your search."}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredRecentSites.map((site) => (
+                  <tr
+                    key={site.id}
+                    className="border-b border-neutral-50 last:border-0 dark:border-neutral-800/80"
+                  >
+                    <td className="px-3 py-2 text-xs font-medium">
+                      <a
+                        href={`https://${site.subdomain}.${siteDomain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-neutral-950 underline-offset-2 hover:underline dark:text-neutral-50"
+                        aria-label={`Open ${site.subdomain}.${siteDomain} in a new tab`}
+                      >
+                        {site.subdomain}
+                      </a>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <a
+                        href={`https://www.are.na/channel/${site.channelSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-neutral-600 underline-offset-2 hover:text-neutral-900 hover:underline dark:text-neutral-300 dark:hover:text-neutral-50"
+                        aria-label={`Open Are.na channel ${site.channelTitle}`}
+                      >
+                        {site.channelTitle}
+                      </a>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.template}</td>
+                    <td className="px-3 py-2">
+                      <PublishStatusBadge published={site.published} />
+                    </td>
+                    <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{site.arenaUsername}</td>
+                    <td className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">
+                      {new Date(site.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 py-2">
+                      <FeaturedToggleButton
+                        featured={site.featured}
+                        disabled={!!toggling[site.id]}
+                        onClick={() => handleToggleFeatured(site)}
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </section>
+        </>
+      )}
 
-      {/* Featured sites */}
-      <section>
-        <h2 className="text-xs text-neutral-400 uppercase tracking-wider mb-4 dark:text-neutral-500">
-          Currently Featured
-        </h2>
-        {featuredSites.length === 0 ? (
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">No featured sites yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {featuredSites.map((site) => (
-              <div
-                key={site.id}
-                className="flex items-center justify-between p-3 border border-neutral-100 rounded dark:border-neutral-800"
-              >
-                <div>
-                  <p className="text-sm font-medium">{site.channelTitle}</p>
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                    {site.subdomain}.tiny.garden &middot; by {site.arenaUsername}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleToggleFeatured(site)}
-                  disabled={!!toggling[site.id]}
-                  className="text-xs px-2 py-0.5 rounded border border-red-100 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+      {activeTab === "templates" && (
+        <section className="space-y-6">
+          {!hasExampleToken && (
+            <div className="p-3 rounded border border-amber-200 bg-amber-50 text-sm text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+              No Are.na token for examples: set{" "}
+              <code className="text-xs">ARENA_EXAMPLE_TOKEN</code> in production, or rely on an admin
+              account&apos;s OAuth token in development.
+            </div>
+          )}
+          <AdminTemplateExamplesTable
+            rows={filteredTemplateRows}
+            emptyMessage={
+              templateExamples.length === 0
+                ? "No templates yet. Run prisma migrate deploy and ensure the API can read templates or TemplateExampleChannel rows."
+                : "No templates match your search."
+            }
+          />
+        </section>
+      )}
+
+      {activeTab === "featured" && (
+        <section>
+          {featuredSites.length === 0 ? (
+            <p className="text-sm text-neutral-400 dark:text-neutral-500">No featured sites yet.</p>
+          ) : filteredFeaturedSites.length === 0 ? (
+            <p className="text-sm text-neutral-400 dark:text-neutral-500">
+              No featured sites match your search.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {filteredFeaturedSites.map((site) => (
+                <div
+                  key={site.id}
+                  className="flex items-center justify-between p-3 border border-neutral-100 rounded dark:border-neutral-800"
                 >
-                  Unfeature
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+                  <div>
+                    <p className="text-sm font-medium">{site.channelTitle}</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                      {site.subdomain}.tiny.garden &middot; by {site.arenaUsername}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeatured(site)}
+                    disabled={!!toggling[site.id]}
+                    className="text-xs px-2 py-0.5 rounded border border-red-100 text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-950/40"
+                  >
+                    Unfeature
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

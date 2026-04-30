@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="photo-body">
+  <div class="grid-lines" aria-hidden="true"></div>
+
+  <header class="photo-top">
+    <div class="logo">{{channel.title}}{{#if site.built_at}} // {{formatYear site.built_at}}{{/if}}</div>
+    <div class="photo-top__center">{{#if channel.description}}{{channel.description}}{{else}}Portfolio{{/if}}</div>
+    <div class="photo-top__right">{{#if channel.user.name}}{{channel.user.name}}{{else}}Available for Commissions{{/if}}</div>
+  </header>
+
+  <main class="grid-container">
+    {{#each blocks}}
+      {{> block}}
+    {{/each}}
+  </main>
+
+  <footer class="photo-footer">
+    <div>{{channel.title}}</div>
+    <div>ALL RIGHTS RESERVED © {{#if channel.user.name}}{{channel.user.name}}{{else}}{{site.subdomain}}{{/if}}</div>
+    <div>SCROLL TO NAVIGATE</div>
+  </footer>
+
+  <div
+    id="photo-lightbox"
+    class="photo-lightbox"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-label="Full screen image"
+  >
+    <div class="photo-lightbox__backdrop" aria-hidden="true"></div>
+    <div class="photo-lightbox__frame">
+      <img id="photo-lightbox-img" class="photo-lightbox__img" src="" alt="" decoding="async" />
+    </div>
+    <div class="photo-lightbox__chrome">
+      <button type="button" class="photo-lightbox__close" aria-label="Close">
+        <span class="photo-lightbox__close-hint" aria-hidden="true">← → navigate · Esc to close</span>
+      </button>
+      <div class="photo-lightbox__hud" id="photo-lightbox-hud" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var items = Array.prototype.slice.call(
+        document.querySelectorAll(".photo-lightbox-item")
+      );
+      if (!items.length) return;
+
+      var overlay = document.getElementById("photo-lightbox");
+      var imgEl = document.getElementById("photo-lightbox-img");
+      var hudEl = document.getElementById("photo-lightbox-hud");
+      var backdrop = overlay && overlay.querySelector(".photo-lightbox__backdrop");
+      var closeBtn = overlay && overlay.querySelector(".photo-lightbox__close");
+      if (!overlay || !imgEl || !hudEl) return;
+
+      var index = 0;
+      var lastFocus = null;
+
+      function showHud() {
+        var total = items.length;
+        var cur = index + 1;
+        var item = items[index];
+        var title = (item.getAttribute("data-photo-title") || "").trim();
+        var caption = (item.getAttribute("data-photo-caption") || "").trim();
+        var seq = (item.getAttribute("data-photo-seq") || "").trim();
+        var loc = title || "—";
+        var cap = caption || "—";
+        var seqLabel = seq || "—";
+        var lines = '<div class="photo-lightbox__hud-inner">';
+        lines +=
+          '<span class="photo-lightbox__hud-index">' +
+          cur +
+          " / " +
+          total +
+          "</span>";
+        lines += '<div class="photo-lightbox__hud-stamp">';
+        lines +=
+          '<span class="photo-lightbox__hud-line"><span class="photo-lightbox__hud-k">LOC</span> ' +
+          escapeHtml(loc) +
+          "</span>";
+        lines +=
+          '<span class="photo-lightbox__hud-line photo-lightbox__hud-line--caption"><span class="photo-lightbox__hud-k">CAPTION</span> ' +
+          escapeHtml(cap) +
+          "</span>";
+        lines +=
+          '<span class="photo-lightbox__hud-line"><span class="photo-lightbox__hud-k">SEQ</span> ' +
+          escapeHtml(seqLabel) +
+          "</span>";
+        lines += "</div></div>";
+        hudEl.innerHTML = lines;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function applyIndex() {
+        var item = items[index];
+        var src = item.getAttribute("data-photo-src");
+        if (!src) return;
+        imgEl.src = src;
+        var t = (item.getAttribute("data-photo-title") || "").trim();
+        imgEl.alt = t || "Image " + (index + 1) + " of " + items.length;
+        showHud();
+      }
+
+      function openAt(i) {
+        var wasHidden = overlay.hasAttribute("hidden");
+        if (wasHidden) {
+          lastFocus = document.activeElement;
+        }
+        index = ((i % items.length) + items.length) % items.length;
+        applyIndex();
+        if (wasHidden) {
+          overlay.removeAttribute("hidden");
+          overlay.setAttribute("aria-hidden", "false");
+          document.body.classList.add("photo-lightbox-open");
+          if (closeBtn) {
+            try {
+              closeBtn.focus({ preventScroll: true });
+            } catch (e) {}
+          }
+        }
+      }
+
+      function step(delta) {
+        index = (index + delta + items.length) % items.length;
+        applyIndex();
+      }
+
+      function close() {
+        overlay.setAttribute("hidden", "");
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("photo-lightbox-open");
+        imgEl.removeAttribute("src");
+        if (lastFocus && typeof lastFocus.focus === "function") {
+          try {
+            lastFocus.focus({ preventScroll: true });
+          } catch (e) {}
+        }
+        lastFocus = null;
+      }
+
+      function step(delta) {
+        openAt(index + delta);
+      }
+
+      items.forEach(function (el, i) {
+        el.addEventListener("click", function (e) {
+          e.preventDefault();
+          openAt(i);
+        });
+        el.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openAt(i);
+          }
+        });
+      });
+
+      if (backdrop) {
+        backdrop.addEventListener("click", close);
+      }
+      if (closeBtn) {
+        closeBtn.addEventListener("click", close);
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (overlay.hasAttribute("hidden")) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+          return;
+        }
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          step(-1);
+          return;
+        }
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          step(1);
+          return;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

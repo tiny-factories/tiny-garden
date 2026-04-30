@@ -24,3 +24,4 @@
 - Stripe keys are optional; billing endpoints return 503 gracefully when unconfigured.
 - `BLOB_READ_WRITE_TOKEN` is optional; without it, built sites fall back to local `generated/` directory.
 - `.env.local` must include `DATABASE_URL` pointing to the running PostgreSQL instance.
+

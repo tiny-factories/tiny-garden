@@ -1,0 +1,33 @@
+<article class="cs-block cs-block--{{type}}">
+  {{#if (eq type "text")}}
+    {{#if title}}<h2 class="cs-title">{{title}}</h2>{{/if}}
+    <div class="cs-body">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "image")}}
+    <figure class="cs-figure">
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+      {{#if title}}<figcaption>{{title}}</figcaption>{{/if}}
+    </figure>
+    {{#if description}}<p class="cs-desc">{{description}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h2 class="cs-title">{{title}}</h2>{{/if}}
+    <div class="cs-media">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a class="cs-link" href="{{link.url}}" target="_blank" rel="noopener">
+      <span class="cs-link-title">{{link.title}}</span>
+      {{#if link.description}}<span class="cs-link-desc">{{link.description}}</span>{{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if attachment.preview_image_url}}
+      <img class="cs-attachment-preview" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    <a class="cs-attachment" href="{{attachment.url}}" download>{{attachment.display_name}}</a>
+  {{/if}}
+</article>
