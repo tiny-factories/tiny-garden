@@ -67,11 +67,11 @@ function sanitizeCustomCss(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const t = raw.trim();
   if (!t) return null;
-  if (t.length > MAX_CUSTOM_CSS_CHARS) {
-    return t.slice(0, MAX_CUSTOM_CSS_CHARS);
-  }
   if (/@import\b/i.test(t)) {
     return null;
+  }
+  if (t.length > MAX_CUSTOM_CSS_CHARS) {
+    return t.slice(0, MAX_CUSTOM_CSS_CHARS);
   }
   return t;
 }

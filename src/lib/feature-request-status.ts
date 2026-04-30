@@ -28,8 +28,12 @@ const LABEL: Record<FeatureRequestStatusKey, string> = {
 
 export function featureRequestStripHtml(html: string): string {
   return html
+    .replace(/<\/?(?:p|div|section|article|header|footer|li|ul|ol|h[1-6]|blockquote|pre|br)\b[^>]*>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/[ \t\f\v]+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n")
     .trim();
 }
 
