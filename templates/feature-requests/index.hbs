@@ -7,71 +7,135 @@
   <link rel="stylesheet" href="style.css">
   <style>{{{site.custom_css}}}</style>
 </head>
-<body class="sv-body-fr">
+<body class="fr-body">
 
-  <!-- Sticky nav bar — hidden by default, fades in on scroll -->
-  <nav class="sv-fr-nav" id="sv-fr-nav">
-    <div class="sv-fr-nav-inner">
-      <a href="/" class="sv-fr-nav-logo" aria-label="Home">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="20" height="20" rx="4" fill="currentColor"/>
-        </svg>
-      </a>
-      <span class="sv-fr-nav-title">{{channel.title}}</span>
-      <div class="sv-fr-nav-links">
-        <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
-      </div>
+  <nav class="fr-nav" aria-label="Primary">
+    <a href="/" class="fr-logo">{{channel.title}}</a>
+    <div class="fr-nav-links">
+      <a href="https://www.are.na/{{channel.user.slug}}/{{channel.slug}}" class="fr-nav-link" target="_blank" rel="noopener">Channel</a>
+      <a href="https://www.are.na/{{channel.user.slug}}" class="fr-nav-link" target="_blank" rel="noopener">Profile</a>
+    </div>
+    <div class="fr-nav-links fr-nav-links--end">
+      <a href="https://tiny.garden" class="fr-nav-link" target="_blank" rel="noopener">tiny.garden</a>
     </div>
   </nav>
 
-  <!-- Hero intro -->
-  <header class="sv-fr-intro" id="sv-fr-intro">
-    <div class="sv-fr-intro-inner">
-      <h1 class="sv-fr-intro-title">{{channel.title}}</h1>
-      {{#if channel.description}}
-        <p class="sv-fr-intro-description">{{channel.description}}</p>
+  <header class="fr-header">
+    <div class="fr-header-main">
+      <h1 class="fr-page-title"><span class="fr-page-title-line">{{channel.title}}</span></h1>
+      <div class="fr-search">
+        <label class="fr-label" for="fr-search-input">Filter by keyword</label>
+        <input type="search" id="fr-search-input" class="fr-search-input" placeholder="Search requests..." autocomplete="off" aria-label="Search requests">
+      </div>
+      <div class="fr-header-actions">
+        <button type="button" class="fr-btn fr-btn--primary" id="fr-open-overlay" aria-haspopup="dialog" aria-controls="fr-overlay">+ New Request</button>
+      </div>
+    </div>
+
+    <div class="fr-filters" role="toolbar" aria-label="Filter by tag">
+      <button type="button" class="fr-chip fr-chip--active" data-fr-filter="all">All</button>
+      {{#if feature_request_registry}}
+        {{#each feature_request_registry.filterTags}}
+          <button type="button" class="fr-chip" data-fr-filter="{{slug}}">{{label}}</button>
+        {{/each}}
       {{/if}}
-      <p class="sv-fr-intro-hint">Comment on Are.na to vote for a feature</p>
-      <p class="sv-fr-intro-meta">
-        {{channel.length}} requests &middot; by <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
-      </p>
     </div>
   </header>
 
-  <!-- Feature request cards -->
-  <main class="sv-fr-cards">
+  <main class="fr-list" id="fr-list">
     {{#each blocks}}
       {{> block}}
+    {{else}}
+      <p class="fr-empty">No requests yet. Add a block to this channel on Are.na to post the first one.</p>
     {{/each}}
   </main>
 
-  <!-- Footer -->
-  <footer class="sv-fr-footer">
-    <div class="sv-fr-footer-items">
-      <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}} on Are.na</a>
-      <span class="sv-fr-footer-sep">&middot;</span>
+  <footer class="fr-footer">
+    <div class="fr-footer-left">
+      <a href="https://www.are.na/{{channel.user.slug}}">{{channel.user.name}}</a>
+      <span class="fr-footer-sep">&middot;</span>
+      <span>{{channel.length}} in channel</span>
+    </div>
+    <div class="fr-footer-center">Comments on Are.na count as votes</div>
+    <div class="fr-footer-right">
       <a href="https://tiny.garden">Built with tiny.garden</a>
     </div>
   </footer>
 
-  <!-- Scroll behaviour: show/hide sticky nav -->
+  <div class="fr-overlay" id="fr-overlay" role="dialog" aria-modal="true" aria-labelledby="fr-overlay-title" aria-hidden="true">
+    <div class="fr-overlay-header">
+      <span class="fr-overlay-brand" id="fr-overlay-title">{{channel.title}}</span>
+      <button type="button" class="fr-close" id="fr-close-overlay" aria-label="Close">CLOSE —</button>
+    </div>
+    <div class="fr-overlay-body">
+      <p class="fr-overlay-lead">Requests live as blocks on your Are.na channel. Add a block there to suggest something new — comments on each block count as votes on this page.</p>
+      <a class="fr-btn fr-btn--inverse fr-btn--block" href="https://www.are.na/{{channel.user.slug}}/{{channel.slug}}" target="_blank" rel="noopener">Open channel on Are.na</a>
+    </div>
+  </div>
+
   <script>
     (function () {
-      var nav = document.getElementById('sv-fr-nav');
-      var intro = document.getElementById('sv-fr-intro');
-      if (!nav || !intro) return;
+      var search = document.getElementById("fr-search-input");
+      var chips = document.querySelectorAll("[data-fr-filter]");
+      var rows = document.querySelectorAll(".fr-row");
+      var overlay = document.getElementById("fr-overlay");
+      var openBtn = document.getElementById("fr-open-overlay");
+      var closeBtn = document.getElementById("fr-close-overlay");
+      var activeFilter = "all";
 
-      function onScroll() {
-        var introBottom = intro.getBoundingClientRect().bottom;
-        if (introBottom <= 0) {
-          nav.classList.add('is-visible');
-        } else {
-          nav.classList.remove('is-visible');
+      function rowMatchesFilter(row) {
+        if (activeFilter === "all") return true;
+        var raw = row.getAttribute("data-fr-tags") || "";
+        var tags = raw.split(/\s+/).filter(Boolean);
+        return tags.indexOf(activeFilter) !== -1;
+      }
+
+      function rowMatchesSearch(row, q) {
+        if (!q) return true;
+        var t = (row.textContent || "").toLowerCase();
+        return t.indexOf(q) !== -1;
+      }
+
+      function apply() {
+        var q = (search && search.value ? search.value : "").toLowerCase().trim();
+        for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          var show = rowMatchesFilter(row) && rowMatchesSearch(row, q);
+          row.hidden = !show;
         }
       }
 
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+      if (search) {
+        search.addEventListener("input", apply);
+      }
+
+      chips.forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          activeFilter = chip.getAttribute("data-fr-filter") || "all";
+          chips.forEach(function (c) {
+            c.classList.toggle("fr-chip--active", c === chip);
+          });
+          apply();
+        });
+      });
+
+      function setOverlay(open) {
+        if (!overlay) return;
+        overlay.classList.toggle("fr-overlay--open", open);
+        overlay.setAttribute("aria-hidden", open ? "false" : "true");
+        document.body.classList.toggle("fr-overlay-active", open);
+      }
+
+      if (openBtn) openBtn.addEventListener("click", function () { setOverlay(true); });
+      if (closeBtn) closeBtn.addEventListener("click", function () { setOverlay(false); });
+      if (overlay) {
+        overlay.addEventListener("click", function (e) {
+          if (e.target === overlay) setOverlay(false);
+        });
+      }
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") setOverlay(false);
+      });
     })();
   </script>
 </body>

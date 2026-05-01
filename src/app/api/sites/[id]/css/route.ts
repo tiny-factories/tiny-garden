@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ArenaClient } from "@/lib/arena";
+import { extractChannelStylesCss } from "@/lib/channel-styles";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
 
@@ -19,7 +21,14 @@ export async function GET(
   const { id } = await params;
   const site = await prisma.site.findUnique({
     where: { id },
-    select: { id: true, userId: true, customCss: true, updatedAt: true },
+    select: {
+      id: true,
+      userId: true,
+      channelSlug: true,
+      customCss: true,
+      updatedAt: true,
+      user: { select: { arenaToken: true } },
+    },
   });
   if (!site || site.userId !== auth.userId) {
     return NextResponse.json(
@@ -28,8 +37,18 @@ export async function GET(
     );
   }
 
+  let channelCss = "";
+  try {
+    const client = new ArenaClient(site.user.arenaToken);
+    const blocks = await client.getAllChannelBlocks(site.channelSlug);
+    channelCss = extractChannelStylesCss(blocks);
+  } catch (e) {
+    console.error("[css GET] Are.na channel blocks failed", e);
+  }
+
   return NextResponse.json({
     css: site.customCss || "",
+    channelCss,
     updatedAt: site.updatedAt,
   });
 }

@@ -38,7 +38,7 @@ export function Nav() {
   if (pathname.startsWith("/api/serve")) return null;
 
   return (
-    <nav className="flex w-full items-center justify-between gap-2 px-4 py-4 border-b border-neutral-100 dark:border-neutral-800">
+    <nav className="flex h-14 w-full shrink-0 items-center justify-between gap-2 px-4 border-b border-neutral-100 dark:border-neutral-800">
       <div className="flex min-w-0 justify-start">
         <Link
           href={isLoggedIn ? "/sites" : "/"}
@@ -50,7 +50,7 @@ export function Nav() {
             width={20}
             height={20}
             unoptimized
-            className="size-5 shrink-0 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
+            className="size-5 shrink-0 rounded bg-white dark:bg-neutral-900 object-contain pointer-events-none select-none [image-rendering:crisp-edges]"
             aria-hidden
           />
           tiny.garden
@@ -116,7 +116,7 @@ export function Nav() {
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors px-3 py-1.5 text-sm"
+              className="inline-flex h-8 shrink-0 items-center justify-center rounded bg-neutral-900 px-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white"
             >
               Try it now
             </Link>

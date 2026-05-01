@@ -1,0 +1,35 @@
+<article class="pk-item pk-item--{{type}}">
+  {{#if (eq type "text")}}
+    {{#if title}}<h2 class="pk-item-title">{{title}}</h2>{{/if}}
+    <div class="pk-item-body">{{{content}}}</div>
+  {{/if}}
+
+  {{#if (eq type "image")}}
+    <figure>
+      <img src="{{image.display}}" alt="{{title}}" loading="lazy">
+      {{#if title}}<figcaption>{{title}}</figcaption>{{/if}}
+    </figure>
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a class="pk-link" href="{{link.url}}" target="_blank" rel="noopener">
+      <span class="pk-link-title">{{#if title}}{{title}}{{else}}{{link.title}}{{/if}}</span>
+      {{#if link.description}}<span class="pk-link-desc">{{link.description}}</span>{{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h2 class="pk-item-title">{{title}}</h2>{{/if}}
+    <div class="pk-item-body">{{{embed.html}}}</div>
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if attachment.preview_image_url}}
+      <img class="pk-attachment-preview" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    {{#if attachment.is_video}}
+      <video class="pk-attachment-preview" controls preload="metadata" src="{{attachment.url}}"></video>
+    {{/if}}
+    <a class="pk-attachment" href="{{attachment.url}}" download>{{attachment.display_name}}</a>
+  {{/if}}
+</article>

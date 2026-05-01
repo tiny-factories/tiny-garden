@@ -1,0 +1,74 @@
+{{#if (eq type "image")}}
+  <div
+    class="cell {{photoCellClass @root.blocks this}} photo-lightbox-item{{#if image.width}}{{#if image.height}} photo-lightbox-item--intrinsic{{/if}}{{/if}}"
+    role="button"
+    tabindex="0"
+    data-photo-src="{{image.display}}"
+    data-photo-seq="{{photoImageSeq @root.blocks this}}"
+    {{#if title}}data-photo-title="{{title}}"{{/if}}
+    {{#if description}}data-photo-caption="{{description}}"{{/if}}
+    aria-label="Open full screen{{#if title}}: {{title}}{{/if}}"
+    {{#if image.width}}{{#if image.height}}style="aspect-ratio: {{image.width}} / {{image.height}};"{{/if}}{{/if}}
+  >
+    <div class="image-bg" style="background-image: url('{{image.display}}');" role="img" aria-label="{{title}}"></div>
+    <div class="metadata-stamp">
+      <span class="stamp-label">LOC: {{#if title}}{{title}}{{else}}—{{/if}}</span>
+      <span class="stamp-label">CAPTION: {{#if description}}{{description}}{{else}}—{{/if}}</span>
+      <span class="stamp-label">SEQ: {{photoImageSeq @root.blocks this}}</span>
+    </div>
+    {{#if description}}
+      <div class="film-edge">{{description}}</div>
+    {{else}}
+      <div class="film-edge">35MM</div>
+    {{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq type "text")}}
+  <div class="cell cell--full cell--prose">
+    {{#if title}}<h2 class="photo-prose-title">{{title}}</h2>{{/if}}
+    <div class="photo-prose">{{{content}}}</div>
+  </div>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <div class="cell wide cell--link">
+    {{#if link.thumbnail}}
+      <a class="cell-link-hit" href="{{link.url}}" target="_blank" rel="noopener noreferrer">
+        <span class="image-bg" style="background-image: url('{{link.thumbnail}}');"></span>
+      </a>
+      <div class="metadata-stamp">
+        <span class="stamp-label">LINK: {{link.title}}</span>
+        {{#if link.description}}<span class="stamp-label">{{link.description}}</span>{{/if}}
+        <span class="stamp-label">{{link.url}}</span>
+      </div>
+    {{else}}
+      <div class="cell--link-fallback">
+        <a class="photo-link-title" href="{{link.url}}" target="_blank" rel="noopener noreferrer">{{link.title}}</a>
+        {{#if link.description}}<p class="photo-link-desc">{{link.description}}</p>{{/if}}
+      </div>
+    {{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <div class="cell cell--full cell--embed">
+    <div class="photo-media">{{{embed.html}}}</div>
+    {{#if title}}<h3 class="photo-media-title">{{title}}</h3>{{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <div class="cell cell--full cell--attachment">
+    {{#if (eq attachment.kind "video")}}
+      <video class="photo-attachment-video" src="{{attachment.url}}" controls preload="metadata" playsinline></video>
+    {{/if}}
+    {{#if (eq attachment.kind "pdf")}}
+      <iframe class="photo-attachment-pdf" src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+    {{/if}}
+    {{#if attachment.preview_image_url}}
+      <img class="photo-attachment-preview" src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+    {{/if}}
+    <a class="photo-attachment-link" href="{{attachment.url}}" download>{{attachment.display_name}}</a>
+  </div>
+{{/if}}

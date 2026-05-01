@@ -1,0 +1,4 @@
+{
+  "name": "Directory",
+  "description": "List with sort, search, hover previews, and on-site pages per block (`block-{id}.html`)."
+}

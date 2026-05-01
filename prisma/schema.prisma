@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -39,7 +40,6 @@ model Site {
   blobUrl        String?
   customDomain   String?  @unique
   domainVerified Boolean  @default(false)
-  discoverable   Boolean  @default(true)
   iconSeed       Int?     // Seed for procedural plant icon
   lastBuiltAt    DateTime?
   lastBuildError String?  // Set when a build fails; cleared on success
@@ -95,4 +95,14 @@ model BuildRequest {
 
   @@index([userId, createdAt])
   @@index([siteId, createdAt])
+}
+
+/// Per-template Are.na channel used for public /templates previews (see admin → Template examples).
+model TemplateExampleChannel {
+  id            String   @id @default(cuid())
+  templateSlug  String   @unique
+  /// Null until an admin links an Are.na channel in Admin → Templates.
+  channelSlug   String?
+  channelTitle  String?
+  updatedAt     DateTime @updatedAt
 }

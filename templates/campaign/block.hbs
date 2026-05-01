@@ -41,14 +41,29 @@
   {{/if}}
 
   {{#if (eq type "attachment")}}
-    {{#if image.display}}
-      <img class="sv-campaign-block-img" src="{{image.display}}" alt="{{attachment.file_name}}" loading="lazy">
+    {{#if attachment.preview_url}}
+      {{#if attachment.is_video}}
+        <video class="sv-campaign-block-img" src="{{attachment.preview_url}}" controls preload="metadata"></video>
+      {{else}}
+        {{#if attachment.is_pdf}}
+          <iframe class="sv-campaign-block-img" src="{{attachment.preview_url}}" title="{{attachment.alt_text}}" loading="lazy"></iframe>
+        {{else}}
+          {{#if attachment.is_audio}}
+            <audio class="sv-campaign-block-audio" src="{{attachment.preview_url}}" controls preload="metadata"></audio>
+          {{else}}
+            <img class="sv-campaign-block-img" src="{{attachment.preview_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+          {{/if}}
+        {{/if}}
+      {{/if}}
     {{/if}}
     <a href="{{attachment.url}}" class="sv-campaign-block-attachment" download>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M8 1v10M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>{{attachment.file_name}}</span>
+      <span>{{attachment.display_name}}</span>
+      {{#if attachment.kind_label}}
+        <small>({{attachment.kind_label}})</small>
+      {{/if}}
     </a>
   {{/if}}
 

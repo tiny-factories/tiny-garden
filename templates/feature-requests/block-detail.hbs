@@ -1,0 +1,77 @@
+<div class="fr-child-block fr-child-block--{{type}}">
+  <div class="fr-child-meta">
+    <span class="fr-status fr-status--{{featureRequestStatusKey}}"><span class="fr-status-dot"></span> {{featureRequestStatusLabel}}</span>
+    <span class="fr-child-meta-votes">{{comment_count}} votes</span>
+    <time class="fr-child-meta-time" datetime="{{created_at}}">{{formatDate created_at}}</time>
+  </div>
+
+  {{#if (eq type "image")}}
+    <figure class="fr-child-figure">
+      <img src="{{image.display}}" alt="{{featureRequestRowTitle}}" loading="lazy">
+    </figure>
+    {{#if title}}<h1 class="fr-child-title">{{featureRequestRowTitle}}</h1>{{/if}}
+    {{#if (featureRequestCleanDescription)}}<p class="fr-child-lead">{{featureRequestCleanDescription}}</p>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "text")}}
+    {{#if title}}<h1 class="fr-child-title">{{featureRequestRowTitle}}</h1>{{/if}}
+    {{#if (featureRequestCleanDescription)}}<p class="fr-child-lead">{{featureRequestCleanDescription}}</p>{{/if}}
+    {{#if content}}<div class="fr-child-body">{{{content}}}</div>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "link")}}
+    <a href="{{link.url}}" class="fr-child-outbound" target="_blank" rel="noopener noreferrer">
+      {{#if link.thumbnail}}
+      <figure class="fr-child-figure">
+        <img src="{{link.thumbnail}}" alt="" loading="lazy">
+      </figure>
+      {{/if}}
+      <h1 class="fr-child-title">{{featureRequestRowTitle}}</h1>
+      {{#if (featureRequestCleanDescription)}}
+        <p class="fr-child-lead">{{featureRequestCleanDescription}}</p>
+      {{else}}
+        {{#if link.description}}<p class="fr-child-lead">{{link.description}}</p>{{/if}}
+      {{/if}}
+    </a>
+  {{/if}}
+
+  {{#if (eq type "media")}}
+    {{#if title}}<h1 class="fr-child-title">{{featureRequestRowTitle}}</h1>{{/if}}
+    {{#if (featureRequestCleanDescription)}}<p class="fr-child-lead">{{featureRequestCleanDescription}}</p>{{/if}}
+    {{#if embed.html}}<div class="fr-child-embed">{{{embed.html}}}</div>{{/if}}
+  {{/if}}
+
+  {{#if (eq type "attachment")}}
+    {{#if (eq attachment.kind "video")}}
+    <div class="fr-child-embed">
+      <video controls preload="metadata" src="{{attachment.url}}"></video>
+    </div>
+    {{/if}}
+    {{#if (eq attachment.kind "pdf")}}
+    <div class="fr-child-embed fr-child-embed--pdf">
+      <iframe src="{{attachment.url}}" title="{{attachment.display_name}}" loading="lazy"></iframe>
+    </div>
+    {{/if}}
+    {{#if attachment.preview_image_url}}
+      {{#if (eq attachment.kind "image")}}
+      <figure class="fr-child-figure">
+        <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+      </figure>
+      {{/if}}
+      {{#if (eq attachment.kind "gif")}}
+      <figure class="fr-child-figure">
+        <img src="{{attachment.preview_image_url}}" alt="{{attachment.alt_text}}" loading="lazy">
+      </figure>
+      {{/if}}
+    {{/if}}
+    <h1 class="fr-child-title">{{featureRequestRowTitle}}</h1>
+    {{#if (featureRequestCleanDescription)}}<p class="fr-child-lead">{{featureRequestCleanDescription}}</p>{{/if}}
+    <p class="fr-child-actions">
+      <a href="{{attachment.url}}" class="fr-child-download" download>Download</a>
+    </p>
+  {{/if}}
+
+  <p class="fr-child-arena">
+    <a href="{{arena_url}}" class="fr-child-arena-link" target="_blank" rel="noopener noreferrer">View on Are.na</a>
+  </p>
+</div>

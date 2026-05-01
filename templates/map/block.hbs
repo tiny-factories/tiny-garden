@@ -1,0 +1,41 @@
+{{#if (eq type "text")}}
+  <article class="map-item map-item--text">
+    {{#if title}}<h2>{{title}}</h2>{{/if}}
+    <div>{{{content}}}</div>
+  </article>
+{{/if}}
+
+{{#if (eq type "image")}}
+  <article class="map-item map-item--image">
+    {{#if image.display}}<img src="{{image.display}}" alt="{{title}}" loading="lazy">{{/if}}
+    <div class="map-item-meta">
+      {{#if title}}<h2>{{title}}</h2>{{/if}}
+      {{#if description}}<p>{{description}}</p>{{/if}}
+    </div>
+  </article>
+{{/if}}
+
+{{#if (eq type "link")}}
+  <article class="map-item map-item--link">
+    <a href="{{link.url}}" target="_blank" rel="noopener">
+      <h2>{{link.title}}</h2>
+      {{#if link.description}}<p>{{link.description}}</p>{{/if}}
+    </a>
+  </article>
+{{/if}}
+
+{{#if (eq type "media")}}
+  <article class="map-item map-item--media">
+    {{#if title}}<h2>{{title}}</h2>{{/if}}
+    <div>{{{embed.html}}}</div>
+  </article>
+{{/if}}
+
+{{#if (eq type "attachment")}}
+  <article class="map-item map-item--attachment">
+    <a href="{{attachment.url}}" download>
+      <strong>{{attachment.display_name}}</strong>
+      <span>{{attachment.type_label}}</span>
+    </a>
+  </article>
+{{/if}}

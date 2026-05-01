@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{channel.title}}</title>
+  <link rel="stylesheet" href="style.css">
+  <style>{{{site.custom_css}}}</style>
+</head>
+<body class="dir-body">
+  <div class="dir-wrap">
+    <header class="dir-head">
+      <h1 class="dir-title">{{channel.title}}</h1>
+      {{#if channel.description}}<p class="dir-desc">{{channel.description}}</p>{{/if}}
+
+      {{#if blocks.length}}
+      <div class="dir-tools">
+        <div class="dir-tools__inner">
+          <label class="dir-search-label" for="dir-search">
+            <span class="dir-field-label">Search</span>
+            <input type="search" id="dir-search" class="dir-search" placeholder="Search items…" autocomplete="off" enterkeyhint="search">
+          </label>
+          <div class="dir-sort" role="toolbar" aria-label="Sort list">
+            <span class="dir-field-label">Sort</span>
+            <div class="dir-sort__buttons" role="group">
+              <button type="button" class="dir-sort__btn dir-sort__btn--active" data-sort="alpha-asc" aria-label="Sort A to Z" title="A–Z" aria-pressed="true">
+                <svg class="dir-sort__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M20 8h-5"/><path d="M15 10V6.5a2.5 2.5 0 0 1 5 0V10"/><path d="M15 14h5l-5 6h5"/></svg>
+              </button>
+              <button type="button" class="dir-sort__btn" data-sort="alpha-desc" aria-label="Sort Z to A" title="Z–A" aria-pressed="false">
+                <svg class="dir-sort__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 16 4 4 4-4"/><path d="M7 4v16"/><path d="M15 4h5l-5 6h5"/><path d="M15 20v-3.5a2.5 2.5 0 0 1 5 0V20"/><path d="M20 18h-5"/></svg>
+              </button>
+              <button type="button" class="dir-sort__btn" data-sort="date-desc" aria-label="Sort by date, newest first" title="Newest first" aria-pressed="false">
+                <svg class="dir-sort__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 18 4 4 4-4"/><path d="M16 2v4"/><path d="M18 14v8"/><path d="M21 11.354V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7.343"/><path d="M3 10h18"/><path d="M8 2v4"/></svg>
+              </button>
+              <button type="button" class="dir-sort__btn" data-sort="date-asc" aria-label="Sort by date, oldest first" title="Oldest first" aria-pressed="false">
+                <svg class="dir-sort__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 18 4-4 4 4"/><path d="M16 2v4"/><path d="M18 22v-8"/><path d="M21 11.343V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9"/><path d="M3 10h18"/><path d="M8 2v4"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+    </header>
+
+    <main class="dir-main" id="dir-main">
+      {{#unless blocks.length}}
+      <p class="dir-empty">No blocks in this channel yet.</p>
+      {{else}}
+      <ul class="dir-list" role="list">
+        {{#each (sortDirectoryBlocksAlpha blocks)}}
+        <li class="dir-row dir-row--{{type}}" id="block-{{id}}" data-sort-label="{{directoryLabel this}}" data-search="{{directorySearchText this}}" data-created-at="{{created_at}}" data-preview-variant="{{directoryPreviewVariant this}}" data-preview-url="{{directoryPreviewMediaUrl this}}" data-preview-text="{{directoryPreviewTextAttr this}}" data-preview-kind="{{directoryKindLabel this}}">
+          {{> block}}
+        </li>
+        {{/each}}
+      </ul>
+      {{/unless}}
+    </main>
+  </div>
+  <div id="dir-float-preview" class="dir-float-preview" hidden aria-hidden="true" data-mode="">
+    <img class="dir-float-preview__img" alt="" decoding="async" />
+    <div class="dir-float-preview__text-wrap">
+      <p class="dir-float-preview__text"></p>
+    </div>
+    <iframe class="dir-float-preview__pdf" title="PDF preview"></iframe>
+    <span class="dir-float-preview__fallback"></span>
+  </div>
+  <script>
+(function () {
+  var main = document.getElementById("dir-main");
+  if (!main) return;
+  var input = document.getElementById("dir-search");
+  var sortButtons = document.querySelector(".dir-sort__buttons");
+  /** Original row nodes in server A–Z order (same references; we only reorder with appendChild). */
+  var initialRows = [];
+  var listEl = main.querySelector(".dir-list");
+  if (listEl) {
+    initialRows = Array.from(listEl.querySelectorAll(".dir-row"));
+  }
+
+  function getList() {
+    return main.querySelector(".dir-list");
+  }
+
+  function currentRows() {
+    var ul = getList();
+    return ul ? Array.from(ul.querySelectorAll(".dir-row")) : [];
+  }
+
+  function applyFilter() {
+    var q = (input && input.value || "").trim().toLowerCase();
+    var rows = main.querySelectorAll(".dir-row");
+    var any = false;
+    rows.forEach(function (row) {
+      var hay = (row.getAttribute("data-search") || "").toLowerCase();
+      var show = !q || hay.indexOf(q) !== -1;
+      row.classList.toggle("dir-row--hidden", !show);
+      if (show) any = true;
+    });
+    main.classList.toggle("dir-main--filter-empty", q.length > 0 && !any);
+  }
+
+  function rowBlockId(row) {
+    var id = row.id || "";
+    var m = id.match(/^block-(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+
+  function setActiveSort(mode) {
+    var btns = document.querySelectorAll(".dir-sort__btn");
+    btns.forEach(function (b) {
+      var m = b.getAttribute("data-sort");
+      var on = m === mode;
+      b.classList.toggle("dir-sort__btn--active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function renderAlpha() {
+    var ul = getList();
+    if (!ul || !initialRows.length) return;
+    initialRows.forEach(function (row) {
+      ul.appendChild(row);
+    });
+    ul.removeAttribute("aria-label");
+    setActiveSort("alpha-asc");
+    applyFilter();
+  }
+
+  function renderAlphaDesc() {
+    var ul = getList();
+    var nodes = currentRows();
+    if (!ul || !nodes.length) return;
+    nodes.sort(function (a, b) {
+      var la = (a.getAttribute("data-sort-label") || "").toLowerCase();
+      var lb = (b.getAttribute("data-sort-label") || "").toLowerCase();
+      var c = lb.localeCompare(la, undefined, { sensitivity: "base" });
+      if (c !== 0) return c;
+      return rowBlockId(b) - rowBlockId(a);
+    });
+    nodes.forEach(function (row) {
+      ul.appendChild(row);
+    });
+    ul.setAttribute("aria-label", "Z to A");
+    setActiveSort("alpha-desc");
+    applyFilter();
+  }
+
+  function renderByDate(newestFirst) {
+    var ul = getList();
+    var nodes = currentRows();
+    if (!ul || !nodes.length) return;
+    nodes.sort(function (a, b) {
+      var ta = new Date(a.getAttribute("data-created-at") || 0).getTime();
+      var tb = new Date(b.getAttribute("data-created-at") || 0).getTime();
+      if (newestFirst) return tb - ta;
+      return ta - tb;
+    });
+    nodes.forEach(function (row) {
+      ul.appendChild(row);
+    });
+    ul.setAttribute("aria-label", newestFirst ? "Newest first" : "Oldest first");
+    setActiveSort(newestFirst ? "date-desc" : "date-asc");
+    applyFilter();
+  }
+
+  if (input) input.addEventListener("input", applyFilter);
+
+  if (sortButtons) {
+    sortButtons.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest(".dir-sort__btn") : null;
+      if (!btn || !sortButtons.contains(btn)) return;
+      var v = btn.getAttribute("data-sort");
+      if (v === "alpha-asc") renderAlpha();
+      else if (v === "alpha-desc") renderAlphaDesc();
+      else if (v === "date-desc") renderByDate(true);
+      else if (v === "date-asc") renderByDate(false);
+    });
+  }
+
+  var floatEl = document.getElementById("dir-float-preview");
+  var floatImg = floatEl && floatEl.querySelector(".dir-float-preview__img");
+  var floatTextWrap = floatEl && floatEl.querySelector(".dir-float-preview__text-wrap");
+  var floatText = floatEl && floatEl.querySelector(".dir-float-preview__text");
+  var floatPdf = floatEl && floatEl.querySelector(".dir-float-preview__pdf");
+  var floatFb = floatEl && floatEl.querySelector(".dir-float-preview__fallback");
+  var floatRaf = null;
+  var floatActiveRow = null;
+
+  function hideFloatPreview() {
+    floatActiveRow = null;
+    if (!floatEl) return;
+    floatEl.classList.remove("dir-float-preview--visible");
+    floatEl.hidden = true;
+    floatEl.setAttribute("aria-hidden", "true");
+    floatEl.setAttribute("data-mode", "");
+    if (floatImg) {
+      floatImg.onerror = null;
+      floatImg.removeAttribute("src");
+      floatImg.style.display = "none";
+    }
+    if (floatPdf) {
+      floatPdf.removeAttribute("src");
+      floatPdf.style.display = "none";
+    }
+    if (floatText) floatText.textContent = "";
+    if (floatTextWrap) floatTextWrap.style.display = "none";
+    if (floatFb) {
+      floatFb.style.display = "none";
+      floatFb.textContent = "";
+    }
+  }
+
+  function positionFloatPreview(clientX, clientY) {
+    if (!floatEl) return;
+    var gap = 14;
+    var w = floatEl.offsetWidth || 320;
+    var h = floatEl.offsetHeight || 200;
+    var x = clientX + gap;
+    var y = clientY + gap;
+    if (x + w > window.innerWidth - 10) x = clientX - w - gap;
+    if (y + h > window.innerHeight - 10) y = clientY - h - gap;
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
+    floatEl.style.left = x + "px";
+    floatEl.style.top = y + "px";
+  }
+
+  function applyRowToFloat(row) {
+    if (!floatEl || !floatImg || !floatFb) return;
+    var variant = (row.getAttribute("data-preview-variant") || "none").trim();
+    var url = (row.getAttribute("data-preview-url") || "").trim();
+    var text = row.getAttribute("data-preview-text") || "";
+    var kind = (row.getAttribute("data-preview-kind") || "").trim();
+
+    floatImg.onerror = null;
+    floatImg.style.display = "none";
+    floatImg.removeAttribute("src");
+    if (floatPdf) floatPdf.style.display = "none";
+    if (floatPdf) floatPdf.removeAttribute("src");
+    if (floatTextWrap) floatTextWrap.style.display = "none";
+    if (floatText) floatText.textContent = "";
+    floatFb.style.display = "none";
+    floatFb.textContent = "";
+
+    if (variant === "text" && text && floatText && floatTextWrap) {
+      floatEl.setAttribute("data-mode", "text");
+      floatText.textContent = text;
+      floatTextWrap.style.display = "block";
+      return;
+    }
+    if (variant === "pdf" && url && floatPdf) {
+      floatEl.setAttribute("data-mode", "pdf");
+      var pdfSrc = url.indexOf("#") === -1 ? url + "#view=FitH" : url;
+      floatPdf.src = pdfSrc;
+      floatPdf.style.display = "block";
+      return;
+    }
+    if (variant === "image" && url) {
+      floatEl.setAttribute("data-mode", "image");
+      floatImg.onerror = function () {
+        floatImg.onerror = null;
+        floatImg.removeAttribute("src");
+        floatImg.style.display = "none";
+        floatEl.setAttribute("data-mode", "none");
+        floatFb.style.display = "flex";
+        floatFb.textContent = kind || "—";
+      };
+      floatImg.src = url;
+      floatImg.style.display = "block";
+      return;
+    }
+    floatEl.setAttribute("data-mode", "none");
+    floatFb.style.display = "flex";
+    floatFb.textContent = kind || "—";
+  }
+
+  function showFloatPreview(row) {
+    if (!floatEl) return;
+    applyRowToFloat(row);
+    floatEl.hidden = false;
+    floatEl.setAttribute("aria-hidden", "true");
+    requestAnimationFrame(function () {
+      floatEl.classList.add("dir-float-preview--visible");
+    });
+  }
+
+  if (floatEl && main) {
+    main.addEventListener(
+      "mouseover",
+      function (e) {
+        var row = e.target && e.target.closest ? e.target.closest(".dir-row") : null;
+        if (!row || !main.contains(row)) return;
+        if (row.classList.contains("dir-row--hidden")) {
+          hideFloatPreview();
+          return;
+        }
+        floatActiveRow = row;
+        showFloatPreview(row);
+        positionFloatPreview(e.clientX, e.clientY);
+      },
+      true
+    );
+
+    main.addEventListener(
+      "mousemove",
+      function (e) {
+        if (!floatActiveRow || !floatEl.classList.contains("dir-float-preview--visible")) return;
+        var row = e.target && e.target.closest ? e.target.closest(".dir-row") : null;
+        if (!row || row !== floatActiveRow || row.classList.contains("dir-row--hidden")) {
+          hideFloatPreview();
+          return;
+        }
+        if (floatRaf) return;
+        floatRaf = requestAnimationFrame(function () {
+          floatRaf = null;
+          positionFloatPreview(e.clientX, e.clientY);
+        });
+      },
+      true
+    );
+
+    main.addEventListener(
+      "mouseleave",
+      function (e) {
+        if (e.relatedTarget && main.contains(e.relatedTarget)) return;
+        hideFloatPreview();
+      },
+      true
+    );
+  }
+})();
+  </script>
+</body>
+</html>

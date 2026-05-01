@@ -5,6 +5,7 @@ import { buildSite } from "@/lib/build";
 import { isBetaFull } from "@/lib/beta";
 import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { getRequestAuth } from "@/lib/request-auth";
+import { themeToDbFields } from "@/lib/ai-site-theme";
 
 // POST returns quickly but runs buildSite in after(); that work shares this invocation’s limit.
 export const maxDuration = 300;
@@ -29,7 +30,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized", code: "unauthorized" }, { status: 401 });
   }
 
-  const { channelSlug, channelTitle, template, subdomain } = await req.json();
+  const { channelSlug, channelTitle, template, subdomain, initialTheme } =
+    await req.json();
 
   if (!channelSlug || !template || !subdomain) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -79,6 +81,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Subdomain taken" }, { status: 409 });
   }
 
+  let themePayload: {
+    themeColors: string;
+    themeFonts: string;
+    customCss?: string;
+  } | undefined;
+  if (initialTheme !== undefined && initialTheme !== null) {
+    if (!user.isAdmin) {
+      return NextResponse.json(
+        { error: "Initial theme is only available for admins." },
+        { status: 403 }
+      );
+    }
+    const parsed = themeToDbFields(initialTheme);
+    if (!parsed) {
+      return NextResponse.json(
+        { error: "Invalid initial theme payload" },
+        { status: 400 }
+      );
+    }
+    themePayload = parsed;
+  }
+
   const site = await prisma.site.create({
     data: {
       subdomain,
@@ -87,6 +111,13 @@ export async function POST(req: NextRequest) {
       template,
       iconSeed: seedFromSubdomain(subdomain),
       userId: auth.userId,
+      ...(themePayload && {
+        themeColors: themePayload.themeColors,
+        themeFonts: themePayload.themeFonts,
+        ...(themePayload.customCss
+          ? { customCss: themePayload.customCss }
+          : {}),
+      }),
     },
   });
 

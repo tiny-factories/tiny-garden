@@ -23,33 +23,39 @@ const THUMB_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 const THUMB_DURATION_MS = 520;
 const THUMB_DURATION_REDUCED_MS = 200;
 
-/** Horizontal inset: thumb `left-0.5` + right margin (grid `inset-x-0.5`). */
+/** Horizontal inset: thumb `left-0.5` (aligns with label grid `inset-x-0.5`). */
 const TRACK_EDGE_INSET_PX = 2;
-const SEGMENT_TRACK_HORIZONTAL_INSET_PX = TRACK_EDGE_INSET_PX * 2;
 
-function useSegmentWidth(
-  trackRef: RefObject<HTMLElement | null>,
+/** Measure real grid column geometry so the thumb matches `repeat(n, 1fr)` cells (clientWidth math can drift). */
+function useSegmentLayout(
+  gridRef: RefObject<HTMLElement | null>,
   segmentCount: number
 ) {
-  const [segmentPx, setSegmentPx] = useState(0);
+  const [layout, setLayout] = useState<{
+    cellWidth: number;
+    offsets: number[];
+  }>({ cellWidth: 0, offsets: [] });
 
   useLayoutEffect(() => {
-    const el = trackRef.current;
-    if (!el || segmentCount < 1) return;
+    const grid = gridRef.current;
+    if (!grid || segmentCount < 1) return;
 
     const measure = () => {
-      const cw = el.clientWidth;
-      const inner = Math.max(0, cw - SEGMENT_TRACK_HORIZONTAL_INSET_PX);
-      setSegmentPx(inner / segmentCount);
+      const cells = Array.from(grid.children) as HTMLElement[];
+      if (cells.length !== segmentCount) return;
+      const offsets = cells.map((c) => c.offsetLeft);
+      const widths = cells.map((c) => c.offsetWidth);
+      const cellWidth = widths[0] ?? 0;
+      setLayout({ cellWidth, offsets });
     };
 
     measure();
     const ro = new ResizeObserver(measure);
-    ro.observe(el);
+    ro.observe(grid);
     return () => ro.disconnect();
-  }, [trackRef, segmentCount]);
+  }, [gridRef, segmentCount]);
 
-  return segmentPx;
+  return layout;
 }
 
 export type SegmentedOption<T extends string = string> = {
@@ -77,10 +83,14 @@ export function SegmentedControl<T extends string>({
   const maxIdx = Math.max(0, n - 1);
 
   const trackRef = useRef<HTMLDivElement>(null);
-  const segmentPx = useSegmentWidth(trackRef, n);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const { cellWidth: segmentPx, offsets: segmentOffsets } = useSegmentLayout(
+    gridRef,
+    n
+  );
   const indexRaw = segments.findIndex((s) => s.value === value);
   const index = indexRaw >= 0 ? indexRaw : 0;
-  const restingX = index * segmentPx;
+  const restingX = segmentOffsets[index] ?? 0;
 
   const [dragThumbX, setDragThumbX] = useState<number | null>(null);
   const [settleX, setSettleX] = useState<number | null>(null);
@@ -119,11 +129,11 @@ export function SegmentedControl<T extends string>({
     (clientX: number, innerLeft: number) => {
       const w = segmentPx;
       if (w <= 0) return 0;
-      const maxX = maxIdx * w;
+      const maxX = segmentOffsets[maxIdx] ?? maxIdx * w;
       const x = clientX - innerLeft;
       return Math.max(0, Math.min(maxX, x - w / 2));
     },
-    [segmentPx, maxIdx]
+    [segmentPx, maxIdx, segmentOffsets]
   );
 
   /** Viewport X where segment index 0 starts (padding edge + `left-0.5`). */
@@ -148,7 +158,7 @@ export function SegmentedControl<T extends string>({
       const nearest = w > 0 ? Math.round(x / w) : 0;
       const idx = Math.max(0, Math.min(maxIdx, nearest));
       const nextVal = segments[idx]!.value;
-      const snapPos = idx * w;
+      const snapPos = segmentOffsets[idx] ?? idx * w;
 
       setIsDragging(false);
       setSettleX(snapPos);
@@ -160,7 +170,7 @@ export function SegmentedControl<T extends string>({
         onChange(nextVal);
       }
     },
-    [maxIdx, onChange, segmentPx, segments, value]
+    [maxIdx, onChange, segmentOffsets, segmentPx, segments, value]
   );
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -212,7 +222,7 @@ export function SegmentedControl<T extends string>({
       pointerStartRef.current = null;
       isDragGestureRef.current = false;
       if (tapVal !== value) {
-        setSettleX(segmentIndex * w);
+        setSettleX(segmentOffsets[segmentIndex] ?? segmentIndex * w);
         onChange(tapVal);
       }
       return;
@@ -275,6 +285,7 @@ export function SegmentedControl<T extends string>({
         }}
       />
       <div
+        ref={gridRef}
         className="pointer-events-none absolute inset-y-0.5 inset-x-0.5 z-10 grid gap-0"
         style={{
           gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,

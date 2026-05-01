@@ -3,20 +3,24 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowBigLeft } from "lucide-react";
+import { ArrowBigLeft, ChevronDown } from "lucide-react";
 import { track } from "@/lib/track";
 import { SearchInput } from "@/components/search-input";
-import { Toolbar, SegmentedControl } from "@/components/toolbar";
+import { IdeTextEditor } from "@/components/ide-text-editor";
+import { ThemeTokensPillEditor } from "@/components/theme-tokens-pill-editor";
+import { SegmentedControl } from "@/components/toolbar";
+import { SiteChannelSettingsCard } from "@/components/site-channel-settings-card";
 import { SiteSettingsSkeleton } from "@/components/sites-dashboard-skeletons";
+import { PlantIconFrame, SitePreviewColumn } from "@/components/site-preview-column";
 import {
-  BUILTIN_FONTS,
-  GOOGLE_FONTS,
-  isGoogleFont,
-  googleFontName,
-  fontFamilyCSS,
-  googleFontsURL,
-} from "@/lib/fonts";
-import { PIXEL_POLLINATOR_SVG } from "@/lib/garden-icon";
+  DEFAULT_THEME_COLORS,
+  DEFAULT_THEME_FONTS,
+  formatStylesCssPlaceholder,
+  formatThemeCss,
+  parseThemeCss,
+  type ThemeColors,
+  type ThemeFonts,
+} from "@/lib/theme-css-tokens";
 
 interface Site {
   id: string;
@@ -28,6 +32,7 @@ interface Site {
   featured: boolean;
   customDomain: string | null;
   domainVerified: boolean;
+  lastBuiltAt: string | null;
 }
 
 interface Template {
@@ -36,303 +41,139 @@ interface Template {
   description: string;
 }
 
-interface ThemeColors {
-  background: string;
-  text: string;
-  accent: string;
-  border: string;
-}
-
-interface ThemeFonts {
-  heading: string;
-  body: string;
-}
-
 interface AccountInfo {
   isAdmin: boolean;
   isFriend: boolean;
   plan: string;
 }
 
-const DEFAULT_COLORS: ThemeColors = {
-  background: "#ffffff",
-  text: "#1a1a1a",
-  accent: "#555555",
-  border: "#e5e5e5",
-};
+const DEFAULT_COLORS = DEFAULT_THEME_COLORS;
+const DEFAULT_FONTS = DEFAULT_THEME_FONTS;
 
-const DEFAULT_FONTS: ThemeFonts = {
-  heading: "system",
-  body: "system",
-};
+type SettingsTab = "settings" | "theme";
 
-type Tab = "theme" | "config";
+type ThemeFileTab = "theme-css" | "styles-css";
 
-// ── Font Picker ──────────────────────────────────────────────
-
-function FontPicker({
-  value,
-  onChange,
-  label,
+/** Search + compact listbox; pointer hover updates sample preview without committing selection. */
+function TemplatePickerField({
+  templates,
+  filteredTemplates,
+  selectedTemplate,
+  onSelect,
+  configSearch,
+  onConfigSearchChange,
+  onPreviewHover,
 }: {
-  value: string;
-  onChange: (v: string) => void;
-  label: string;
+  templates: Template[];
+  filteredTemplates: Template[];
+  selectedTemplate: string;
+  onSelect: (id: string) => void;
+  configSearch: string;
+  onConfigSearchChange: (value: string) => void;
+  onPreviewHover: (templateId: string | null) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const ref = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  const dropdownTemplates = useMemo(() => {
+    if (!selectedTemplate || filteredTemplates.some((t) => t.id === selectedTemplate)) {
+      return filteredTemplates;
+    }
+    const current = templates.find((t) => t.id === selectedTemplate);
+    return current ? [current, ...filteredTemplates] : filteredTemplates;
+  }, [filteredTemplates, selectedTemplate, templates]);
+
   useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, []);
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        onPreviewHover(null);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open, onPreviewHover]);
 
-  const displayName = isGoogleFont(value)
-    ? googleFontName(value)
-    : value === "system"
-    ? "System (default)"
-    : value.charAt(0).toUpperCase() + value.slice(1);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        onPreviewHover(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onPreviewHover]);
 
-  const q = search.toLowerCase();
-
-  const builtinOptions = Object.keys(BUILTIN_FONTS).filter(
-    (k) => k.toLowerCase().includes(q)
-  );
-
-  const googleOptions = GOOGLE_FONTS.filter(
-    (f) => f.toLowerCase().includes(q)
-  );
-
-  // Allow custom Google Font entry if search doesn't match any known font
-  const hasExactMatch =
-    builtinOptions.some((k) => k.toLowerCase() === q) ||
-    googleOptions.some((f) => f.toLowerCase() === q);
+  const selectedMeta = templates.find((t) => t.id === selectedTemplate);
 
   return (
-    <div ref={ref} className="relative">
-      <span className="text-xs text-neutral-500 dark:text-neutral-400">{label}</span>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="mt-1 w-full text-left text-sm border border-neutral-200 rounded px-2 py-1.5 flex items-center justify-between hover:border-neutral-300 transition-colors dark:hover:border-neutral-600 dark:border-neutral-700"
-      >
-        <span className="truncate">{displayName}</span>
-        <svg className="w-3 h-3 text-neutral-400 shrink-0 ml-2 dark:text-neutral-500" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M3 5l3 3 3-3" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-neutral-200 rounded shadow-lg max-h-64 overflow-hidden flex flex-col dark:border-neutral-700 dark:bg-neutral-900">
-          <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search fonts..."
-              className="w-full text-sm px-2 py-1 border border-neutral-200 rounded outline-none focus:border-neutral-400 dark:focus:border-neutral-500 dark:border-neutral-700"
-              autoFocus
-            />
-          </div>
-          <div className="overflow-y-auto flex-1">
-            {builtinOptions.length > 0 && (
-              <>
-                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider dark:text-neutral-500">
-                  System
-                </div>
-                {builtinOptions.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => { onChange(key); setOpen(false); setSearch(""); }}
-                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors ${
-                      value === key ? "bg-neutral-50 dark:bg-neutral-800 font-medium" : ""
-                    }`}
-                  >
-                    {key === "system" ? "System (default)" : key.charAt(0).toUpperCase() + key.slice(1)}
-                  </button>
-                ))}
-              </>
-            )}
-            {googleOptions.length > 0 && (
-              <>
-                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1 dark:border-neutral-800 dark:text-neutral-500">
-                  Google Fonts
-                </div>
-                {googleOptions.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => { onChange(`gf:${name}`); setOpen(false); setSearch(""); }}
-                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/80 transition-colors ${
-                      value === `gf:${name}` ? "bg-neutral-50 dark:bg-neutral-800 font-medium" : ""
-                    }`}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </>
-            )}
-            {search.trim() && !hasExactMatch && (
-              <>
-                <div className="px-3 py-1.5 text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-t border-neutral-100 mt-1 dark:border-neutral-800 dark:text-neutral-500">
-                  Custom
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { onChange(`gf:${search.trim()}`); setOpen(false); setSearch(""); }}
-                  className="w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80"
-                >
-                  Use &ldquo;{search.trim()}&rdquo; from Google Fonts
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Color Input (picker + hex) ───────────────────────────────
-
-function ColorInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const [hex, setHex] = useState(value);
-
-  // Keep local hex in sync with parent when parent changes (e.g. reset)
-  useEffect(() => { setHex(value); }, [value]);
-
-  function commitHex(raw: string) {
-    let v = raw.trim();
-    if (v && !v.startsWith("#")) v = "#" + v;
-    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-      onChange(v);
-    }
-  }
-
-  return (
-    <div className="min-w-0">
-      <span className="text-xs text-neutral-500 capitalize dark:text-neutral-400">{label}</span>
-      <div className="mt-1 flex h-9 w-full min-w-0 rounded border border-neutral-200 bg-white overflow-hidden transition-colors focus-within:border-neutral-400 dark:focus-within:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
-        <input
-          type="color"
-          value={value}
-          onChange={(e) => { onChange(e.target.value); setHex(e.target.value); }}
-          title={`${label} — pick a color`}
-          className="h-full w-10 shrink-0 cursor-pointer border-0 bg-transparent p-0 appearance-none [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch-wrapper]:border-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-none [&::-moz-color-swatch]:border-0"
-        />
-        <input
-          type="text"
-          value={hex}
-          onChange={(e) => setHex(e.target.value)}
-          onBlur={(e) => commitHex(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") commitHex(hex); }}
-          className="min-w-0 flex-1 border-0 border-l border-neutral-200 bg-transparent px-3 text-sm font-mono outline-none dark:border-neutral-700"
-          placeholder="#000000"
-          spellCheck={false}
-          autoComplete="off"
-        />
-      </div>
-    </div>
-  );
-}
-
-/** Pixel bee — same 1×1 rects + crispEdges as procedural plant icons. */
-function PollinatorBee({ className }: { className?: string }) {
-  return (
-    <span
-      className={`inline-block [&>svg]:block [&>svg]:h-full [&>svg]:w-full ${className ?? ""}`}
-      dangerouslySetInnerHTML={{ __html: PIXEL_POLLINATOR_SVG }}
-      aria-hidden
-    />
-  );
-}
-
-/** Square frame for procedural plant SVG (preview + settings). */
-function PlantIconFrame({
-  svg,
-  sizeClass = "w-16 h-16",
-  className,
-  decorative,
-  growing,
-  growCycleKey = 0,
-  iconVersion = 0,
-  sproutActive = false,
-  showPollinator,
-}: {
-  svg: string | null;
-  sizeClass?: string;
-  /** Extra classes (e.g. tighter padding for fake browser chrome). */
-  className?: string;
-  /** Hide from assistive tech when purely visual (e.g. fake tab favicon). */
-  decorative?: boolean;
-  /** Germinating motion while a new icon is generating. */
-  growing?: boolean;
-  /** Bumps when “Grow” starts so layered stem/bloom animation replays on the current icon. */
-  growCycleKey?: number;
-  /** Bumps when a new SVG returns (remount + sprout playback). */
-  iconVersion?: number;
-  /** One-shot layer sprout after regrow (mutually exclusive with `growing` in UI). */
-  sproutActive?: boolean;
-  /** Friend, featured site, or paid plan — tiny bee by the plant. */
-  showPollinator?: boolean;
-}) {
-  const extra = className ? ` ${className}` : "";
-  const a11y = decorative ? ({ "aria-hidden": true } as const) : {};
-  const growingCls = growing
-    ? " border-emerald-300/90 shadow-[0_0_14px_rgba(16,185,129,0.22)]"
-    : "";
-  const plantMotionCls = [
-    growing ? "plant-icon--growing" : "",
-    sproutActive && !growing ? "plant-icon--sprout" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  if (!svg) {
-    return (
-      <div
-        className={`relative shrink-0 aspect-square ${sizeClass} overflow-visible border border-neutral-200 dark:border-neutral-700 rounded bg-neutral-50 dark:bg-neutral-900 animate-pulse${growing ? " border-emerald-200/80 dark:border-emerald-800/50" : ""}${extra}`}
-        {...a11y}
-      >
-        {showPollinator && !growing && (
-          <PollinatorBee className="absolute -top-0.5 -right-0.5 w-[34%] max-w-[20px] aspect-[7/6] max-h-[18px] animate-[bee-gentle_2.8s_ease-in-out_infinite]" />
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`relative shrink-0 aspect-square ${sizeClass} border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 flex items-center justify-center p-1 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full transition-[border-color,box-shadow] duration-300 overflow-visible${growingCls} ${plantMotionCls}${extra}`}
-      {...a11y}
-    >
-      <div
-        key={`plant-${growCycleKey}-${iconVersion}`}
-        className="flex items-center justify-center size-full min-h-0 [&_svg]:block [&_svg]:size-full [&_svg]:max-h-full [&_svg]:max-w-full"
-        dangerouslySetInnerHTML={{ __html: svg }}
+    <div ref={rootRef} className="space-y-2">
+      <SearchInput
+        value={configSearch}
+        onChange={(e) => onConfigSearchChange(e.target.value)}
+        placeholder="Search templates…"
+        aria-label="Search templates"
       />
-      {showPollinator && !growing && (
-        <span
-          className="pointer-events-none absolute -top-1 -right-1 z-10 select-none"
-          aria-hidden
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          className="flex w-full items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-left text-sm outline-none transition-colors hover:border-neutral-300 focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-950 dark:hover:border-neutral-600 dark:focus:border-neutral-500"
         >
-          <PollinatorBee className="w-[34%] max-w-[22px] min-w-[12px] aspect-[7/6] animate-[bee-gentle_2.8s_ease-in-out_infinite]" />
-        </span>
-      )}
+          <span className="min-w-0 truncate font-medium text-neutral-900 dark:text-neutral-100">
+            {selectedMeta?.name ?? "Choose template"}
+          </span>
+          <ChevronDown
+            className={`size-4 shrink-0 text-neutral-400 transition-transform dark:text-neutral-500 ${open ? "rotate-180" : ""}`}
+            strokeWidth={2}
+            aria-hidden
+          />
+        </button>
+        {open ? (
+          <ul
+            role="listbox"
+            aria-label="Templates"
+            className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+            onMouseLeave={() => onPreviewHover(null)}
+          >
+            {dropdownTemplates.length === 0 ? (
+              <li className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">No templates match.</li>
+            ) : (
+              dropdownTemplates.map((t) => (
+                <li key={t.id} role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={t.id === selectedTemplate}
+                    onPointerEnter={() => onPreviewHover(t.id)}
+                    onClick={() => {
+                      onSelect(t.id);
+                      setOpen(false);
+                      onPreviewHover(null);
+                    }}
+                    className={`w-full border-b border-neutral-100 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/80 ${
+                      t.id === selectedTemplate ? "bg-neutral-50 dark:bg-neutral-800/60" : ""
+                    }`}
+                  >
+                    <div className="text-xs font-medium text-neutral-900 dark:text-neutral-100">{t.name}</div>
+                    <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-neutral-400 dark:text-neutral-500">
+                      {t.description}
+                    </div>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        ) : null}
+      </div>
+      {selectedMeta?.description ? (
+        <p className="text-xs leading-snug text-neutral-400 dark:text-neutral-500">{selectedMeta.description}</p>
+      ) : null}
     </div>
   );
 }
@@ -349,11 +190,16 @@ export default function SiteSettingsPage() {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateSaved, setTemplateSaved] = useState(false);
   const [colors, setColors] = useState<ThemeColors>(DEFAULT_COLORS);
+  const [themeCssDraft, setThemeCssDraft] = useState(() =>
+    formatThemeCss(DEFAULT_COLORS, DEFAULT_FONTS)
+  );
+  const [themeCssError, setThemeCssError] = useState("");
   const [fonts, setFonts] = useState<ThemeFonts>(DEFAULT_FONTS);
   const [loading, setLoading] = useState(true);
+  const [userSites, setUserSites] = useState<Site[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("theme");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("settings");
   const [domainInput, setDomainInput] = useState("");
   const [domainStatus, setDomainStatus] = useState<{
     domain: string | null;
@@ -370,6 +216,15 @@ export default function SiteSettingsPage() {
   const [iconVersion, setIconVersion] = useState(0);
   const [iconSproutPulse, setIconSproutPulse] = useState(false);
   const [configSearch, setConfigSearch] = useState("");
+  /** Hovered template in picker — drives sample preview only (not saved until you pick + save). */
+  const [templatePreviewHover, setTemplatePreviewHover] = useState<string | null>(null);
+  const [themeFileTab, setThemeFileTab] = useState<ThemeFileTab>("theme-css");
+  const [customCss, setCustomCss] = useState("");
+  const [cssSaving, setCssSaving] = useState(false);
+  const [cssSaved, setCssSaved] = useState(false);
+  /** Bust iframe cache after theme/CSS save so preview reloads with latest DB customCss + query theme. */
+  const [previewRev, setPreviewRev] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const canCustomize = account?.isAdmin || account?.isFriend || account?.plan === "pro" || account?.plan === "studio";
 
@@ -385,37 +240,56 @@ export default function SiteSettingsPage() {
     );
   }, [site, account]);
 
-  // Load Google Fonts in the settings page so the picker can preview them
-  useEffect(() => {
-    const url = googleFontsURL([fonts.heading, fonts.body]);
-    if (!url) return;
-    const id = "theme-google-fonts";
-    let link = document.getElementById(id) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      document.head.appendChild(link);
-    }
-    link.href = url;
-  }, [fonts.heading, fonts.body]);
+  const previewTheme = useMemo(() => {
+    const p = parseThemeCss(themeCssDraft);
+    if (p.ok) return { colors: p.colors, fonts: p.fonts };
+    return { colors, fonts };
+  }, [themeCssDraft, colors, fonts]);
 
-  // Build preview URL with theme params (debounced to avoid iframe flickering)
-  const rawPreviewUrl = useMemo(() => {
-    const template = selectedTemplate || site?.template;
+  /** When DB + channel have no custom site CSS, show a template-specific placeholder (not a duplicate of theme.css). */
+  const stylesCssEditorValue = useMemo(() => {
+    if (customCss.trim()) return customCss;
+    const templateId = templatePreviewHover ?? selectedTemplate ?? site?.template ?? "";
+    return formatStylesCssPlaceholder(templateId || "blog");
+  }, [customCss, templatePreviewHover, selectedTemplate, site?.template]);
+
+  /** Last build — real channel content from generated/blob (not mock data). */
+  const rawLivePreviewUrl = useMemo(() => {
+    if (!site?.lastBuiltAt || typeof id !== "string") return null;
+    const v = encodeURIComponent(site.lastBuiltAt);
+    return `/api/sites/${id}/preview/?v=${v}`;
+  }, [site?.lastBuiltAt, id]);
+
+  /** Template preview: mock channel + live theme query params + owner customCss from DB (no build yet, or template hover). */
+  const rawTemplatePreviewUrl = useMemo(() => {
+    const template = templatePreviewHover ?? (selectedTemplate || site?.template);
     if (!template) return null;
     const params = new URLSearchParams({ template });
     if (typeof id === "string") params.set("siteId", id);
     if (canCustomize) {
-      params.set("bg", colors.background);
-      params.set("text", colors.text);
-      params.set("accent", colors.accent);
-      params.set("border", colors.border);
-      params.set("headingFont", fonts.heading);
-      params.set("bodyFont", fonts.body);
+      params.set("bg", previewTheme.colors.background);
+      params.set("text", previewTheme.colors.text);
+      params.set("accent", previewTheme.colors.accent);
+      params.set("border", previewTheme.colors.border);
+      params.set("headingFont", previewTheme.fonts.heading);
+      params.set("bodyFont", previewTheme.fonts.body);
     }
     return `/api/templates/preview?${params.toString()}`;
-  }, [selectedTemplate, site?.template, colors, fonts, canCustomize, id]);
+  }, [templatePreviewHover, selectedTemplate, site?.template, previewTheme, canCustomize, id]);
+
+  const previewUsesMockChannel = Boolean(templatePreviewHover != null || !site?.lastBuiltAt);
+
+  const rawPreviewUrl = useMemo(() => {
+    const withRev = (base: string) => {
+      const sep = base.includes("?") ? "&" : "?";
+      return `${base}${sep}rev=${previewRev}`;
+    };
+    if (templatePreviewHover != null) {
+      return rawTemplatePreviewUrl ? withRev(rawTemplatePreviewUrl) : null;
+    }
+    if (rawLivePreviewUrl) return withRev(rawLivePreviewUrl);
+    return rawTemplatePreviewUrl ? withRev(rawTemplatePreviewUrl) : null;
+  }, [templatePreviewHover, rawLivePreviewUrl, rawTemplatePreviewUrl, previewRev]);
 
   const filteredTemplates = useMemo(() => {
     if (!configSearch.trim()) return templates;
@@ -425,20 +299,29 @@ export default function SiteSettingsPage() {
     );
   }, [templates, configSearch]);
 
-  /** Keep current pick visible in the mobile select when it doesn’t match search. */
-  const templateSelectOptions = useMemo(() => {
-    if (!selectedTemplate || filteredTemplates.some((t) => t.id === selectedTemplate)) {
-      return filteredTemplates;
-    }
-    const current = templates.find((t) => t.id === selectedTemplate);
-    return current ? [current, ...filteredTemplates] : filteredTemplates;
-  }, [filteredTemplates, selectedTemplate, templates]);
+  const otherSitesChannelSlugs = useMemo(
+    () =>
+      new Set(
+        userSites.filter((s) => site && s.id !== site.id).map((s) => s.channelSlug)
+      ),
+    [userSites, site]
+  );
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   useEffect(() => {
+    if (activeTab !== "settings") setTemplatePreviewHover(null);
+  }, [activeTab]);
+
+  const prevPreviewRevRef = useRef(previewRev);
+  useEffect(() => {
+    const revBumped = prevPreviewRevRef.current !== previewRev;
+    prevPreviewRevRef.current = previewRev;
+    if (revBumped) {
+      setPreviewUrl(rawPreviewUrl);
+      return;
+    }
     const timeout = setTimeout(() => setPreviewUrl(rawPreviewUrl), 300);
     return () => clearTimeout(timeout);
-  }, [rawPreviewUrl]);
+  }, [rawPreviewUrl, previewRev]);
 
   useEffect(() => {
     if (!id || typeof id !== "string") {
@@ -455,21 +338,27 @@ export default function SiteSettingsPage() {
       fetch("/api/templates").then((r) => r.json()),
       fetch(`/api/sites/${id}/domain`).then((r) => r.json()),
       fetch(`/api/sites/${id}/icon`).then((r) => (r.ok ? r.text() : null)),
+      fetch(`/api/sites/${id}/css`).then((r) => (r.ok ? r.json() : null)),
     ])
-      .then(([sites, theme, acc, tmpls, domain, icon]) => {
+      .then(([sites, theme, acc, tmpls, domain, icon, cssPayload]) => {
         if (cancelled) return;
 
         const list = Array.isArray(sites) ? sites : [];
+        setUserSites(list);
         const s = list.find((x: Site) => x.id === id);
         if (s) {
           setSite(s);
           setSelectedTemplate(s.template);
         }
         if (theme && typeof theme === "object" && "colors" in theme && theme.colors) {
-          setColors(theme.colors as ThemeColors);
-        }
-        if (theme && typeof theme === "object" && "fonts" in theme && theme.fonts) {
-          setFonts(theme.fonts as ThemeFonts);
+          const tc = theme.colors as ThemeColors;
+          const tf =
+            theme.fonts && typeof theme.fonts === "object"
+              ? (theme.fonts as ThemeFonts)
+              : DEFAULT_FONTS;
+          setColors(tc);
+          setFonts(tf);
+          setThemeCssDraft(formatThemeCss(tc, tf));
         }
         if (acc && typeof acc === "object" && !("error" in acc && (acc as { error?: string }).error)) {
           setAccount(acc as AccountInfo);
@@ -481,6 +370,26 @@ export default function SiteSettingsPage() {
           setDomainStatus(domain);
         }
         if (icon) setIconSvg(icon);
+        if (
+          cssPayload &&
+          typeof cssPayload === "object" &&
+          "css" in cssPayload &&
+          typeof (cssPayload as { css: unknown }).css === "string"
+        ) {
+          const loaded = (cssPayload as { css: string }).css;
+          const chRaw =
+            "channelCss" in cssPayload &&
+            typeof (cssPayload as { channelCss: unknown }).channelCss === "string"
+              ? (cssPayload as { channelCss: string }).channelCss
+              : "";
+          if (loaded.trim()) {
+            setCustomCss(loaded);
+          } else if (chRaw.trim()) {
+            setCustomCss(chRaw);
+          } else {
+            setCustomCss("");
+          }
+        }
       })
       .catch(() => {
         /* network / parse errors — leave defaults; still exit loading */
@@ -495,19 +404,47 @@ export default function SiteSettingsPage() {
   }, [id]);
 
   async function handleSave() {
+    const parsed = parseThemeCss(themeCssDraft);
+    if (!parsed.ok) {
+      setThemeCssError(parsed.error);
+      return;
+    }
+    setThemeCssError("");
+    setColors(parsed.colors);
+    setFonts(parsed.fonts);
+    setThemeCssDraft(formatThemeCss(parsed.colors, parsed.fonts));
     setSaving(true);
     setSaved(false);
     const res = await fetch(`/api/sites/${id}/theme`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ colors, fonts }),
+      body: JSON.stringify({ colors: parsed.colors, fonts: parsed.fonts }),
     });
     if (res.ok) {
       track("theme-saved", { subdomain: site?.subdomain || "" });
       setSaved(true);
+      setPreviewRev((n) => n + 1);
       setTimeout(() => setSaved(false), 2000);
     }
     setSaving(false);
+  }
+
+  async function handleSaveCss() {
+    if (!id || typeof id !== "string") return;
+    setCssSaving(true);
+    setCssSaved(false);
+    const res = await fetch(`/api/sites/${id}/css`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ css: customCss }),
+    });
+    if (res.ok) {
+      track("custom-css-saved", { subdomain: site?.subdomain || "" });
+      setCssSaved(true);
+      setPreviewRev((n) => n + 1);
+      setTimeout(() => setCssSaved(false), 2000);
+    }
+    setCssSaving(false);
   }
 
   async function handleTemplateChange() {
@@ -530,6 +467,8 @@ export default function SiteSettingsPage() {
 
   async function handleReset() {
     setColors(DEFAULT_COLORS);
+    setThemeCssDraft(formatThemeCss(DEFAULT_COLORS, DEFAULT_FONTS));
+    setThemeCssError("");
     setFonts(DEFAULT_FONTS);
   }
 
@@ -585,57 +524,74 @@ export default function SiteSettingsPage() {
 
   if (!site) {
     return (
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="w-full min-w-0 px-4 py-8 sm:px-6">
         <p className="text-sm text-neutral-400 dark:text-neutral-500">Site not found.</p>
       </main>
     );
   }
 
-  return (
-    <main className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg font-medium">
-            <Link
-              href="/sites"
-              className="text-neutral-400 hover:text-neutral-600 shrink-0 inline-flex dark:hover:text-neutral-300 dark:text-neutral-500"
-              aria-label="Back to sites"
-            >
-              <ArrowBigLeft className="size-7" strokeWidth={1.75} aria-hidden />
-            </Link>
-            <h1 className="text-lg font-medium text-neutral-950 dark:text-neutral-50">{site.channelTitle}</h1>
-          </div>
-          <p className="text-xs text-neutral-400 mt-1 dark:text-neutral-500">{site.subdomain}.tiny.garden &middot; {site.template}</p>
-        </div>
-      </div>
+  const siteDomain = process.env.NEXT_PUBLIC_SITE_DOMAIN || "tiny.garden";
+  const tinyGardenHost = `${site.subdomain}.${siteDomain}`;
+  const tinyGardenUrl = `${siteDomain.includes("localhost") ? "http" : "https"}://${tinyGardenHost}`;
+  const liveSiteUrl =
+    domainStatus?.verified && domainStatus.domain
+      ? `https://${domainStatus.domain}`
+      : tinyGardenUrl;
 
-      {/* Mobile: controls first, preview below. md+: side‑by‑side. */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-start">
-        {/* Left panel — Controls */}
-        <div className="w-full shrink-0 md:w-80">
-          {/* Tab navigation */}
-          <Toolbar>
-            <SegmentedControl<Tab>
+  return (
+    <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col px-4 py-8 sm:px-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-6">
+        <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <div className="min-w-0 pb-2 sm:flex-1">
+              <div className="flex w-fit max-w-full flex-wrap items-center gap-x-3 gap-y-1 text-lg font-medium">
+                <Link
+                  href="/sites"
+                  className="text-neutral-400 hover:text-neutral-600 shrink-0 inline-flex dark:hover:text-neutral-300 dark:text-neutral-500"
+                  aria-label="Back to sites"
+                >
+                  <ArrowBigLeft className="size-7" strokeWidth={1.75} aria-hidden />
+                </Link>
+                <h1 className="min-w-0 text-lg font-medium text-neutral-950 dark:text-neutral-50">
+                  <a
+                    href={liveSiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate font-mono text-[15px] tracking-tight text-neutral-950 underline-offset-2 hover:underline dark:text-neutral-50"
+                  >
+                    {tinyGardenHost}
+                  </a>
+                </h1>
+              </div>
+              <p className="mt-1 max-w-full text-xs text-neutral-400 dark:text-neutral-500">
+                {site.channelTitle} &middot; {site.template}
+              </p>
+            </div>
+            <SegmentedControl<SettingsTab>
               segments={[
+                { value: "settings", label: "Settings" },
                 { value: "theme", label: "Theme" },
-                { value: "config", label: "Config" },
               ]}
               value={activeTab}
               onChange={setActiveTab}
-              ariaLabel="Settings section"
-              className="w-[8.25rem] shrink-0"
+              ariaLabel="Site settings sections"
+              className="w-full max-w-[13.5rem] shrink-0 sm:w-[13.5rem] sm:self-end"
               labelClassName="px-3 text-xs font-medium"
             />
-          </Toolbar>
+        </div>
 
-          {/* Theme tab */}
-          {activeTab === "theme" && (
-            <div className="space-y-4">
+        <div className="outline-none flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 md:flex-row md:items-stretch md:gap-6">
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-2 md:min-h-0">
+              <h2 className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                {activeTab === "settings" ? "Settings" : "Theme"}
+              </h2>
+              {activeTab === "settings" && (
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-950">
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
               {/* Site Icon — available on all plans */}
               <div>
                 <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Site Icon</h3>
-                <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                <div className="p-4 rounded">
                   <div className="flex items-center gap-4">
                     <PlantIconFrame
                       svg={iconSvg}
@@ -649,7 +605,10 @@ export default function SiteSettingsPage() {
                     <div>
                       <p className="text-xs text-neutral-500 mb-2 leading-relaxed dark:text-neutral-400">
                         Your site&apos;s unique plant icon, used as favicon and in the footer.
-                        <span className="text-neutral-400 dark:text-neutral-500"> Rebuild your site to update the favicon.</span>
+                        <span className="text-neutral-400 dark:text-neutral-500">
+                          {" "}
+                          Rebuild your site to update the favicon.
+                        </span>
                       </p>
                       <button
                         type="button"
@@ -677,140 +636,21 @@ export default function SiteSettingsPage() {
                 </div>
               </div>
 
-              {!canCustomize ? (
-                <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    Custom themes are available on Pro and Studio plans.
-                  </p>
-                  <Link
-                    href="/account"
-                    className="text-xs text-neutral-400 underline underline-offset-2 mt-2 inline-block dark:text-neutral-500"
-                  >
-                    Upgrade
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  {/* Colors */}
-                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
-                    <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Colors</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {(Object.keys(DEFAULT_COLORS) as (keyof ThemeColors)[]).map((key) => (
-                        <ColorInput
-                          key={key}
-                          label={key}
-                          value={colors[key]}
-                          onChange={(v) => setColors({ ...colors, [key]: v })}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Fonts */}
-                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
-                    <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Fonts</h3>
-                    <div className="space-y-3">
-                      <FontPicker
-                        label="Headings"
-                        value={fonts.heading}
-                        onChange={(v) => setFonts({ ...fonts, heading: v })}
-                      />
-                      <FontPicker
-                        label="Body"
-                        value={fonts.body}
-                        onChange={(v) => setFonts({ ...fonts, body: v })}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="px-3 py-1.5 text-sm bg-neutral-900 text-white rounded hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50"
-                    >
-                      {saving ? "Saving..." : saved ? "Saved" : "Save theme"}
-                    </button>
-                    <button
-                      onClick={handleReset}
-                      className="px-3 py-1.5 text-sm border border-neutral-200 rounded hover:bg-neutral-50 transition-colors dark:hover:bg-neutral-800/80 dark:border-neutral-700"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                    Rebuild your site to apply changes.
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Config tab */}
-          {activeTab === "config" && (
-            <div className="space-y-4">
               {/* Template Picker */}
               <div>
                 <h3 className="text-xs font-medium text-neutral-500 mb-3 dark:text-neutral-400">Template</h3>
-                <SearchInput
-                  value={configSearch}
-                  onChange={(e) => setConfigSearch(e.target.value)}
-                  placeholder="Search templates..."
-                  aria-label="Search templates"
-                  className="mb-3"
+                <p className="mb-2 text-[11px] leading-snug text-neutral-400 dark:text-neutral-500">
+                  Search, open the list, and point at a template to preview it on the right — click to select.
+                </p>
+                <TemplatePickerField
+                  templates={templates}
+                  filteredTemplates={filteredTemplates}
+                  selectedTemplate={selectedTemplate}
+                  onSelect={setSelectedTemplate}
+                  configSearch={configSearch}
+                  onConfigSearchChange={setConfigSearch}
+                  onPreviewHover={setTemplatePreviewHover}
                 />
-                {/* Narrow screens: compact dropdown */}
-                <div className="md:hidden space-y-2">
-                  {templateSelectOptions.length === 0 ? (
-                    <p className="text-xs text-neutral-400 dark:text-neutral-500">No templates match your search.</p>
-                  ) : (
-                    <>
-                      <select
-                        value={selectedTemplate}
-                        onChange={(e) => setSelectedTemplate(e.target.value)}
-                        className="w-full text-sm border border-neutral-200 rounded px-2 py-2 outline-none focus:border-neutral-400 bg-white dark:focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-900"
-                        aria-label="Choose template"
-                      >
-                        {templateSelectOptions.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name}
-                          </option>
-                        ))}
-                      </select>
-                      {(() => {
-                        const meta = templates.find((t) => t.id === selectedTemplate);
-                        return meta?.description ? (
-                          <p className="text-xs text-neutral-400 leading-snug dark:text-neutral-500">{meta.description}</p>
-                        ) : null;
-                      })()}
-                    </>
-                  )}
-                </div>
-                {/* md+: card grid */}
-                {filteredTemplates.length === 0 ? (
-                  <p className="hidden md:block text-xs text-neutral-400 py-1 dark:text-neutral-500">
-                    No templates match your search.
-                  </p>
-                ) : (
-                  <div className="hidden md:grid grid-cols-2 gap-2">
-                    {filteredTemplates.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setSelectedTemplate(t.id)}
-                        className={`text-left p-3 border rounded text-sm transition-colors ${
-                          selectedTemplate === t.id
-                            ? "border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-800"
-                            : "border-neutral-100 hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-600"
-                        }`}
-                      >
-                        <p className="font-medium text-xs">{t.name}</p>
-                        <p className="text-xs text-neutral-400 mt-0.5 line-clamp-2 dark:text-neutral-500">{t.description}</p>
-                      </button>
-                    ))}
-                  </div>
-                )}
                 {selectedTemplate !== site.template && (
                   <div className="flex items-center gap-2 mt-3">
                     <button
@@ -837,7 +677,7 @@ export default function SiteSettingsPage() {
                   <span className="font-normal text-neutral-400 dark:text-neutral-500">[beta]</span>
                 </h3>
                 {!canCustomize ? (
-                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                  <div className="p-4 rounded">
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
                       Custom domains are available on Pro and Studio plans.
                     </p>
@@ -849,7 +689,7 @@ export default function SiteSettingsPage() {
                     </Link>
                   </div>
                 ) : !domainStatus?.domain ? (
-                  <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
+                  <div className="p-4 rounded">
                     <p className="text-xs text-neutral-400 mb-3 dark:text-neutral-500">
                       Point your own domain to this site.
                     </p>
@@ -875,7 +715,7 @@ export default function SiteSettingsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="p-4 border border-neutral-100 rounded space-y-3 dark:border-neutral-800">
+                  <div className="p-4 rounded space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{domainStatus.domain}</span>
@@ -978,139 +818,190 @@ export default function SiteSettingsPage() {
                 )}
               </div>
 
-              {/* Channel info */}
-              <div className="p-4 border border-neutral-100 rounded dark:border-neutral-800">
-                <h3 className="text-xs font-medium text-neutral-500 mb-2 dark:text-neutral-400">Channel</h3>
-                <p className="text-sm">{site.channelTitle}</p>
-                <a
-                  href={`https://www.are.na/channel/${site.channelSlug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-neutral-400 underline underline-offset-2 mt-1 inline-block dark:text-neutral-500"
-                >
-                  View on Are.na
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right panel — Live Preview (stacked under controls on small screens) */}
-        <div className="w-full min-w-0 flex-1 space-y-3">
-          <div className="border border-neutral-200 rounded-lg p-3 bg-white dark:border-neutral-700 dark:bg-neutral-900">
-            <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider mb-2 dark:text-neutral-500">
-              Share preview
-            </p>
-            <div className="flex gap-3">
-              <PlantIconFrame
-                svg={iconSvg}
-                sizeClass="w-14 h-14"
-                growing={iconLoading}
-                growCycleKey={iconGrowCycle}
-                iconVersion={iconVersion}
-                sproutActive={iconSproutPulse}
-                showPollinator={showPollinator}
+              <SiteChannelSettingsCard
+                siteId={id}
+                channelSlug={site.channelSlug}
+                channelTitle={site.channelTitle}
+                otherSitesChannelSlugs={otherSitesChannelSlugs}
+                onChannelUpdated={async ({ channelSlug, channelTitle }) => {
+                  setSite((prev) =>
+                    prev ? { ...prev, channelSlug, channelTitle } : prev
+                  );
+                  setUserSites((prev) =>
+                    prev.map((s) =>
+                      s.id === site.id ? { ...s, channelSlug, channelTitle } : s
+                    )
+                  );
+                  setPreviewRev((n) => n + 1);
+                  if (typeof id !== "string") return;
+                  const cssRes = await fetch(`/api/sites/${id}/css`);
+                  if (!cssRes.ok) return;
+                  const cssPayload = await cssRes.json();
+                  if (
+                    cssPayload &&
+                    typeof cssPayload === "object" &&
+                    "css" in cssPayload &&
+                    typeof (cssPayload as { css: unknown }).css === "string"
+                  ) {
+                    const loaded = (cssPayload as { css: string }).css;
+                    const chRaw =
+                      "channelCss" in cssPayload &&
+                      typeof (cssPayload as { channelCss: unknown }).channelCss ===
+                        "string"
+                        ? (cssPayload as { channelCss: string }).channelCss
+                        : "";
+                    if (loaded.trim()) {
+                      setCustomCss(loaded);
+                    } else if (chRaw.trim()) {
+                      setCustomCss(chRaw);
+                    } else {
+                      setCustomCss("");
+                    }
+                  }
+                }}
               />
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-neutral-400 truncate dark:text-neutral-500">
-                  {site.subdomain}.tiny.garden
-                </p>
-                <p className="text-sm font-medium text-neutral-800 truncate dark:text-neutral-200">
-                  {site.channelTitle}
-                </p>
-                <p className="text-xs text-neutral-500 mt-1 leading-snug dark:text-neutral-400">
-                  Same square icon attached to this site in the preview page&apos;s social metadata.
-                </p>
+                </div>
               </div>
-            </div>
-          </div>
-          <div
-            className={`border rounded-lg overflow-hidden bg-white dark:bg-neutral-900 transition-[border-color,box-shadow] duration-300 md:sticky md:top-8 ${
-              iconLoading
-                ? "border-emerald-200/80 dark:border-emerald-800/50 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]"
-                : "border-neutral-200 dark:border-neutral-700"
-            }`}
-          >
-            <div
-              className={`flex items-center gap-2 px-3 py-2 border-b transition-colors duration-300 ${
-                iconLoading
-                  ? "border-emerald-100/90 dark:border-emerald-900/40 bg-linear-to-r from-emerald-50/90 via-neutral-50 to-emerald-50/70 dark:from-emerald-950/50 dark:via-neutral-900 dark:to-emerald-950/40"
-                  : "border-neutral-100 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"
-              }`}
-            >
-              <div className="flex items-center gap-1.5 shrink-0">
-                <div
-                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    iconLoading ? "bg-emerald-400/70" : "bg-neutral-300 dark:bg-neutral-600"
-                  }`}
-                />
-                <div
-                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    iconLoading ? "bg-emerald-400/50" : "bg-neutral-300 dark:bg-neutral-600"
-                  }`}
-                />
-                <div
-                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    iconLoading ? "bg-emerald-300/60" : "bg-neutral-300 dark:bg-neutral-600"
-                  }`}
-                />
-              </div>
-              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <PlantIconFrame
-                  svg={iconSvg}
-                  sizeClass="w-4 h-4"
-                  className="p-0.5! rounded-[3px] border-neutral-200/90 dark:border-neutral-600/90"
-                  decorative
-                  growing={iconLoading}
-                  growCycleKey={iconGrowCycle}
-                  iconVersion={iconVersion}
-                  sproutActive={iconSproutPulse}
-                />
-                <span
-                  className={`text-[10px] min-w-0 flex-1 truncate transition-colors duration-300 ${
-                    iconLoading ? "text-emerald-800/80 dark:text-emerald-200/80" : "text-neutral-400 dark:text-neutral-500"
-                  }`}
-                >
-                  {site.subdomain}.tiny.garden
-                </span>
-                {iconLoading && (
-                  <span className="text-[10px] text-emerald-700/80 shrink-0 font-medium whitespace-nowrap">
-                    · growing…
-                  </span>
-                )}
-              </div>
-            </div>
-            {previewUrl ? (
-              <div className="relative">
-                <iframe
-                  key={previewUrl}
-                  src={previewUrl}
-                  className={`w-full border-0 transition-[filter,opacity] duration-300 max-md:h-[min(26rem,62vh)] max-md:min-h-68 md:h-[calc(100vh-200px)] md:min-h-[500px] ${
-                    iconLoading ? "opacity-55 saturate-75" : "opacity-100"
-                  }`}
-                  title="Site preview"
-                />
-                {iconLoading && (
-                  <div
-                    className="pointer-events-none absolute inset-0 flex flex-col items-center justify-end gap-2 pb-10 px-4 bg-linear-to-t from-emerald-100/55 via-emerald-50/15 to-transparent animate-[plant-preview-mist_1.8s_ease-in-out_infinite]"
-                    aria-hidden
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-[11px] font-medium text-emerald-900/75 tracking-tight">
-                        Sprouting a new icon
-                      </span>
-                      <span className="text-[10px] text-emerald-800/55">
-                        Favicon & preview will match when done
-                      </span>
+              )}
+
+              {activeTab === "theme" && (
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-950">
+                <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-3 py-2.5 dark:border-neutral-800 dark:bg-neutral-900/95">
+                  <SegmentedControl<ThemeFileTab>
+                    segments={[
+                      {
+                        value: "theme-css",
+                        label: <span className="font-mono text-[11px] tracking-tight">theme.css</span>,
+                      },
+                      {
+                        value: "styles-css",
+                        label: <span className="font-mono text-[11px] tracking-tight">styles.css</span>,
+                      },
+                    ]}
+                    value={themeFileTab}
+                    onChange={setThemeFileTab}
+                    ariaLabel="Theme editor files"
+                    className="w-full min-w-[14rem] max-w-[17rem] shrink-0"
+                    labelClassName="px-2 text-[11px] font-medium"
+                  />
+                  {themeFileTab === "styles-css" ? (
+                    <button
+                      type="button"
+                      onClick={handleSaveCss}
+                      disabled={cssSaving}
+                      className="ml-auto shrink-0 rounded-md px-3 py-1.5 text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50"
+                    >
+                      {cssSaving ? "Saving…" : cssSaved ? "Saved" : "Save styles.css"}
+                    </button>
+                  ) : canCustomize ? (
+                    <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="rounded-md px-3 py-1.5 text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white transition-colors disabled:opacity-50"
+                      >
+                        {saving ? "Saving…" : saved ? "Saved" : "Save theme.css"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:hover:bg-neutral-700/80"
+                      >
+                        Reset
+                      </button>
                     </div>
+                  ) : null}
+                </div>
+
+                {themeFileTab === "theme-css" && (
+                  <div
+                    id="panel-theme-css"
+                    role="tabpanel"
+                    aria-label="theme.css"
+                    className="flex min-h-0 flex-1 flex-col bg-[#fafafa] outline-none dark:bg-[#1e1e1e]"
+                  >
+                    {!canCustomize ? (
+                      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                          Custom themes are available on Pro and Studio plans.
+                        </p>
+                        <Link
+                          href="/account"
+                          className="text-xs text-neutral-400 underline underline-offset-2 dark:text-neutral-500"
+                        >
+                          Upgrade
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="min-h-0 flex-1 overflow-hidden">
+                          <ThemeTokensPillEditor
+                            value={themeCssDraft}
+                            onChange={(v) => {
+                              setThemeCssDraft(v);
+                              setThemeCssError("");
+                            }}
+                            ariaLabel="theme.css source"
+                          />
+                        </div>
+                        {themeCssError ? (
+                          <footer className="shrink-0 border-t border-neutral-200 bg-neutral-200/60 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950/90">
+                            <p className="font-mono text-[11px] leading-snug text-red-600 dark:text-red-400">
+                              {themeCssError}
+                            </p>
+                          </footer>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {themeFileTab === "styles-css" && (
+                  <div
+                    id="panel-styles-css"
+                    role="tabpanel"
+                    aria-label="styles.css"
+                    className="flex min-h-0 flex-1 flex-col bg-[#fafafa] outline-none dark:bg-[#1e1e1e]"
+                  >
+                    <div className="min-h-0 flex-1 overflow-hidden">
+                      <IdeTextEditor
+                        value={stylesCssEditorValue}
+                        onChange={setCustomCss}
+                        ariaLabel="styles.css source"
+                      />
+                    </div>
+                    <footer className="shrink-0 border-t border-neutral-200 bg-neutral-200/60 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950/90">
+                      <p className="text-[10px] text-neutral-500 dark:text-neutral-500">
+                        Rebuild for the live site to pick this up. Saved CSS here wins over the channel block when both
+                        exist. Use the Theme tab for global colors and fonts (theme.css); this editor is for
+                        template/layout overrides that reference <code className="font-mono">var(--color-*)</code> from
+                        the build.
+                      </p>
+                    </footer>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-96 text-sm text-neutral-400 dark:text-neutral-500">
-                Select a template to preview
-              </div>
-            )}
+              )}
+            </div>
+            <div className="hidden min-h-0 w-full min-w-0 flex-1 flex-col gap-2 md:flex md:min-h-0">
+              <h2 className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                Preview
+              </h2>
+              <SitePreviewColumn
+                site={site}
+                iconSvg={iconSvg}
+                iconLoading={iconLoading}
+                previewUrl={previewUrl}
+                onPreviewRefresh={() => setPreviewRev((n) => n + 1)}
+                showPollinator={showPollinator}
+                iconGrowCycle={iconGrowCycle}
+                iconVersion={iconVersion}
+                iconSproutPulse={iconSproutPulse}
+                columnClassName="flex w-full min-w-0 min-h-0 flex-1 flex-col gap-3"
+                dashboardPreview={previewUsesMockChannel}
+              />
+            </div>
           </div>
         </div>
       </div>
