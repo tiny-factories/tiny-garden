@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { put } from "@vercel/blob";
-import { ArenaClient, ArenaBlock } from "./arena";
+import { ArenaClient, ArenaBlock, ArenaChannel } from "./arena";
 import {
   extractChannelStylesCss,
   filterOutChannelStylesBlocks,
@@ -15,6 +15,11 @@ import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
 import { isKnownTemplateSlug } from "./templates-manifest";
 import { fetchRemoteAsset } from "./remote-asset";
+import { registerFeatureRequestHandlebarsHelpers } from "./feature-request-status";
+import {
+  enrichFeatureRequestSiteData,
+  registerFeatureRequestRowHelpers,
+} from "./feature-request-tags";
 
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
@@ -145,6 +150,39 @@ export interface SiteData {
     custom_css: string;
     built_at: string;
   };
+  /** Feature Requests template: recurring `[bracket]` tags for filter chips. */
+  feature_request_registry?: {
+    filterTags: Array<{ slug: string; label: string; count: number }>;
+  };
+}
+
+/** Maps Are.na API channel JSON to template `channel` root — used by builds and template previews. */
+export function arenaChannelToSiteDataChannel(
+  channel: ArenaChannel
+): SiteData["channel"] {
+  return {
+    title: channel.title,
+    slug: channel.slug,
+    description:
+      typeof channel.description === "string" ? channel.description : "",
+    user: {
+      name:
+        channel.owner?.name ||
+        channel.owner?.full_name ||
+        channel.owner?.username ||
+        channel.user?.full_name ||
+        "",
+      slug: channel.owner?.slug || channel.user?.slug || "",
+      avatar_url:
+        channel.owner?.avatar ||
+        channel.owner?.avatar_image?.display ||
+        channel.user?.avatar_image?.display ||
+        "",
+    },
+    created_at: channel.created_at,
+    updated_at: channel.updated_at,
+    length: channel.length || channel.counts?.contents || 0,
+  };
 }
 
 export interface TemplateBlock {
@@ -160,6 +198,9 @@ export interface TemplateBlock {
     large: string;
     square: string;
     display: string;
+    /** From Are.na when available — used for photography bento layout by aspect ratio. */
+    width?: number;
+    height?: number;
   };
   content?: string;
   link?: {
@@ -202,6 +243,11 @@ export interface TemplateBlock {
   source_url: string | null;
   comment_count: number;
   arena_url: string;
+  /** Feature Requests template: filled at build from `[tag]` patterns. */
+  feature_request?: {
+    tagSlugs: string[];
+    categoryLabel: string;
+  };
 }
 
 function pickFirstNonEmpty(...values: Array<string | null | undefined>): string {
@@ -218,6 +264,44 @@ function getFileExtension(value: string): string {
   const cleaned = value.split("#")[0]?.split("?")[0] || "";
   const ext = path.extname(cleaned).toLowerCase().replace(/^\./, "");
   return ext;
+}
+
+function coercePositiveInt(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+  if (typeof value === "string") {
+    const n = parseInt(value, 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return undefined;
+}
+
+/** Read width/height from Are.na v3 image object and block (original pixels when present). */
+function extractImagePixelDimensions(
+  img: Record<string, unknown>,
+  block: ArenaBlock
+): { width?: number; height?: number } {
+  let width = coercePositiveInt(img.width);
+  let height = coercePositiveInt(img.height);
+
+  const tryNested = (key: string) => {
+    const sub = img[key];
+    if (sub && typeof sub === "object") {
+      const o = sub as Record<string, unknown>;
+      if (!width) width = coercePositiveInt(o.width);
+      if (!height) height = coercePositiveInt(o.height);
+    }
+  };
+  for (const k of ["original", "large", "medium", "display", "square"]) {
+    tryNested(k);
+  }
+
+  const br = block as unknown as Record<string, unknown>;
+  if (!width) width = coercePositiveInt(br.width);
+  if (!height) height = coercePositiveInt(br.height);
+
+  return { width, height };
 }
 
 type AttachmentKind = TemplateBlock["attachment"] extends infer A
@@ -322,7 +406,12 @@ function normalizeBlock(block: ArenaBlock): TemplateBlock {
     const square = getSrc(img.square) || getSrc(img.medium) || original;
     const display = getSrc(img.medium) || large || original;
 
+    const dims = extractImagePixelDimensions(img, block);
     normalized.image = { original, large, square, display };
+    if (dims.width && dims.height) {
+      normalized.image.width = dims.width;
+      normalized.image.height = dims.height;
+    }
     normalized.source_url = original || display;
   }
 
@@ -418,8 +507,419 @@ export function channelBlocksForTemplate(blocks: ArenaBlock[]): TemplateBlock[] 
     .filter((b) => !isReservedStylesCssTitle(b.title));
 }
 
+function stripHtmlToPlain(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getDirectoryRowLabel(block: TemplateBlock): string {
+  switch (block.type) {
+    case "image":
+      return pickFirstNonEmpty(block.title, block.description, "Image");
+    case "text":
+      return pickFirstNonEmpty(
+        block.title,
+        stripHtmlToPlain(block.content || "").slice(0, 120),
+        "Text"
+      );
+    case "link":
+      return pickFirstNonEmpty(block.link?.title, block.title, block.link?.url, "Link");
+    case "media":
+      return pickFirstNonEmpty(block.title, block.description, "Media");
+    case "attachment":
+      return pickFirstNonEmpty(block.attachment?.display_name, block.title, "Attachment");
+    default:
+      return pickFirstNonEmpty(
+        block.title,
+        block.description,
+        block.id != null ? `Block ${block.id}` : "",
+        "Untitled"
+      );
+  }
+}
+
+function sortDirectoryBlocksAlpha(blocks: TemplateBlock[]): TemplateBlock[] {
+  const labeled = blocks.map((block) => ({
+    block,
+    label: getDirectoryRowLabel(block),
+  }));
+  labeled.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+  return labeled.map((x) => x.block);
+}
+
+function directorySearchText(block: TemplateBlock): string {
+  const parts: string[] = [block.title, block.description];
+  if (block.content) parts.push(stripHtmlToPlain(block.content));
+  if (block.link) {
+    parts.push(block.link.title, block.link.description, block.link.url);
+  }
+  if (block.attachment) {
+    parts.push(
+      block.attachment.display_name,
+      block.attachment.type_label,
+      block.attachment.kind_label
+    );
+  }
+  return parts.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+}
+
+function directoryPreviewUrl(block: TemplateBlock): string {
+  switch (block.type) {
+    case "image":
+      return block.image?.display || "";
+    case "link":
+      return pickFirstNonEmpty(block.link?.thumbnail, block.image?.display);
+    case "attachment":
+      if (block.attachment?.kind === "pdf") return "";
+      return pickFirstNonEmpty(block.attachment?.preview_image_url, block.attachment?.preview_image);
+    default:
+      return "";
+  }
+}
+
+/** Finder grid/list thumbnails — uses Are.na previews when present (incl. PDF poster frames). */
+export function finderThumbUrl(block: TemplateBlock): string {
+  switch (block.type) {
+    case "image":
+      return block.image?.display || "";
+    case "link":
+      return pickFirstNonEmpty(block.link?.thumbnail, block.image?.display);
+    case "media":
+      return block.image?.display || "";
+    case "text":
+      return "";
+    case "attachment": {
+      const a = block.attachment;
+      if (!a) return "";
+      if (a.is_image || a.is_gif) {
+        return pickFirstNonEmpty(
+          block.image?.display,
+          a.preview_image_url,
+          a.preview_image,
+          a.url
+        );
+      }
+      if (a.is_video) {
+        return pickFirstNonEmpty(
+          a.preview_image_url,
+          a.preview_image,
+          block.image?.display
+        );
+      }
+      if (a.is_pdf) {
+        return pickFirstNonEmpty(a.preview_image_url, a.preview_image);
+      }
+      return pickFirstNonEmpty(
+        a.preview_image_url,
+        a.preview_image,
+        block.image?.display
+      );
+    }
+    default:
+      return "";
+  }
+}
+
+/** URL opened when double-clicking a Finder item (new tab). */
+export function finderOpenUrl(block: TemplateBlock): string {
+  if (block.type === "link" && block.link?.url) return block.link.url;
+  if (block.type === "attachment" && block.attachment?.url) return block.attachment.url;
+  return block.arena_url;
+}
+
+/** Finder grid/list thumbs: use object-fit contain for PDF / 3D / video posters so previews are not cropped. */
+export function finderThumbContain(block: TemplateBlock): boolean {
+  if (block.type !== "attachment" || !block.attachment) return false;
+  const a = block.attachment;
+  return a.is_pdf || a.is_model || a.is_video;
+}
+
+function directoryPreviewTextExcerpt(block: TemplateBlock): string {
+  if (block.type !== "text" || !block.content) return "";
+  const plain = stripHtmlToPlain(block.content);
+  if (!plain) return "";
+  if (plain.length <= 400) return plain;
+  return `${plain.slice(0, 397).trim()}…`;
+}
+
+function directoryPreviewVariant(block: TemplateBlock): string {
+  if (block.type === "text") {
+    return directoryPreviewTextExcerpt(block) ? "text" : "none";
+  }
+  if (block.type === "attachment" && block.attachment?.kind === "pdf" && block.attachment.url) {
+    return "pdf";
+  }
+  if (directoryPreviewUrl(block)) return "image";
+  return "none";
+}
+
+function directoryPreviewMediaUrl(block: TemplateBlock): string {
+  if (block.type === "attachment" && block.attachment?.kind === "pdf" && block.attachment.url) {
+    return block.attachment.url;
+  }
+  return directoryPreviewUrl(block);
+}
+
+function directoryRowHref(block: TemplateBlock): string {
+  if (block.type === "link" && block.link?.url) return block.link.url;
+  return block.arena_url;
+}
+
+/** True when the list row should open in a new tab (outbound link blocks only). Child pages use same-tab navigation. */
+function directoryRowExternal(block: TemplateBlock): boolean {
+  if (block.type === "link" && block.link?.url) {
+    return /^https?:\/\//i.test(block.link.url);
+  }
+  return false;
+}
+
+/** Link blocks only: true when the outbound URL is not on are.na (external / “leaves” the archive). */
+function directoryLinkIsOffArena(block: TemplateBlock): boolean {
+  if (block.type !== "link" || !block.link?.url) return false;
+  const raw = block.link.url.trim();
+  if (!raw) return false;
+  if (/^mailto:/i.test(raw) || /^tel:/i.test(raw)) return true;
+  if (!/^https?:\/\//i.test(raw)) return true;
+  try {
+    const u = new URL(raw);
+    const h = u.hostname.replace(/^www\./, "").toLowerCase();
+    return h !== "are.na" && !h.endsWith(".are.na");
+  } catch {
+    return false;
+  }
+}
+
+function directoryKindLabel(block: TemplateBlock): string {
+  switch (block.type) {
+    case "image":
+      return "Image";
+    case "text":
+      return "Text";
+    case "link":
+      return "Link";
+    case "media":
+      return "Media";
+    case "attachment":
+      return block.attachment?.kind_label || "File";
+    default:
+      return "";
+  }
+}
+
+/** List row href: outbound link URL, or static child page for other block types. */
+function directoryChildHref(block: TemplateBlock): string {
+  if (block.type === "link" && block.link?.url) return block.link.url;
+  return `block-${block.id}.html`;
+}
+
+function applyStaticPageFinishes(
+  html: string,
+  opts: {
+    styleContent: string;
+    faviconURI: string;
+    gardenFooter: string;
+    themeFontLinks: string;
+    themeOverrideCss: string;
+    effectiveCustomCss: string;
+  }
+): string {
+  let out = html;
+  if (opts.styleContent) {
+    out = out.replace(
+      /<link[^>]*rel=["']stylesheet["'][^>]*href=["']style\.css["'][^>]*\/?>/i,
+      `<style>${opts.styleContent}</style>`
+    );
+  }
+  out = out.replace("</head>", `<link rel="icon" type="image/svg+xml" href="${opts.faviconURI}">\n</head>`);
+  if (out.includes("</body>")) {
+    out = out.replace("</body>", `${opts.gardenFooter}\n</body>`);
+  } else {
+    out += opts.gardenFooter;
+  }
+  const themeInjection =
+    opts.themeFontLinks + (opts.themeOverrideCss ? `<style>${opts.themeOverrideCss}</style>\n` : "");
+  if (themeInjection) {
+    out = out.replace("</head>", `${themeInjection}</head>`);
+  }
+  if (opts.effectiveCustomCss) {
+    const siteCssInjection = `<style id="tiny-garden-site-css">\n${opts.effectiveCustomCss}\n</style>\n`;
+    if (out.includes("</head>")) {
+      out = out.replace("</head>", `${siteCssInjection}</head>`);
+    } else {
+      out = siteCssInjection + out;
+    }
+  }
+  return out;
+}
+
+async function emitDirectoryBlockPages(params: {
+  siteTemplate: string;
+  templateDir: string;
+  siteData: SiteData;
+  styleContent: string;
+  faviconURI: string;
+  gardenFooter: string;
+  themeFontLinks: string;
+  themeOverrideCss: string;
+  effectiveCustomCss: string;
+  assetMap: AssetMap;
+  appUrl: string;
+  blobToken: string | undefined;
+  blobSitePrefix: string;
+  outputDir: string | null;
+}): Promise<void> {
+  if (params.siteTemplate !== "directory") return;
+  const detailPath = path.join(params.templateDir, "block-detail.hbs");
+  const pagePath = path.join(params.templateDir, "block-page.hbs");
+  const detailSrc = await fs.readFile(detailPath, "utf-8").catch(() => null);
+  const pageSrc = await fs.readFile(pagePath, "utf-8").catch(() => null);
+  if (!detailSrc || !pageSrc) return;
+  Handlebars.registerPartial("blockDetail", detailSrc);
+  const pageTemplate = Handlebars.compile(pageSrc);
+  const finishOpts = {
+    styleContent: params.styleContent,
+    faviconURI: params.faviconURI,
+    gardenFooter: params.gardenFooter,
+    themeFontLinks: params.themeFontLinks,
+    themeOverrideCss: params.themeOverrideCss,
+    effectiveCustomCss: params.effectiveCustomCss,
+  };
+  for (const block of params.siteData.blocks) {
+    let pageHtml = pageTemplate({ ...params.siteData, block, styles: params.styleContent });
+    pageHtml = applyStaticPageFinishes(pageHtml, finishOpts);
+    if (params.assetMap.size > 0) {
+      pageHtml = rewriteUrls(pageHtml, params.assetMap, params.appUrl);
+    }
+    const filename = `block-${block.id}.html`;
+    if (params.blobToken) {
+      await put(`${params.blobSitePrefix}/${filename}`, pageHtml, {
+        access: "private",
+        contentType: "text/html",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        token: params.blobToken,
+      });
+    }
+    if (params.outputDir) {
+      await fs.writeFile(path.join(params.outputDir, filename), pageHtml);
+    }
+  }
+}
+
+async function emitFeatureRequestsBlockPages(params: {
+  siteTemplate: string;
+  templateDir: string;
+  siteData: SiteData;
+  styleContent: string;
+  faviconURI: string;
+  gardenFooter: string;
+  themeFontLinks: string;
+  themeOverrideCss: string;
+  effectiveCustomCss: string;
+  assetMap: AssetMap;
+  appUrl: string;
+  blobToken: string | undefined;
+  blobSitePrefix: string;
+  outputDir: string | null;
+}): Promise<void> {
+  if (params.siteTemplate !== "feature-requests") return;
+  const detailPath = path.join(params.templateDir, "block-detail.hbs");
+  const pagePath = path.join(params.templateDir, "block-page.hbs");
+  const detailSrc = await fs.readFile(detailPath, "utf-8").catch(() => null);
+  const pageSrc = await fs.readFile(pagePath, "utf-8").catch(() => null);
+  if (!detailSrc || !pageSrc) return;
+  Handlebars.registerPartial("blockDetail", detailSrc);
+  const pageTemplate = Handlebars.compile(pageSrc);
+  const finishOpts = {
+    styleContent: params.styleContent,
+    faviconURI: params.faviconURI,
+    gardenFooter: params.gardenFooter,
+    themeFontLinks: params.themeFontLinks,
+    themeOverrideCss: params.themeOverrideCss,
+    effectiveCustomCss: params.effectiveCustomCss,
+  };
+  for (const block of params.siteData.blocks) {
+    let pageHtml = pageTemplate({ ...params.siteData, block, styles: params.styleContent });
+    pageHtml = applyStaticPageFinishes(pageHtml, finishOpts);
+    if (params.assetMap.size > 0) {
+      pageHtml = rewriteUrls(pageHtml, params.assetMap, params.appUrl);
+    }
+    const filename = `block-${block.id}.html`;
+    if (params.blobToken) {
+      await put(`${params.blobSitePrefix}/${filename}`, pageHtml, {
+        access: "private",
+        contentType: "text/html",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        token: params.blobToken,
+      });
+    }
+    if (params.outputDir) {
+      await fs.writeFile(path.join(params.outputDir, filename), pageHtml);
+    }
+  }
+}
+
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+registerFeatureRequestHandlebarsHelpers(Handlebars);
+registerFeatureRequestRowHelpers(Handlebars);
+
+/**
+ * When Are.na omits image pixel dimensions, photography layout falls back to this cycle
+ * (otherwise layout uses {@link photoCellClassFromDimensions}).
+ */
+const PHOTO_CELL_FALLBACK_LAYOUTS = [
+  "wide",
+  "tall",
+  "square",
+  "wide",
+  "square",
+  "tall",
+  "square",
+  "wide",
+] as const;
+
+/** Map intrinsic aspect ratio → CSS cell modifier (12-column bento). */
+function photoCellClassFromDimensions(width: number, height: number): string {
+  const r = width / height;
+  if (r >= 1.95) return "hero";
+  if (r >= 1.2) return "wide";
+  if (r <= 0.82) return "tall";
+  return "square";
+}
+
+function photoImageIndexInChannel(blocks: TemplateBlock[], block: TemplateBlock): number {
+  let imageIndex = 0;
+  for (const item of blocks) {
+    if (item.type !== "image") continue;
+    if (item.id === block.id) return imageIndex;
+    imageIndex++;
+  }
+  return 0;
+}
+
+/** Photography template: bento cell from image aspect ratio when width/height exist; else fallback cycle. */
+Handlebars.registerHelper("photoCellClass", (blocks: unknown, block: unknown) => {
+  if (!block || typeof block !== "object") return "square";
+  const b = block as TemplateBlock;
+  if (b.type !== "image" || !b.image) return "square";
+  const w = b.image.width;
+  const h = b.image.height;
+  if (typeof w === "number" && typeof h === "number" && w > 0 && h > 0) {
+    return photoCellClassFromDimensions(w, h);
+  }
+  if (!Array.isArray(blocks)) return "square";
+  const idx = photoImageIndexInChannel(blocks as TemplateBlock[], b);
+  return PHOTO_CELL_FALLBACK_LAYOUTS[idx % PHOTO_CELL_FALLBACK_LAYOUTS.length] ?? "square";
+});
+
+/** Sequence label e.g. `001/A` for stamp metadata on photography template image cells. */
+Handlebars.registerHelper("photoImageSeq", (blocks: unknown, block: unknown) => {
+  if (!Array.isArray(blocks) || !block || typeof block !== "object") return "001/A";
+  const idx = photoImageIndexInChannel(blocks as TemplateBlock[], block as TemplateBlock);
+  return `${String(idx + 1).padStart(3, "0")}/A`;
+});
+
 Handlebars.registerHelper("isReservedStylesCssTitle", (title: unknown) =>
   typeof title === "string" && isReservedStylesCssTitle(title)
 );
@@ -428,6 +928,12 @@ function parseDate(dateStr: string): Date | null {
   const parsed = new Date(dateStr);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
+
+Handlebars.registerHelper("formatYear", (dateStr: unknown) => {
+  if (typeof dateStr !== "string") return "";
+  const parsed = parseDate(dateStr);
+  return parsed ? String(parsed.getUTCFullYear()) : "";
+});
 
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
@@ -443,6 +949,72 @@ Handlebars.registerHelper("formatDateTime24", (dateStr: string) => {
   const parsed = parseDate(dateStr);
   if (!parsed) return dateStr;
   return `${parsed.getUTCFullYear()}-${pad2(parsed.getUTCMonth() + 1)}-${pad2(parsed.getUTCDate())} ${pad2(parsed.getUTCHours())}:${pad2(parsed.getUTCMinutes())}`;
+});
+
+Handlebars.registerHelper("sortDirectoryBlocksAlpha", (blocks: unknown) => {
+  if (!Array.isArray(blocks)) return [];
+  return sortDirectoryBlocksAlpha(blocks as TemplateBlock[]);
+});
+
+/** Bare `{{directoryLabel}}` passes Handlebars options as the first arg, not the block — use `this` unless arg is an explicit block (e.g. `{{directoryLabel this}}`). */
+function directoryLabelHelperArgBlock(arg: unknown, self: TemplateBlock): TemplateBlock {
+  if (
+    arg !== undefined &&
+    arg !== null &&
+    typeof arg === "object" &&
+    !("lookupProperty" in arg) &&
+    typeof (arg as TemplateBlock).id === "number" &&
+    typeof (arg as TemplateBlock).type === "string"
+  ) {
+    return arg as TemplateBlock;
+  }
+  return self;
+}
+
+Handlebars.registerHelper("directoryLabel", function (
+  this: TemplateBlock,
+  arg?: unknown
+) {
+  return getDirectoryRowLabel(directoryLabelHelperArgBlock(arg, this));
+});
+Handlebars.registerHelper("directorySearchText", function (this: TemplateBlock) {
+  return directorySearchText(this);
+});
+Handlebars.registerHelper("finderThumbUrl", function (this: TemplateBlock) {
+  return finderThumbUrl(this);
+});
+Handlebars.registerHelper("finderOpenUrl", function (this: TemplateBlock) {
+  return finderOpenUrl(this);
+});
+Handlebars.registerHelper("finderThumbContain", function (this: TemplateBlock) {
+  return finderThumbContain(this);
+});
+Handlebars.registerHelper("directoryPreviewUrl", function (this: TemplateBlock) {
+  return directoryPreviewUrl(this);
+});
+Handlebars.registerHelper("directoryPreviewVariant", function (this: TemplateBlock) {
+  return directoryPreviewVariant(this);
+});
+Handlebars.registerHelper("directoryPreviewMediaUrl", function (this: TemplateBlock) {
+  return directoryPreviewMediaUrl(this);
+});
+Handlebars.registerHelper("directoryPreviewTextAttr", function (this: TemplateBlock) {
+  return directoryPreviewTextExcerpt(this);
+});
+Handlebars.registerHelper("directoryRowHref", function (this: TemplateBlock) {
+  return directoryRowHref(this);
+});
+Handlebars.registerHelper("directoryRowExternal", function (this: TemplateBlock) {
+  return directoryRowExternal(this);
+});
+Handlebars.registerHelper("directoryLinkIsOffArena", function (this: TemplateBlock) {
+  return directoryLinkIsOffArena(this);
+});
+Handlebars.registerHelper("directoryKindLabel", function (this: TemplateBlock) {
+  return directoryKindLabel(this);
+});
+Handlebars.registerHelper("directoryChildHref", function (this: TemplateBlock) {
+  return directoryChildHref(this);
 });
 
 export async function buildSite(siteId: string): Promise<string> {
@@ -482,20 +1054,8 @@ async function runBuild(siteId: string): Promise<string> {
     throw new Error(`Unknown template "${site.template}".`);
   }
 
-  const siteData: SiteData = {
-    channel: {
-      title: channel.title,
-      slug: channel.slug,
-      description: typeof channel.description === "string" ? channel.description : "",
-      user: {
-        name: channel.owner?.name || channel.owner?.full_name || channel.owner?.username || channel.user?.full_name || "",
-        slug: channel.owner?.slug || channel.user?.slug || "",
-        avatar_url: channel.owner?.avatar || channel.owner?.avatar_image?.display || channel.user?.avatar_image?.display || "",
-      },
-      created_at: channel.created_at,
-      updated_at: channel.updated_at,
-      length: channel.length || channel.counts?.contents || 0,
-    },
+  let siteData: SiteData = {
+    channel: arenaChannelToSiteDataChannel(channel),
     blocks: channelBlocksForTemplate(blocks),
     site: {
       subdomain: site.subdomain,
@@ -505,6 +1065,7 @@ async function runBuild(siteId: string): Promise<string> {
       built_at: new Date().toISOString(),
     },
   };
+  siteData = enrichFeatureRequestSiteData(siteData);
 
   // Load template
   const templateDir = path.join(process.cwd(), "templates", site.template);
@@ -541,6 +1102,13 @@ async function runBuild(siteId: string): Promise<string> {
   if (site.themeFonts) {
     try {
       const f = JSON.parse(site.themeFonts);
+      const heading = f.heading || "system";
+      const body = f.body || "system";
+      themeOverrideCss += `:root {
+  --tg-font-heading: ${fontFamilyCSS(heading)};
+  --tg-font-body: ${fontFamilyCSS(body)};
+}
+`;
       if (f.heading && f.heading !== "system") {
         themeOverrideCss += `h1, h2, h3, h4, h5, h6 { font-family: ${fontFamilyCSS(f.heading)}; }\n`;
       }
@@ -552,23 +1120,8 @@ async function runBuild(siteId: string): Promise<string> {
     } catch {}
   }
 
-  const template = Handlebars.compile(templateSource);
-  let html = template({ ...siteData, styles: styleContent });
-
-  // Inline the stylesheet so the single-file serve works without relative paths
-  if (styleContent) {
-    html = html.replace(
-      /<link[^>]*rel=["']stylesheet["'][^>]*href=["']style\.css["'][^>]*\/?>/i,
-      `<style>${styleContent}</style>`
-    );
-  }
-
-  // Inject favicon (pixel-art plant)
   const iconSeed = site.iconSeed ?? seedFromSubdomain(site.subdomain);
   const faviconURI = generatePlantDataURI(iconSeed);
-  html = html.replace("</head>", `<link rel="icon" type="image/svg+xml" href="${faviconURI}">\n</head>`);
-
-  // Inject tiny.garden footer with plant icon before </body>
   const plantSVGInline = generatePlantSVG(iconSeed).replace(/"/g, "'");
   const gardenFooter = `<footer style="margin-top:3rem;padding:1rem 0;border-top:1px solid #e5e5e5;text-align:center;font-size:11px;color:#999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
   <a href="https://tiny.garden" target="_blank" rel="noopener" style="color:#999;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
@@ -576,27 +1129,20 @@ async function runBuild(siteId: string): Promise<string> {
     made with tiny.garden
   </a>
 </footer>`;
-  if (html.includes("</body>")) {
-    html = html.replace("</body>", `${gardenFooter}\n</body>`);
-  } else {
-    html += gardenFooter;
-  }
 
-  // Inject Google Fonts links + theme overrides before </head>
-  const themeInjection = themeFontLinks + (themeOverrideCss ? `<style>${themeOverrideCss}</style>\n` : "");
-  if (themeInjection) {
-    html = html.replace("</head>", `${themeInjection}</head>`);
-  }
+  const template = Handlebars.compile(templateSource);
+  let html = template({ ...siteData, styles: styleContent });
+  html = applyStaticPageFinishes(html, {
+    styleContent,
+    faviconURI,
+    gardenFooter,
+    themeFontLinks,
+    themeOverrideCss,
+    effectiveCustomCss,
+  });
 
-  // Inject site-level CSS last (saved customCss and/or channel styles.css block).
-  if (effectiveCustomCss) {
-    const siteCssInjection = `<style id="tiny-garden-site-css">\n${effectiveCustomCss}\n</style>\n`;
-    if (html.includes("</head>")) {
-      html = html.replace("</head>", `${siteCssInjection}</head>`);
-    } else {
-      html = siteCssInjection + html;
-    }
-  }
+  const blobSitePrefix = `users/${site.user.arenaUsername}/sites/${site.subdomain}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tiny.garden";
 
   // Upload to Vercel Blob if token available, otherwise write to filesystem
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
@@ -612,12 +1158,44 @@ async function runBuild(siteId: string): Promise<string> {
     );
 
     // Rewrite all Are.na CDN URLs to our proxied blob URLs
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tiny.garden";
     if (assetMap.size > 0) {
       html = rewriteUrls(html, assetMap, appUrl);
     }
 
-    const blob = await put(`users/${site.user.arenaUsername}/sites/${site.subdomain}/index.html`, html, {
+    await emitDirectoryBlockPages({
+      siteTemplate: site.template,
+      templateDir,
+      siteData,
+      styleContent,
+      faviconURI,
+      gardenFooter,
+      themeFontLinks,
+      themeOverrideCss,
+      effectiveCustomCss,
+      assetMap,
+      appUrl,
+      blobToken,
+      blobSitePrefix,
+      outputDir: null,
+    });
+    await emitFeatureRequestsBlockPages({
+      siteTemplate: site.template,
+      templateDir,
+      siteData,
+      styleContent,
+      faviconURI,
+      gardenFooter,
+      themeFontLinks,
+      themeOverrideCss,
+      effectiveCustomCss,
+      assetMap,
+      appUrl,
+      blobToken,
+      blobSitePrefix,
+      outputDir: null,
+    });
+
+    const blob = await put(`${blobSitePrefix}/index.html`, html, {
       access: "private",
       contentType: "text/html",
       addRandomSuffix: false,
@@ -642,6 +1220,40 @@ async function runBuild(siteId: string): Promise<string> {
     const outputDir = path.join(base, site.subdomain);
     await fs.mkdir(outputDir, { recursive: true });
     await fs.writeFile(path.join(outputDir, "index.html"), html);
+
+    const emptyAssets: AssetMap = new Map();
+    await emitDirectoryBlockPages({
+      siteTemplate: site.template,
+      templateDir,
+      siteData,
+      styleContent,
+      faviconURI,
+      gardenFooter,
+      themeFontLinks,
+      themeOverrideCss,
+      effectiveCustomCss,
+      assetMap: emptyAssets,
+      appUrl,
+      blobToken: undefined,
+      blobSitePrefix,
+      outputDir,
+    });
+    await emitFeatureRequestsBlockPages({
+      siteTemplate: site.template,
+      templateDir,
+      siteData,
+      styleContent,
+      faviconURI,
+      gardenFooter,
+      themeFontLinks,
+      themeOverrideCss,
+      effectiveCustomCss,
+      assetMap: emptyAssets,
+      appUrl,
+      blobToken: undefined,
+      blobSitePrefix,
+      outputDir,
+    });
 
     await prisma.site.update({
       where: { id: siteId },

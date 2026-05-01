@@ -1,4 +1,4 @@
 {
   "name": "Directory",
-  "description": "Filterable resource directory with search and simple type chips."
+  "description": "List with sort, search, hover previews, and on-site pages per block (`block-{id}.html`)."
 }

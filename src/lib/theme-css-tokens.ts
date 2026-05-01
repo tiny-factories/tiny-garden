@@ -83,6 +83,123 @@ export function formatThemeCss(c: ThemeColors, f: ThemeFonts): string {
 `;
 }
 
+/**
+ * Default text for the site settings **styles.css** editor when the user has not
+ * saved custom CSS. Intentionally **not** a copy of {@link formatThemeCss}: theme
+ * colors/fonts belong in the Theme tab; this field is for template layout, block
+ * chrome, and semantic overrides that reference `var(--color-*)` from the build.
+ */
+export function formatStylesCssPlaceholder(templateSlug: string): string {
+  if (templateSlug === "photography") {
+    return `/* Site CSS — Photography layout & block chrome. Colors & fonts: Theme tab (injected on build as --color-* and --tg-font-*). */
+
+:root {
+  /* Page & grid */
+  --photo-page-padding: 40px;
+  --photo-grid-gap: 14px;
+  --photo-grid-row-height: 220px;
+  --photo-grid-max-width: 1360px;
+  --photo-tile-radius: 0;
+  --photo-header-margin-bottom: 60px;
+  --photo-footer-margin-top: 80px;
+  --photo-block-prose-padding: 28px 32px;
+
+  /* By block / role (defaults follow theme accent) */
+  --photo-logo-color: var(--color-accent);
+  --photo-stamp-color: var(--color-accent);
+  --photo-prose-title-color: var(--color-accent);
+  --photo-link-title-color: var(--color-accent);
+
+  /* Image cells */
+  --photo-image-filter: grayscale(0.2) contrast(1.1);
+  --photo-image-filter-hover: grayscale(0) contrast(1);
+
+  /* Header/footer/lightbox chrome only — 0 off */
+  --photo-label-glow: 0;
+
+  /* On-image labels: mix-blend-mode — difference | exclusion | normal */
+  --photo-on-image-blend-mode: difference;
+
+  /* Overlay */
+  --photo-grid-lines-opacity: 1;
+}
+
+/* Examples — uncomment to tune */
+/* :root { --photo-label-glow: 0.85; } */
+/* :root { --photo-on-image-blend-mode: exclusion; } */
+/* .cell--prose { } */
+/* .cell--embed .photo-media iframe { border-radius: 4px; } */
+/* .grid-lines { opacity: 0.35; } */
+`;
+  }
+
+  if (templateSlug === "finder") {
+    return `/* Site CSS — Finder shell & layout. Colors & fonts: Theme tab (injected as --color-* and --tg-font-*). */
+
+:root {
+  /* Full-viewport shell (default). Set max-width to cap width on large screens. */
+  --finder-shell-max-w: none;
+  --finder-shell-min-h: 100%;
+  --finder-shell-h: 100vh;
+  --finder-shadow: none;
+
+  /* Columns preview pane (right) */
+  --finder-preview-min-h: 240px;
+
+  /* Icon / folder tiles (defaults follow theme neutrals) */
+  --finder-icon-folder: color-mix(in srgb, var(--color-text) 14%, var(--color-bg));
+  --finder-icon-folder-tab: color-mix(in srgb, var(--color-text) 12%, var(--color-bg));
+}
+
+/* Examples — uncomment to tune */
+/* :root { --finder-shell-max-w: 1200px; --finder-shadow: 0 20px 50px rgba(0,0,0,0.08); } */
+`;
+  }
+
+  if (templateSlug === "feature-requests") {
+    return `/* Site CSS — Feature Requests registry layout. Colors & fonts: Theme tab (injected as --color-* and --tg-font-*). */
+
+:root {
+  /* Page & type scale */
+  --fr-page-pad: 40px;
+  --fr-page-pad-sm: 24px;
+  --fr-title-size: clamp(2rem, 6vw, 4rem);
+
+  /* Overlay copy on the accent panel (usually #fff on a saturated accent) */
+  --fr-overlay-fg: #fff;
+}
+
+/* Examples — uncomment to tune */
+/* :root { --fr-page-pad: 32px; --fr-title-size: 3.5rem; } */
+`;
+  }
+
+  if (templateSlug === "custom") {
+    return `/* Site CSS — Custom template (often AI-assisted). Theme tab sets --color-* and fonts; tune blog-derived layout here. */
+
+:root {
+  /* Example: section rhythm */
+  /* --custom-section-gap: 2rem; */
+}
+
+/* Example: soften block separation using theme border */
+/* article { border-bottom: 1px solid var(--color-border); } */
+`;
+  }
+
+  return `/* Site CSS — optional template overrides. Set colors & fonts in the Theme tab (theme.css); the build injects --color-bg, --color-text, --color-accent, --color-border and font stacks. */
+
+/* Use theme tokens, e.g.:
+:root {
+  --block-radius: 8px;
+}
+article img {
+  border-radius: var(--block-radius);
+}
+*/
+`;
+}
+
 export function parseThemeCss(
   input: string
 ): { ok: true; colors: ThemeColors; fonts: ThemeFonts } | { ok: false; error: string } {

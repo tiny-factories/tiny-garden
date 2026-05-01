@@ -3,6 +3,9 @@ import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
+import { blobUrlForSiblingSiteFile } from "@/lib/site-static-html";
+
+const PREVIEW_HTML_FILES = /^(index\.html|block-\d+\.html)$/;
 
 /**
  * Owner-only preview of the last successful build (blob or local generated/).
@@ -47,14 +50,18 @@ export async function GET(
 
   const subPath = joined && joined !== "." ? joined : "index.html";
 
-  if (site.blobUrl) {
-    const wantsIndex = subPath === "index.html" || !joined;
-    if (!wantsIndex) {
-      return new NextResponse("Not found", { status: 404 });
-    }
+  if (!PREVIEW_HTML_FILES.test(subPath)) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
+  if (site.blobUrl) {
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    const res = await fetch(site.blobUrl, {
+    const targetUrl =
+      subPath === "index.html"
+        ? site.blobUrl
+        : blobUrlForSiblingSiteFile(site.blobUrl, subPath);
+
+    const res = await fetch(targetUrl, {
       headers: blobToken ? { Authorization: `Bearer ${blobToken}` } : {},
     });
     if (!res.ok) return new NextResponse("Not found", { status: 404 });

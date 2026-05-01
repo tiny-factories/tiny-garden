@@ -1,21 +1,902 @@
-.finder-root { max-width: 1100px; margin: 0 auto; padding: 28px 18px 56px; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color: #1a1a1a; }
-.finder-head h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.02em; }
-.finder-head p { margin: 0; color: #555; max-width: 70ch; }
-.finder-shell { display: grid; grid-template-columns: 280px 1fr; gap: 14px; margin-top: 16px; min-height: 68vh; }
-.finder-list { border: 1px solid #dfdfdf; border-radius: 10px; padding: 10px; background: #fafafa; overflow: auto; }
-.finder-item { display: block; text-decoration: none; color: inherit; border: 1px solid #ececec; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; background: #fff; }
-.finder-item small { color: #777; display: block; margin-top: 4px; font-size: 12px; }
-.finder-preview { border: 1px solid #dfdfdf; border-radius: 10px; padding: 14px; background: #fff; overflow: auto; }
-.finder-block { border-bottom: 1px solid #eee; padding: 12px 0; }
-.finder-block:last-child { border-bottom: 0; }
-.finder-block h3 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.01em; }
-.finder-meta { color: #6f6f6f; font-size: 12px; margin: 0 0 8px; }
-.finder-body { line-height: 1.6; }
-.finder-link { color: #0d4ec6; text-decoration: none; }
-.finder-link:hover { text-decoration: underline; }
-.finder-media iframe, .finder-media video, .finder-media audio, .finder-media img, .finder-media object { width: 100%; max-width: 100%; border: 1px solid #ececec; border-radius: 8px; }
-.finder-media video, .finder-media img, .finder-media object { max-height: 380px; object-fit: contain; background: #f8f8f8; }
-.finder-attachment { display: inline-block; margin-top: 8px; text-decoration: none; color: #1d5d2a; font-weight: 600; }
-@media (max-width: 900px) {
-  .finder-shell { grid-template-columns: 1fr; }
+/*
+ * Theme: build injects --color-bg, --color-text, --color-accent, --color-border
+ * and --tg-font-heading / --tg-font-body. Preview uses the same names.
+ * Layout chrome: --finder-* (see Theme → styles.css placeholder for Finder).
+ */
+:root {
+  --bg-canvas: var(--color-bg, var(--color-background, #f0f0f0));
+  --bg-panel: color-mix(
+    in srgb,
+    var(--color-text, #222) 3%,
+    var(--color-bg, var(--color-background, #f0f0f0))
+  );
+  --bg-muted: color-mix(
+    in srgb,
+    var(--color-text, #222) 6%,
+    var(--color-bg, var(--color-background, #f0f0f0))
+  );
+  --bg-hover: color-mix(
+    in srgb,
+    var(--color-text, #222) 4%,
+    var(--color-bg, var(--color-background, #fff))
+  );
+  --text-main: var(--color-text, #222);
+  --text-dim: color-mix(in srgb, var(--color-text, #222) 45%, transparent);
+  --accent: var(--color-accent, #007aff);
+  --border-soft: color-mix(
+    in srgb,
+    var(--color-border, rgba(0, 0, 0, 0.08)) 70%,
+    transparent
+  );
+  --border: var(--color-border, rgba(0, 0, 0, 0.08));
+  --shadow-soft: var(--finder-shadow, none);
+  --font-ui: var(
+    --tg-font-body,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  --font-heading: var(--tg-font-heading, var(--font-ui));
+
+  --finder-shell-max-w: none;
+  --finder-shell-min-h: 100%;
+  --finder-shell-h: 100vh;
+  --finder-preview-min-h: 240px;
+  --finder-icon-folder: color-mix(
+    in srgb,
+    var(--color-text, #222) 14%,
+    var(--color-bg, #e3e3e3)
+  );
+  --finder-icon-folder-tab: color-mix(
+    in srgb,
+    var(--color-text, #222) 12%,
+    var(--color-bg, #dcdcdc)
+  );
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body.finder-body {
+  background-color: var(--bg-canvas);
+  font-family: var(--font-ui);
+  color: var(--text-main);
+  overflow: hidden;
+  cursor: default;
+  margin: 0;
+}
+
+button,
+a,
+input[type="search"] {
+  font: inherit;
+}
+
+button,
+a[href] {
+  cursor: pointer;
+}
+
+.browser-container {
+  width: 100%;
+  max-width: var(--finder-shell-max-w);
+  height: var(--finder-shell-h);
+  min-height: var(--finder-shell-min-h);
+  max-height: 100vh;
+  margin: 0;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+  border: none;
+}
+
+.toolbar {
+  height: 80px;
+  padding: 0 28px 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-panel);
+}
+
+.nav-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+
+.window-dots {
+  display: flex;
+  gap: 8px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-soft);
+}
+
+.location-title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(40vw, 320px);
+}
+
+.toolbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 200px;
+  max-width: none;
+  padding: 0 20px;
+}
+
+.finder-search-label {
+  display: block;
+  width: 100%;
+  max-width: min(720px, 100%);
+}
+
+.finder-toolbar-search {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 18px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  color: var(--text-main);
+}
+
+.finder-toolbar-search::placeholder {
+  color: var(--text-dim);
+}
+
+.finder-toolbar-search:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.view-switcher {
+  display: flex;
+  background: var(--bg-muted);
+  padding: 4px;
+  border-radius: 8px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.view-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.view-btn:hover {
+  color: var(--text-main);
+}
+
+.view-btn.active {
+  background: var(--bg-panel);
+  color: var(--text-main);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--color-text, #000) 6%, transparent);
+}
+
+.main-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  padding: 28px 20px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  overflow: auto;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-group-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding-left: 12px;
+  margin-bottom: 8px;
+}
+
+.sidebar-item {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.15s ease;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  width: 100%;
+}
+
+.sidebar-item:not(.sidebar-item--muted):hover {
+  background: var(--bg-hover);
+}
+
+.sidebar-item.active {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.sidebar-item--muted {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  cursor: default;
+}
+
+.finder-workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-panel);
+}
+
+.finder-view--columns.finder-workspace {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.finder-top-region {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 32px 40px 24px;
+}
+
+.finder-view--columns .finder-top-region {
+  flex: 0 0 min(280px, 38%);
+  max-width: 360px;
+  padding: 24px 12px 24px 16px;
+  border-right: 1px solid var(--border);
+}
+
+.finder-pane {
+  min-height: 100%;
+}
+
+.finder-view--columns .finder-pane-columns {
+  height: 100%;
+  padding: 0 4px;
+}
+
+.finder-workspace:not(.finder-view--columns) .finder-preview {
+  display: none !important;
+}
+
+.finder-preview {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--finder-preview-min-h);
+  overflow: auto;
+  padding: 20px 32px 28px;
+  border-top: none;
+  background: color-mix(
+    in srgb,
+    var(--color-text, #222) 2.5%,
+    var(--color-bg, var(--color-background, #fafafa))
+  );
+}
+
+.finder-view--columns .finder-preview {
+  min-height: 0;
+}
+
+.finder-preview[hidden] {
+  display: none !important;
+}
+
+.finder-doc {
+  display: none;
+  max-width: 72ch;
+}
+
+.finder-doc.active {
+  display: block;
+}
+
+.finder-block-head {
+  margin-bottom: 16px;
+}
+
+.finder-block-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  color: var(--text-main);
+}
+
+.finder-type {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: capitalize;
+}
+
+.finder-prose {
+  line-height: 1.65;
+}
+
+.finder-prose :where(p, ul, ol) {
+  margin: 0 0 0.75em;
+}
+
+.finder-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.finder-link:hover {
+  text-decoration: underline;
+}
+
+.finder-link-desc {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.finder-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+}
+
+.finder-media iframe,
+.finder-media video,
+.finder-media audio,
+.finder-media img,
+.finder-media object {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+}
+
+.finder-media video,
+.finder-media img,
+.finder-media object {
+  max-height: min(420px, 55vh);
+  object-fit: contain;
+  background: var(--bg-muted);
+}
+
+.finder-pdf-wrap {
+  margin: 12px 0 16px;
+}
+
+.finder-pdf-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.finder-pdf-gate[hidden] {
+  display: none !important;
+}
+
+.finder-pdf-poster,
+.finder-model-poster {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(52vh, 520px);
+  object-fit: contain;
+  object-position: center top;
+  background: var(--bg-muted);
+}
+
+.finder-attach-preview {
+  width: auto;
+  max-width: 100%;
+  max-height: min(480px, 60vh);
+  object-fit: contain;
+  object-position: center;
+  background: var(--bg-muted);
+}
+
+.finder-model-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.finder-model-mount {
+  width: 100%;
+  min-height: 320px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-dim) 8%, var(--bg-panel));
+  border: 1px solid var(--border-soft);
+}
+
+model-viewer.finder-model-viewer {
+  display: block;
+  width: 100%;
+  height: min(70vh, 560px);
+  min-height: 320px;
+  --poster-color: transparent;
+}
+
+.finder-model-fallback-msg {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.finder-pdf-fallback {
+  width: 100%;
+  max-width: 280px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  background: var(--bg-muted);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.finder-pdf-open-btn {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text, #000) 6%, transparent);
+}
+
+.finder-pdf-open-btn:hover {
+  background: var(--bg-hover);
+}
+
+.finder-pdf-frame {
+  width: 100%;
+  min-height: min(72vh, 720px);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--bg-muted);
+}
+
+.finder-pdf-frame[hidden] {
+  display: none !important;
+}
+
+/* Columns: auto-opened PDF uses more of the preview height */
+.finder-view--columns .finder-doc.active .finder-pdf-frame:not([hidden]) {
+  min-height: min(88vh, 1000px);
+}
+
+.finder-attachment {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.finder-col-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.finder-col-list li {
+  margin: 0;
+}
+
+.finder-col-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+
+.finder-col-thumb-wrap {
+  flex-shrink: 0;
+  width: 32px;
+  height: 26px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-soft);
+}
+
+.finder-col-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.finder-col-thumb--contain,
+.finder-col-thumb-wrap--contain .finder-col-thumb {
+  object-fit: contain;
+}
+
+.finder-col-label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finder-col-item:hover {
+  background: var(--bg-hover);
+}
+
+.finder-col-item.active {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 36px 28px;
+}
+
+.file-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 8px 4px;
+  border-radius: 10px;
+}
+
+.file-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.file-card.active .finder-file-icon {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.finder-file-icon {
+  width: 80px;
+  height: 64px;
+  background: var(--finder-icon-folder);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.finder-file-icon::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 30px;
+  height: 6px;
+  background: var(--finder-icon-folder-tab);
+  border-radius: 2px 2px 0 0;
+}
+
+.finder-file-icon--thumb {
+  background: var(--bg-muted);
+}
+
+.finder-file-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.finder-file-thumb--contain,
+.finder-file-icon--thumb-contain .finder-file-thumb {
+  object-fit: contain;
+}
+
+.finder-file-icon--thumb-contain {
+  background: var(--bg-muted);
+}
+
+.finder-file-icon--text {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-panel));
+}
+
+.finder-file-icon--link::after {
+  content: "↗";
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 18px;
+  color: var(--accent);
+  z-index: 2;
+}
+
+.finder-file-icon--media::after {
+  content: "▶";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--accent);
+  z-index: 2;
+}
+
+.finder-file-icon--thumb.finder-file-icon--link::after,
+.finder-file-icon--thumb.finder-file-icon--media::after {
+  display: none;
+}
+
+.finder-file-icon--attachment {
+  background: color-mix(in srgb, var(--text-dim) 20%, var(--bg-panel));
+}
+
+.finder-file-icon--sm {
+  width: 36px;
+  height: 28px;
+}
+
+.finder-file-icon--sm::before {
+  width: 14px;
+  height: 4px;
+  top: -4px;
+}
+
+.finder-file-icon--sm.finder-file-icon--thumb {
+  border-radius: 4px;
+}
+
+.finder-row .finder-file-icon--sm .finder-file-thumb {
+  border-radius: 2px;
+}
+
+.file-label {
+  font-size: 14px;
+  color: var(--text-main);
+  max-width: 140px;
+  word-wrap: break-word;
+  line-height: 1.35;
+}
+
+.file-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: -4px;
+}
+
+.finder-list-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-muted);
+}
+
+.finder-list-rows li {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.finder-list-rows li:last-child {
+  border-bottom: none;
+}
+
+.finder-row {
+  display: grid;
+  grid-template-columns: 44px 1fr minmax(72px, auto) 120px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: var(--bg-panel);
+  color: inherit;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.finder-row:hover {
+  background: var(--bg-hover);
+}
+
+.finder-row.active {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.finder-row-title {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finder-row-kind {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: capitalize;
+}
+
+.finder-row-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.status-bar {
+  height: 48px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  background: color-mix(
+    in srgb,
+    var(--color-text, #222) 3%,
+    var(--color-bg, var(--color-background, #fafafa))
+  );
+  flex-shrink: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 960px) {
+  .browser-container {
+    margin: 0;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+  }
+
+  .sidebar-section {
+    flex: 1 1 200px;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .location-title {
+    max-width: 100%;
+  }
+
+  .toolbar-center {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .finder-view--columns.finder-workspace {
+    flex-direction: column;
+  }
+
+  .finder-view--columns .finder-top-region {
+    flex: 0 0 auto;
+    max-width: none;
+    max-height: 42vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-btn {
+    transition: none;
+  }
 }
