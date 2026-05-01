@@ -20,6 +20,7 @@ import {
 import { fontFamilyCSS, googleFontsLinkTag } from "@/lib/fonts";
 import { prisma } from "@/lib/db";
 import { getRequestAuth } from "@/lib/request-auth";
+import { isKnownTemplateSlug } from "@/lib/templates-manifest";
 import { getArenaTokenForTemplateExamples } from "@/lib/template-example-token";
 import { registerFeatureRequestHandlebarsHelpers } from "@/lib/feature-request-status";
 import {
@@ -292,6 +293,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  if (!(await isKnownTemplateSlug(template))) {
+    return NextResponse.json(
+      { error: `Template "${template}" not found` },
+      { status: 404 }
+    );
+  }
+
   return buildPreviewResponse(request, {
     template,
     bg: request.nextUrl.searchParams.get("bg"),
@@ -319,6 +327,13 @@ export async function POST(request: NextRequest) {
   const template = typeof o.template === "string" ? o.template.trim() : "";
   if (!template) {
     return NextResponse.json({ error: "Missing template" }, { status: 400 });
+  }
+
+  if (!(await isKnownTemplateSlug(template))) {
+    return NextResponse.json(
+      { error: `Template "${template}" not found` },
+      { status: 404 }
+    );
   }
 
   const str = (v: unknown) => (typeof v === "string" ? v : undefined);

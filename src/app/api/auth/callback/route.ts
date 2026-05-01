@@ -2,12 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { setSession } from "@/lib/session";
 import { BETA_SPOTS, getBetaAccessCount } from "@/lib/beta";
+import {
+  OAUTH_STATE_COOKIE_NAME,
+  verifyOAuthState,
+} from "@/lib/oauth-state";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
+  const returnedState = req.nextUrl.searchParams.get("state");
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=no_code", req.url));
+  }
+
+  const oauthStateCookieValue = req.cookies.get(OAUTH_STATE_COOKIE_NAME)?.value;
+  const stateIsValid = verifyOAuthState(oauthStateCookieValue, returnedState);
+  if (!stateIsValid) {
+    const response = NextResponse.redirect(
+      new URL("/login?error=invalid_state", req.url)
+    );
+    response.cookies.delete(OAUTH_STATE_COOKIE_NAME);
+    return response;
   }
 
   // Exchange code for token
@@ -89,5 +104,7 @@ export async function GET(req: NextRequest) {
     arenaUsername: arenaUser.slug,
   });
 
-  return NextResponse.redirect(new URL("/sites?signed_in=1", req.url));
+  const response = NextResponse.redirect(new URL("/sites?signed_in=1", req.url));
+  response.cookies.delete(OAUTH_STATE_COOKIE_NAME);
+  return response;
 }

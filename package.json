@@ -15,7 +15,9 @@
     "lint": "next lint",
     "sync:feature-reviews": "node scripts/sync-feature-requests.mjs",
     "cli:build": "npm --prefix cli run build",
-    "cli:start": "npm --prefix cli run start --"
+    "cli:start": "npm --prefix cli run start --",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.87.0",
@@ -46,6 +48,7 @@
     "postcss": "^8.5.0",
     "prisma": "^6.5.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.2"
   }
 }
