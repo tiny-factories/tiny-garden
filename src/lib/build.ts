@@ -25,6 +25,9 @@ import { normalizeSiteSubdomain } from "./subdomain";
 // Map of original URL → blob URL for rewriting
 type AssetMap = Map<string, string>;
 
+/** Single mirrored asset ceiling before buffering; batches multiply memory use. */
+const MAX_MIRROR_ASSET_BYTES = 35 * 1024 * 1024;
+
 function hashUrl(url: string): string {
   return crypto.createHash("sha256").update(url).digest("hex").slice(0, 16);
 }
@@ -47,6 +50,44 @@ function getExtension(url: string, contentType?: string): string {
   return (contentType && typeMap[contentType]) || ".bin";
 }
 
+export async function responseBufferWithinLimit(
+  res: Response,
+  maxBytes = MAX_MIRROR_ASSET_BYTES
+): Promise<Buffer | null> {
+  const lenHdr = res.headers.get("content-length");
+  if (lenHdr) {
+    const n = parseInt(lenHdr, 10);
+    if (Number.isFinite(n) && n > maxBytes) {
+      await res.body?.cancel?.();
+      return null;
+    }
+  }
+
+  if (!res.body) {
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return buffer.length > maxBytes ? null : buffer;
+  }
+
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+
+  return Buffer.concat(chunks, total);
+}
+
 async function downloadAndUploadAsset(
   originalUrl: string,
   blobPath: string,
@@ -57,7 +98,11 @@ async function downloadAndUploadAsset(
     if (!res.ok) return null;
 
     const contentType = res.headers.get("content-type") || "application/octet-stream";
-    const buffer = Buffer.from(await res.arrayBuffer());
+    const buffer = await responseBufferWithinLimit(res);
+    if (!buffer) {
+      console.warn(`Skipped oversized asset: ${originalUrl}`);
+      return null;
+    }
 
     const ext = getExtension(originalUrl, contentType);
     const hash = hashUrl(originalUrl);
