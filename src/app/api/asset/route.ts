@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAllowedBlobAssetUrl } from "@/lib/blob-asset-proxy";
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
@@ -6,7 +7,7 @@ export async function GET(req: NextRequest) {
 
   // Only allow fetching from our blob store
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!blobToken || !url.includes("vercel-storage.com") && !url.includes("blob.vercel-storage.com")) {
+  if (!blobToken || !isAllowedBlobAssetUrl(url)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
