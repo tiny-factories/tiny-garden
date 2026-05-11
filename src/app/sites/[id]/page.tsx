@@ -9,6 +9,7 @@ import { SearchInput } from "@/components/search-input";
 import { IdeTextEditor } from "@/components/ide-text-editor";
 import { ThemeTokensPillEditor } from "@/components/theme-tokens-pill-editor";
 import { SegmentedControl } from "@/components/toolbar";
+import { SiteAiThemeBox } from "@/components/site-ai-theme-box";
 import { SiteChannelSettingsCard } from "@/components/site-channel-settings-card";
 import { SiteSettingsSkeleton } from "@/components/sites-dashboard-skeletons";
 import { PlantIconFrame, SitePreviewColumn } from "@/components/site-preview-column";
@@ -865,6 +866,18 @@ export default function SiteSettingsPage() {
               )}
 
               {activeTab === "theme" && (
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <SiteAiThemeBox
+                  siteId={id}
+                  canCustomize={!!canCustomize}
+                  onApplied={({ colors: nextColors, fonts: nextFonts }) => {
+                    setColors(nextColors);
+                    setFonts(nextFonts);
+                    setThemeCssDraft(formatThemeCss(nextColors, nextFonts));
+                    setThemeCssError("");
+                    setPreviewRev((n) => n + 1);
+                  }}
+                />
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-950">
                 <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-3 py-2.5 dark:border-neutral-800 dark:bg-neutral-900/95">
                   <SegmentedControl<ThemeFileTab>
@@ -981,6 +994,7 @@ export default function SiteSettingsPage() {
                     </footer>
                   </div>
                 )}
+              </div>
               </div>
               )}
             </div>
