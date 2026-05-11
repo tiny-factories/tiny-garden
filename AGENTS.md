@@ -19,7 +19,6 @@
 ### Gotchas
 
 - The `npm run dev` script includes a `predev` hook that calls `scripts/sync-feature-requests.mjs` (fetches from an external Are.na channel). It fails silently but adds startup latency. Use `npx next dev --port 3000` directly to skip it.
-- The Prisma schema uses PostgreSQL (not SQLite). `CLAUDE.md` mentions SQLite commands for `prisma db push` / `prisma studio` with `DATABASE_URL="file:./dev.db"` — those are outdated. Use the PostgreSQL URL above.
 - Are.na OAuth credentials (`ARENA_CLIENT_ID`, `ARENA_CLIENT_SECRET`) are required to test login/dashboard flows. Without them the app boots and serves public pages (homepage, `/templates`, `/docs`, `/login`) but OAuth redirects will fail.
 - Stripe keys are optional; billing endpoints return 503 gracefully when unconfigured.
 - `BLOB_READ_WRITE_TOKEN` is optional; without it, built sites fall back to local `generated/` directory.

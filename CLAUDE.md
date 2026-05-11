@@ -8,15 +8,15 @@ tiny.garden turns Are.na channels into static websites. Users log in with Are.na
 
 ## Commands
 
-- `npm run dev` — start dev server on localhost:3000
+- `npm run dev` — start dev server on localhost:3000 (HTTPS; needs local trust setup). For plain HTTP or to skip the `predev` Are.na sync hook, use `npx next dev --port 3000`.
 - `npm run build` — production build
-- `npm run lint` — ESLint
-- `DATABASE_URL="file:./dev.db" npx prisma db push` — apply schema changes
-- `DATABASE_URL="file:./dev.db" npx prisma studio` — browse database
+- `npm run lint` — ESLint (runs `eslint .`; see `eslint.config.mjs`)
+- `npm run db:push` — apply schema changes via Prisma (uses `DATABASE_URL` / `DIRECT_URL` from the environment; same as `npx prisma db push` with those vars set)
+- `DATABASE_URL="postgresql://tinygarden:tinygarden@localhost:5432/tinygarden" npx prisma studio` — browse the database (PostgreSQL must be running)
 
 ## Architecture
 
-**Next.js 15 (App Router) + Tailwind v4 + Prisma (SQLite) + Stripe**
+**Next.js 15 (App Router) + Tailwind v4 + Prisma (PostgreSQL) + Stripe**
 
 ### Core Flow
 1. User authenticates via Are.na OAuth (`/api/auth/login` → `/api/auth/callback`)
@@ -49,7 +49,7 @@ templates/blog/
 The data contract passed to templates is the `SiteData` interface in `src/lib/build.ts`. Block types: `image`, `text`, `link`, `media`, `attachment`. In-app docs: `/docs` (block-type table and per-template notes, including **Gallery** masonry + dialog).
 
 ### Database (Prisma)
-Three models: `User` (Are.na auth + Stripe customer), `Site` (subdomain, channel, template), `Subscription` (free/pro plan).
+PostgreSQL (`prisma/schema.prisma`). Models include `User` (Are.na auth + Stripe customer), `Site` (subdomain, channel, template), `Subscription` (free/pro plan), and others (API tokens, build requests, etc.); see the schema for the full set.
 
 ### Billing
 Stripe checkout + webhooks. Free plan = 1 site. Pro = unlimited. Stripe is lazily initialized (not at module load) to avoid build errors when keys aren't set.
