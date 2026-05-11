@@ -175,6 +175,137 @@ export class ArenaClient {
   }
 
   /**
+   * Low-level body+method writer. Same rate-limit retry as `fetch()` but for
+   * POST/PUT/PATCH/DELETE. Returns parsed JSON or null on 204.
+   */
+  private async write<T>(
+    path: string,
+    method: "POST" | "PUT" | "PATCH" | "DELETE",
+    body?: Record<string, unknown>
+  ): Promise<T | null> {
+    const now = Date.now();
+    const elapsed = now - this.lastRequestAt;
+    if (elapsed < this.minInterval) {
+      await sleep(this.minInterval - elapsed);
+    }
+    this.lastRequestAt = Date.now();
+
+    const init: RequestInit = {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    };
+
+    let res = await fetch(`${ARENA_API}${path}`, init);
+    if (res.status === 429) {
+      const resetHeader = res.headers.get("X-RateLimit-Reset");
+      const resetAt = resetHeader
+        ? parseInt(resetHeader, 10) * 1000
+        : Date.now() + 60000;
+      const waitMs = Math.min(Math.max(resetAt - Date.now(), 1000), 60000);
+      await sleep(waitMs);
+      this.lastRequestAt = Date.now();
+      res = await fetch(`${ARENA_API}${path}`, init);
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(
+        `Are.na ${method} ${path} failed (${res.status} ${res.statusText}): ${text.slice(0, 240)}`
+      );
+    }
+    if (res.status === 204) return null;
+    return (await res.json()) as T;
+  }
+
+  /**
+   * Create a new channel under the authenticated user.
+   *
+   * `status` matches Are.na's terminology: `"public"` (anyone can read),
+   * `"closed"` (read/write only for collaborators), `"private"` (visible only
+   * to the owner).
+   */
+  async createChannel(input: {
+    title: string;
+    status?: "public" | "closed" | "private";
+  }): Promise<ArenaChannel> {
+    const body: Record<string, unknown> = { title: input.title };
+    if (input.status) body.status = input.status;
+    const res = await this.write<ArenaChannel | { data: ArenaChannel }>(
+      "/channels",
+      "POST",
+      body
+    );
+    if (!res) throw new Error("Are.na channel create returned no body");
+    return "data" in res && res.data
+      ? (res as { data: ArenaChannel }).data
+      : (res as ArenaChannel);
+  }
+
+  /** Append a Text block (Markdown allowed) to a channel. */
+  async createTextBlock(
+    channelSlug: string,
+    input: { content: string; title?: string; description?: string }
+  ): Promise<ArenaBlock> {
+    const body: Record<string, unknown> = { content: input.content };
+    if (input.title) body.title = input.title;
+    if (input.description) body.description = input.description;
+    const res = await this.write<ArenaBlock | { data: ArenaBlock }>(
+      `/channels/${encodeURIComponent(channelSlug)}/blocks`,
+      "POST",
+      body
+    );
+    if (!res) throw new Error("Are.na block create returned no body");
+    return "data" in res && res.data
+      ? (res as { data: ArenaBlock }).data
+      : (res as ArenaBlock);
+  }
+
+  /** Append a Link block (URL with optional title/description) to a channel. */
+  async createLinkBlock(
+    channelSlug: string,
+    input: { url: string; title?: string; description?: string }
+  ): Promise<ArenaBlock> {
+    const body: Record<string, unknown> = { source: input.url };
+    if (input.title) body.title = input.title;
+    if (input.description) body.description = input.description;
+    const res = await this.write<ArenaBlock | { data: ArenaBlock }>(
+      `/channels/${encodeURIComponent(channelSlug)}/blocks`,
+      "POST",
+      body
+    );
+    if (!res) throw new Error("Are.na block create returned no body");
+    return "data" in res && res.data
+      ? (res as { data: ArenaBlock }).data
+      : (res as ArenaBlock);
+  }
+
+  /**
+   * Append an Image block from a hosted URL. Are.na fetches the URL server-side
+   * and creates an Image block. Useful when the user pastes an image URL or
+   * after we've uploaded a file to a blob host.
+   */
+  async createImageBlockFromUrl(
+    channelSlug: string,
+    input: { url: string; title?: string; description?: string }
+  ): Promise<ArenaBlock> {
+    const body: Record<string, unknown> = { source: input.url };
+    if (input.title) body.title = input.title;
+    if (input.description) body.description = input.description;
+    const res = await this.write<ArenaBlock | { data: ArenaBlock }>(
+      `/channels/${encodeURIComponent(channelSlug)}/blocks`,
+      "POST",
+      body
+    );
+    if (!res) throw new Error("Are.na block create returned no body");
+    return "data" in res && res.data
+      ? (res as { data: ArenaBlock }).data
+      : (res as ArenaBlock);
+  }
+
+  /**
    * Update a block on Are.na.
    *
    * Are.na's `PUT /blocks/:id` accepts `title`, `description`, and (for Text

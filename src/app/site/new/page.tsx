@@ -326,6 +326,7 @@ export default function NewSitePage() {
           cancelHref="/sites"
           highlightChannelSlugs={existingSlugs}
           onSelect={handleChannelSelect}
+          enableCreate
         />
       </main>
     );
