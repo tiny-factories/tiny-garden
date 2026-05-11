@@ -58,6 +58,7 @@ export function SiteChannelPicker({
   highlightChannelSlugs,
   busy = false,
   embedded = false,
+  enableCreate = false,
 }: {
   onSelect: (channel: SiteChannelPickerChannel) => void;
   cancelHref: string;
@@ -67,7 +68,42 @@ export function SiteChannelPicker({
   busy?: boolean;
   /** Use inside a parent `main` (e.g. admin) — drops outer `min-h-screen` / `main` semantics. */
   embedded?: boolean;
+  /** Show a "New channel" inline composer that creates an Are.na channel via our API and selects it. */
+  enableCreate?: boolean;
 }) {
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createStatus, setCreateStatus] = useState<"public" | "closed" | "private">("public");
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const submitCreate = async () => {
+    const trimmed = createTitle.trim();
+    if (!trimmed) {
+      setCreateError("Title is required.");
+      return;
+    }
+    setCreateBusy(true);
+    setCreateError(null);
+    try {
+      const res = await fetch("/api/channels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: trimmed, status: createStatus }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || `Create failed (${res.status})`);
+      }
+      const data = (await res.json()) as { channel: SiteChannelPickerChannel };
+      onSelect(data.channel);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Create failed");
+    } finally {
+      setCreateBusy(false);
+    }
+  };
+
   const [ownChannels, setOwnChannels] = useState<SiteChannelPickerChannel[]>([]);
   const [followingChannels, setFollowingChannels] = useState<
     SiteChannelPickerChannel[]
@@ -142,13 +178,81 @@ export function SiteChannelPicker({
     <div className={rootClass}>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg font-medium">{heading}</h1>
-        <Link
-          href={cancelHref}
-          className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
-        >
-          Cancel
-        </Link>
+        <div className="flex items-center gap-3">
+          {enableCreate && !createOpen && (
+            <button
+              type="button"
+              onClick={() => {
+                setCreateOpen(true);
+                setCreateError(null);
+              }}
+              disabled={busy}
+              className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50"
+            >
+              + New channel
+            </button>
+          )}
+          <Link
+            href={cancelHref}
+            className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 dark:text-neutral-500"
+          >
+            Cancel
+          </Link>
+        </div>
       </div>
+
+      {enableCreate && createOpen && (
+        <div className="mb-4 space-y-2 rounded border border-neutral-200 bg-neutral-50/60 p-3 dark:border-neutral-700 dark:bg-neutral-900/40">
+          <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            Create a new Are.na channel
+          </div>
+          <input
+            type="text"
+            value={createTitle}
+            placeholder="Channel title"
+            autoFocus
+            onChange={(e) => setCreateTitle(e.target.value)}
+            className="w-full rounded border border-neutral-200 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+          />
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <label className="text-neutral-500 dark:text-neutral-400">Visibility</label>
+            <select
+              value={createStatus}
+              onChange={(e) => setCreateStatus(e.target.value as typeof createStatus)}
+              className="rounded border border-neutral-200 bg-white px-2 py-1 dark:border-neutral-700 dark:bg-neutral-950"
+            >
+              <option value="public">Public (anyone)</option>
+              <option value="closed">Closed (collaborators only)</option>
+              <option value="private">Private (only me)</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => void submitCreate()}
+              disabled={createBusy || !createTitle.trim()}
+              className="inline-flex items-center justify-center rounded border border-neutral-900 bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+            >
+              {createBusy ? "Creating…" : "Create channel"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreateOpen(false);
+                setCreateTitle("");
+                setCreateError(null);
+              }}
+              disabled={createBusy}
+              className="inline-flex items-center justify-center rounded px-2 py-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
+            >
+              Cancel
+            </button>
+            {createError && (
+              <span className="text-[11px] text-red-600 dark:text-red-400">{createError}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center border border-neutral-200 rounded mb-4 focus-within:border-neutral-400 transition-colors dark:focus-within:border-neutral-500 dark:border-neutral-700">
         <select

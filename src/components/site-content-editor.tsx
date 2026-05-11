@@ -34,6 +34,13 @@ type SaveState =
 
 type DraftMap = Record<number, { title?: string; description?: string; content?: string }>;
 
+type NewBlockKind = "text" | "link" | "image";
+
+type CreateState =
+  | { kind: "idle" }
+  | { kind: "saving" }
+  | { kind: "error"; message: string };
+
 function blockTypeLabel(type: EditableBlock["type"]): string {
   switch (type) {
     case "image":
@@ -91,6 +98,14 @@ export function SiteContentEditor({ siteId }: { siteId: string }) {
   const [blocks, setBlocks] = useState<EditableBlock[]>([]);
   const [drafts, setDrafts] = useState<DraftMap>({});
   const [saveState, setSaveState] = useState<Record<number, SaveState>>({});
+
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [newKind, setNewKind] = useState<NewBlockKind>("text");
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [createState, setCreateState] = useState<CreateState>({ kind: "idle" });
 
   const refreshAll = useCallback(async () => {
     setLoading(true);
@@ -226,18 +241,157 @@ export function SiteContentEditor({ siteId }: { siteId: string }) {
     );
   }
 
+  const resetComposer = () => {
+    setNewTitle("");
+    setNewDescription("");
+    setNewContent("");
+    setNewUrl("");
+    setCreateState({ kind: "idle" });
+  };
+
+  const createBlock = async () => {
+    setCreateState({ kind: "saving" });
+    const body: Record<string, unknown> = { type: newKind };
+    if (newTitle.trim()) body.title = newTitle.trim();
+    if (newDescription.trim()) body.description = newDescription.trim();
+    if (newKind === "text") {
+      if (!newContent.trim()) {
+        setCreateState({ kind: "error", message: "Content is required for a text block." });
+        return;
+      }
+      body.content = newContent;
+    } else {
+      if (!newUrl.trim()) {
+        setCreateState({ kind: "error", message: "URL is required." });
+        return;
+      }
+      body.url = newUrl.trim();
+    }
+
+    try {
+      const res = await fetch(`/api/sites/${siteId}/blocks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || `Create failed (${res.status})`);
+      }
+      track("block-created", { siteId, kind: newKind });
+      resetComposer();
+      setComposerOpen(false);
+      await refreshAll();
+    } catch (err) {
+      setCreateState({
+        kind: "error",
+        message: err instanceof Error ? err.message : "Create failed",
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-200 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
         <span>{blocks.length} blocks · edits sync to Are.na and queue a rebuild</span>
-        <button
-          type="button"
-          onClick={() => void refreshAll()}
-          className="inline-flex items-center justify-center rounded border border-neutral-200 px-2 py-0.5 text-[11px] font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/80"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setComposerOpen((v) => !v);
+              if (composerOpen) resetComposer();
+            }}
+            className="inline-flex items-center justify-center rounded border border-neutral-200 bg-white px-2 py-0.5 text-[11px] font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-950 dark:hover:bg-neutral-800/80"
+          >
+            {composerOpen ? "Cancel" : "Add block"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void refreshAll()}
+            className="inline-flex items-center justify-center rounded border border-neutral-200 px-2 py-0.5 text-[11px] font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/80"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {composerOpen && (
+        <div className="shrink-0 space-y-2 border-b border-neutral-200 bg-neutral-50/60 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/40">
+          <div className="flex gap-2 text-xs">
+            {(["text", "link", "image"] as NewBlockKind[]).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() => {
+                  setNewKind(kind);
+                  setCreateState({ kind: "idle" });
+                }}
+                className={`rounded border px-2 py-1 font-medium capitalize ${
+                  newKind === kind
+                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                    : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-800/80"
+                }`}
+              >
+                {kind}
+              </button>
+            ))}
+          </div>
+
+          <input
+            type="text"
+            value={newTitle}
+            placeholder="Title (optional)"
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="w-full rounded border border-neutral-200 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          />
+
+          {newKind === "text" ? (
+            <textarea
+              value={newContent}
+              placeholder="Body text (Markdown supported on Are.na)"
+              rows={4}
+              onChange={(e) => setNewContent(e.target.value)}
+              className="w-full resize-y rounded border border-neutral-200 bg-white px-2 py-1 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-900"
+            />
+          ) : (
+            <>
+              <input
+                type="url"
+                value={newUrl}
+                placeholder={newKind === "image" ? "https://… (image URL)" : "https://…"}
+                onChange={(e) => setNewUrl(e.target.value)}
+                className="w-full rounded border border-neutral-200 bg-white px-2 py-1 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-900"
+              />
+              <textarea
+                value={newDescription}
+                placeholder="Description (optional)"
+                rows={2}
+                onChange={(e) => setNewDescription(e.target.value)}
+                className="w-full resize-y rounded border border-neutral-200 bg-white px-2 py-1 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-900"
+              />
+            </>
+          )}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void createBlock()}
+              disabled={createState.kind === "saving"}
+              className="inline-flex items-center justify-center rounded border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:hover:bg-neutral-800/80"
+            >
+              {createState.kind === "saving" ? "Adding…" : `Add ${newKind} block`}
+            </button>
+            {createState.kind === "error" && (
+              <span className="text-[11px] text-red-600 dark:text-red-400">{createState.message}</span>
+            )}
+            {newKind === "image" && (
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                v1 only accepts image URLs.
+              </span>
+            )}
+          </div>
+        </div>
+      )}
       <ul className="min-h-0 flex-1 divide-y divide-neutral-200 overflow-y-auto dark:divide-neutral-800">
         {blocks.map((block) => {
           const draft = drafts[block.id] || {};
