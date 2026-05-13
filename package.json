@@ -12,7 +12,7 @@
     "db:push": "node scripts/run-prisma.cjs db push",
     "postinstall": "node scripts/prisma-generate.cjs",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "sync:feature-reviews": "node scripts/sync-feature-requests.mjs",
     "cli:build": "npm --prefix cli run build",
     "cli:start": "npm --prefix cli run start --"
