@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/button";
 import { SegmentedControl } from "@/components/toolbar";
@@ -500,7 +499,7 @@ export default function AccountPage() {
                     <p className="text-xs text-neutral-400 mt-0.5 dark:text-neutral-500">
                       {
                         {
-                          free: "3 sites, manual rebuild — or subscribe from Pricing (Individual / Studio)",
+                          free: "3 sites, manual rebuild",
                           pro: "Unlimited sites, daily auto-rebuild",
                           studio: "50 sites, daily auto-rebuild",
                         }[account.plan] || "3 sites"
@@ -516,17 +515,7 @@ export default function AccountPage() {
                           checkoutStudioLevel
                         );
                         if (cents <= 0) {
-                          return (
-                            <p className="text-[11px] text-neutral-400 max-w-[14rem] leading-relaxed dark:text-neutral-500 sm:ml-auto">
-                              <Link
-                                href="/#pricing"
-                                className="text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
-                              >
-                                Pricing
-                              </Link>{" "}
-                              — pick a paid tier to subscribe here.
-                            </p>
-                          );
+                          return null;
                         }
                         const subLabel =
                           checkoutPlan === "studio"

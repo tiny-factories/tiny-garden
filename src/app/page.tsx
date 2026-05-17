@@ -7,7 +7,6 @@ import {
   HowItWorksTemplateIllustration,
   LandingHeroAnimation,
 } from "@/components/landing-hero-animation";
-import { PayWhatYouCanPricing } from "@/components/pay-what-you-can-pricing";
 import { TemplateTicker } from "@/components/template-ticker";
 import { prisma } from "@/lib/db";
 import { getTemplateDisplayNames } from "@/lib/template-display-names";
@@ -398,25 +397,6 @@ export default async function Home() {
       </section>
 
       <LandingFeatures />
-
-      {/* Pricing */}
-      <section
-        id="pricing"
-        className="max-w-3xl mx-auto px-4 py-10 border-t border-neutral-100 dark:border-neutral-800"
-      >
-        <h2 className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-2">
-          Pricing
-        </h2>
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-6 max-w-xl leading-relaxed">
-          <span className="text-neutral-600 dark:text-neutral-400">Individual</span> always includes a real{" "}
-          <span className="text-neutral-600 dark:text-neutral-400">$0</span> tier — publish from Are.na for free; pay only
-          if you want extras like daily rebuilds and more sites.{" "}
-          <span className="text-neutral-600 dark:text-neutral-400">Small studio</span> is for heavier use — collectives,
-          freelancers, and teams running several sites at once.
-        </p>
-
-        <PayWhatYouCanPricing />
-      </section>
 
       <FeaturedSitesGallery
         sites={featuredSites}

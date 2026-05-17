@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { ButtondownWaitlistForm } from "@/components/buttondown-waitlist-form";
 import { LandingCard } from "@/components/landing-card";
 import {
   INDIVIDUAL_SLIDER_STEPS,
@@ -27,7 +30,7 @@ type PlanCardProps = {
   tiers: TierRow[];
 } & (
   | { comingSoon?: false; ctaLabel: string; ctaHref: string }
-  | { comingSoon: true; ctaLabel?: never; ctaHref?: never }
+  | { comingSoon: true; waitlistIdPrefix: string; ctaLabel?: never; ctaHref?: never }
 );
 
 function PlanCard(props: PlanCardProps) {
@@ -81,12 +84,16 @@ function PlanCard(props: PlanCardProps) {
 
       <div className="mt-auto">
         {comingSoon ? (
-          <span
-            className="flex w-full items-center justify-center px-4 py-2 text-sm bg-neutral-100 text-neutral-500 border border-neutral-200 rounded-none cursor-not-allowed select-none dark:bg-neutral-900 dark:text-neutral-500 dark:border-neutral-700"
-            aria-disabled="true"
-          >
-            Coming soon
-          </span>
+          <div className="space-y-2">
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              Join the waitlist — we&apos;ll email you when Studio checkout opens.
+            </p>
+            <ButtondownWaitlistForm
+              idPrefix={props.waitlistIdPrefix}
+              submitLabel="Join waitlist"
+              successMessage="You’re on the list — we’ll email you when Studio is available."
+            />
+          </div>
         ) : (
           <Link
             href={props.ctaHref}
@@ -141,6 +148,7 @@ export function PayWhatYouCanPricing() {
         tagline={PRICING_PLANS.studio.tagline}
         tiers={studioTiers}
         comingSoon
+        waitlistIdPrefix="pricing-studio"
       />
     </div>
   );
