@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { BUILD_ERROR_ARENA_AUTH } from "@/lib/build-errors";
 import { prisma } from "@/lib/db";
 import { setSession } from "@/lib/session";
 import { discordTeamNotify } from "@/lib/discord-team-notify";
@@ -86,6 +87,15 @@ export async function GET(req: NextRequest) {
       })
     );
   }
+
+  // Fresh OAuth token — allow cron to retry sites that were paused for arena:401.
+  await prisma.site.updateMany({
+    where: {
+      userId: user.id,
+      lastBuildError: { startsWith: BUILD_ERROR_ARENA_AUTH },
+    },
+    data: { lastBuildError: null },
+  });
 
   await setSession({
     userId: user.id,

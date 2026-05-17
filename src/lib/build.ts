@@ -10,6 +10,11 @@ import {
   isReservedStylesCssTitle,
   resolveSiteCustomCss,
 } from "./channel-styles";
+import {
+  arenaStatusFromError,
+  buildErrorCodeForArenaStatus,
+  formatPersistedBuildError,
+} from "./build-errors";
 import { prisma } from "./db";
 import { fontFamilyCSS, googleFontsLinkTag } from "./fonts";
 import { generatePlantSVG, generatePlantDataURI, seedFromSubdomain } from "./garden-icon";
@@ -1118,14 +1123,13 @@ export async function buildSite(siteId: string): Promise<string> {
   try {
     return await runBuild(siteId);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Build failed";
-    const truncated =
-      message.length > 2000 ? `${message.slice(0, 1997)}...` : message;
+    const status = arenaStatusFromError(error);
+    const code = buildErrorCodeForArenaStatus(status);
+    const persisted = formatPersistedBuildError(code, error);
     await prisma.site
       .update({
         where: { id: siteId },
-        data: { lastBuildError: truncated },
+        data: { lastBuildError: persisted },
       })
       .catch(() => {});
     throw error;

@@ -3,6 +3,16 @@ import type { Prisma } from "@prisma/client";
 import { prisma, withDbRetry } from "@/lib/db";
 import { ArenaClient } from "@/lib/arena";
 import { buildSite } from "@/lib/build";
+import {
+  BUILD_ERROR_ARENA_AUTH,
+  BUILD_ERROR_ARENA_CHANNEL,
+  arenaStatusFromError,
+  buildErrorCodeForArenaStatus,
+  buildErrorCodeFromPersisted,
+  formatPersistedBuildError,
+  isCronSkippableBuildError,
+  shouldNotifyCronBuildFailure,
+} from "@/lib/build-errors";
 import { discordTeamNotify } from "@/lib/discord-team-notify";
 
 export const maxDuration = 300;
@@ -83,10 +93,20 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
 
   let rebuilt = 0;
   let skippedUpToDate = 0;
+  let skippedPaused = 0;
+  let newlyPaused = 0;
   let failed = 0;
   let staleDeferred = 0;
 
   for (const site of candidates) {
+    if (isCronSkippableBuildError(site.lastBuildError)) {
+      skippedPaused++;
+      console.info(
+        `[cron/rebuild] site=${site.subdomain} action=skip_paused reason=${buildErrorCodeFromPersisted(site.lastBuildError)}`
+      );
+      continue;
+    }
+
     try {
       const client = new ArenaClient(site.user.arenaToken);
       const channel = await client.getChannel(site.channelSlug);
@@ -113,18 +133,50 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
       rebuilt++;
       console.info(`[cron/rebuild] site=${site.subdomain} action=build_done`);
     } catch (error) {
-      console.error(`[cron/rebuild] site=${site.subdomain} action=build_failed`, error);
-      failed++;
-      const errMsg = error instanceof Error ? error.message : String(error);
-      void discordTeamNotify({
-        title: `Cron rebuild: site failed (${site.subdomain})`,
-        description: `\`\`\`${errMsg.slice(0, 3500)}\`\`\``,
-        color: 0xfee75c,
-        fields: [
-          { name: "Subdomain", value: site.subdomain, inline: true },
-          { name: "Channel", value: site.channelSlug, inline: true },
-        ],
-      });
+      const status = arenaStatusFromError(error);
+      const code = buildErrorCodeForArenaStatus(status);
+      const persisted = formatPersistedBuildError(code, error);
+      const previous = site.lastBuildError;
+
+      await withDbRetry(
+        () =>
+          prisma.site.update({
+            where: { id: site.id },
+            data: { lastBuildError: persisted },
+          }),
+        { label: "cron/rebuild/persist_error" }
+      ).catch((e) => console.error(`[cron/rebuild] site=${site.subdomain} persist_error_failed`, e));
+
+      if (isCronSkippableBuildError(persisted)) {
+        skippedPaused++;
+        console.warn(
+          `[cron/rebuild] site=${site.subdomain} action=paused code=${code} status=${status ?? "unknown"}`
+        );
+      } else {
+        failed++;
+        console.error(`[cron/rebuild] site=${site.subdomain} action=build_failed`, error);
+      }
+
+      if (shouldNotifyCronBuildFailure(previous, persisted)) {
+        if (isCronSkippableBuildError(persisted)) newlyPaused++;
+        const hint =
+          code === BUILD_ERROR_ARENA_AUTH
+            ? "Owner must log in again at tiny.garden to refresh their Are.na token. Cron will skip this site until then."
+            : code === BUILD_ERROR_ARENA_CHANNEL
+              ? "Channel missing or slug changed — fix in site settings or unpublish. Cron will skip until resolved."
+              : null;
+        const errMsg = error instanceof Error ? error.message : String(error);
+        void discordTeamNotify({
+          title: `Cron rebuild: site paused (${site.subdomain})`,
+          description: [hint, `\`\`\`${errMsg.slice(0, 3200)}\`\`\``].filter(Boolean).join("\n\n"),
+          color: 0xfee75c,
+          fields: [
+            { name: "Subdomain", value: site.subdomain, inline: true },
+            { name: "Channel", value: site.channelSlug, inline: true },
+            { name: "Code", value: code ?? "transient", inline: true },
+          ],
+        });
+      }
     }
   }
 
@@ -162,6 +214,8 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
   const payload = {
     rebuilt,
     skippedUpToDate,
+    skippedPaused,
+    newlyPaused,
     failed,
     staleDeferred,
     eligibleTotal: total,
@@ -175,29 +229,43 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
     timeBucket: bucket,
   };
 
-  const summaryColor =
-    failed > 0 ? 0xfee75c : rebuilt > 0 || staleDeferred > 0 ? 0x57f287 : 0x99aab5;
+  const summaryWorthDiscord =
+    rebuilt > 0 || failed > 0 || newlyPaused > 0 || staleDeferred > 0 || chainedAnother;
 
-  void discordTeamNotify({
-    title: "Cron rebuild finished",
-    description:
-      failed > 0
-        ? `Completed with **${failed}** failed site(s).`
-        : staleDeferred > 0
-          ? `**${staleDeferred}** stale site(s) deferred (build cap).`
-          : "Sweep completed.",
-    color: summaryColor,
-    url: `${origin}/sites`,
-    fields: [
-      { name: "Rebuilt", value: String(rebuilt), inline: true },
-      { name: "Up to date", value: String(skippedUpToDate), inline: true },
-      { name: "Failed", value: String(failed), inline: true },
-      { name: "Deferred", value: String(staleDeferred), inline: true },
-      { name: "Eligible total", value: String(total), inline: true },
-      { name: "Continuation", value: String(continuation), inline: true },
-      { name: "Chained", value: chainedAnother ? "yes" : "no", inline: true },
-    ],
-  });
+  if (summaryWorthDiscord) {
+    const summaryColor =
+      failed > 0 || newlyPaused > 0
+        ? 0xfee75c
+        : rebuilt > 0 || staleDeferred > 0
+          ? 0x57f287
+          : 0x99aab5;
+
+    void discordTeamNotify({
+      title: "Cron rebuild finished",
+      description:
+        failed > 0
+          ? `Completed with **${failed}** failed site(s) (will retry next run).`
+          : newlyPaused > 0
+            ? `**${newlyPaused}** site(s) newly paused (bad token or missing channel).`
+            : staleDeferred > 0
+              ? `**${staleDeferred}** stale site(s) deferred (build cap).`
+              : rebuilt > 0
+                ? `Rebuilt **${rebuilt}** site(s).`
+                : "Sweep completed.",
+      color: summaryColor,
+      url: `${origin}/sites`,
+      fields: [
+        { name: "Rebuilt", value: String(rebuilt), inline: true },
+        { name: "Up to date", value: String(skippedUpToDate), inline: true },
+        { name: "Paused (skipped)", value: String(skippedPaused), inline: true },
+        { name: "Failed", value: String(failed), inline: true },
+        { name: "Deferred", value: String(staleDeferred), inline: true },
+        { name: "Eligible total", value: String(total), inline: true },
+        { name: "Continuation", value: String(continuation), inline: true },
+        { name: "Chained", value: chainedAnother ? "yes" : "no", inline: true },
+      ],
+    });
+  }
 
   return NextResponse.json(payload);
 }

@@ -72,6 +72,17 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Thrown on non-OK Are.na responses so callers can branch on {@link status}. */
+export class ArenaApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, statusText: string, path: string) {
+    super(`Are.na API error: ${status} ${statusText}`);
+    this.name = "ArenaApiError";
+    this.status = status;
+  }
+}
+
 export class ArenaClient {
   private token: string;
   private lastRequestAt = 0;
@@ -115,7 +126,7 @@ export class ArenaClient {
       if (!retryRes.ok) {
         const body = await retryRes.text();
         console.error(`Are.na API error after retry: ${retryRes.status} ${url.toString()}`, body);
-        throw new Error(`Are.na API error: ${retryRes.status} ${retryRes.statusText}`);
+        throw new ArenaApiError(retryRes.status, retryRes.statusText, path);
       }
       return retryRes.json() as Promise<T>;
     }
@@ -123,7 +134,7 @@ export class ArenaClient {
     if (!res.ok) {
       const body = await res.text();
       console.error(`Are.na API error: ${res.status} ${url.toString()}`, body);
-      throw new Error(`Are.na API error: ${res.status} ${res.statusText}`);
+      throw new ArenaApiError(res.status, res.statusText, path);
     }
     return res.json() as Promise<T>;
   }
