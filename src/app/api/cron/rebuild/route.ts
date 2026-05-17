@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import { prisma, withDbRetry } from "@/lib/db";
 import { ArenaClient } from "@/lib/arena";
 import { buildSite } from "@/lib/build";
 import { discordTeamNotify } from "@/lib/discord-team-notify";
@@ -57,18 +57,25 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
     50
   );
 
-  const total = await prisma.site.count({ where: ELIGIBLE_SITE_WHERE });
+  const total = await withDbRetry(
+    () => prisma.site.count({ where: ELIGIBLE_SITE_WHERE }),
+    { label: "cron/rebuild" }
+  );
   const bucket = Math.floor(Date.now() / rotationMs);
   const effectiveSkip =
     total === 0 ? 0 : ((bucket * batchSize + continuation * batchSize) % total);
 
-  const candidates = await prisma.site.findMany({
-    where: ELIGIBLE_SITE_WHERE,
-    orderBy: { id: "asc" },
-    skip: effectiveSkip,
-    take: batchSize,
-    include: { user: { include: { subscription: true } } },
-  });
+  const candidates = await withDbRetry(
+    () =>
+      prisma.site.findMany({
+        where: ELIGIBLE_SITE_WHERE,
+        orderBy: { id: "asc" },
+        skip: effectiveSkip,
+        take: batchSize,
+        include: { user: { include: { subscription: true } } },
+      }),
+    { label: "cron/rebuild" }
+  );
 
   console.info(
     `[cron/rebuild] phase=start eligible_total=${total} rotation_ms=${rotationMs} time_bucket=${bucket} skip=${effectiveSkip} batch=${batchSize} max_builds=${maxBuilds} candidates=${candidates.length} continuation=${continuation}`
