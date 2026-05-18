@@ -72,6 +72,18 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Expected client errors — logged at warn, not error (cron may handle gracefully). */
+const QUIET_ARENA_HTTP_STATUSES = new Set([401, 403, 404]);
+
+function logArenaHttpFailure(status: number, path: string, body: string): void {
+  const line = `Are.na API ${status} ${path}`;
+  if (QUIET_ARENA_HTTP_STATUSES.has(status)) {
+    console.warn(line);
+    return;
+  }
+  console.error(line, body.slice(0, 400));
+}
+
 /** Thrown on non-OK Are.na responses so callers can branch on {@link status}. */
 export class ArenaApiError extends Error {
   readonly status: number;
@@ -125,7 +137,7 @@ export class ArenaClient {
       });
       if (!retryRes.ok) {
         const body = await retryRes.text();
-        console.error(`Are.na API error after retry: ${retryRes.status} ${url.toString()}`, body);
+        logArenaHttpFailure(retryRes.status, path, body);
         throw new ArenaApiError(retryRes.status, retryRes.statusText, path);
       }
       return retryRes.json() as Promise<T>;
@@ -133,7 +145,7 @@ export class ArenaClient {
 
     if (!res.ok) {
       const body = await res.text();
-      console.error(`Are.na API error: ${res.status} ${url.toString()}`, body);
+      logArenaHttpFailure(res.status, path, body);
       throw new ArenaApiError(res.status, res.statusText, path);
     }
     return res.json() as Promise<T>;

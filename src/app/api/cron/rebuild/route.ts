@@ -10,7 +10,9 @@ import {
   buildErrorCodeForArenaStatus,
   buildErrorCodeFromPersisted,
   formatPersistedBuildError,
+  isArenaAuthBuildErrorCode,
   isCronSkippableBuildError,
+  persistedAuthPauseMessage,
   shouldNotifyCronBuildFailure,
 } from "@/lib/build-errors";
 import { discordTeamNotify } from "@/lib/discord-team-notify";
@@ -98,11 +100,56 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
   let failed = 0;
   let staleDeferred = 0;
 
+  const candidateUserIds = [...new Set(candidates.map((s) => s.userId))];
+  const usersWithKnownBadAuth =
+    candidateUserIds.length > 0
+      ? await withDbRetry(
+          () =>
+            prisma.site.findMany({
+              where: {
+                userId: { in: candidateUserIds },
+                OR: [
+                  { lastBuildError: { startsWith: BUILD_ERROR_ARENA_AUTH } },
+                  { lastBuildError: { contains: "Are.na API error: 401" } },
+                  { lastBuildError: { contains: "Are.na API error: 403" } },
+                ],
+              },
+              select: { userId: true },
+              distinct: ["userId"],
+            }),
+          { label: "cron/rebuild/bad_auth_users" }
+        )
+      : [];
+  const userAuthFailed = new Set(usersWithKnownBadAuth.map((r) => r.userId));
+
   for (const site of candidates) {
     if (isCronSkippableBuildError(site.lastBuildError)) {
       skippedPaused++;
       console.info(
         `[cron/rebuild] site=${site.subdomain} action=skip_paused reason=${buildErrorCodeFromPersisted(site.lastBuildError)}`
+      );
+      continue;
+    }
+
+    if (userAuthFailed.has(site.userId)) {
+      skippedPaused++;
+      const notified = await markAuthPausedIfNeeded(site);
+      if (notified) {
+        newlyPaused++;
+        void discordTeamNotify({
+          title: `Cron rebuild: site paused (${site.subdomain})`,
+          description:
+            "Owner must log in again at tiny.garden to refresh their Are.na token. Cron will skip this site until then.",
+          color: 0xfee75c,
+          fields: [
+            { name: "Subdomain", value: site.subdomain, inline: true },
+            { name: "Channel", value: site.channelSlug, inline: true },
+            { name: "Code", value: BUILD_ERROR_ARENA_AUTH, inline: true },
+          ],
+        });
+      }
+      console.info(
+        `[cron/rebuild] site=${site.subdomain} action=skip_user_auth user=@${site.user.arenaUsername}`
       );
       continue;
     }
@@ -148,6 +195,9 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
       ).catch((e) => console.error(`[cron/rebuild] site=${site.subdomain} persist_error_failed`, e));
 
       if (isCronSkippableBuildError(persisted)) {
+        if (isArenaAuthBuildErrorCode(code)) {
+          userAuthFailed.add(site.userId);
+        }
         skippedPaused++;
         console.warn(
           `[cron/rebuild] site=${site.subdomain} action=paused code=${code} status=${status ?? "unknown"}`
@@ -268,4 +318,27 @@ async function executeCronRebuild(req: NextRequest): Promise<NextResponse> {
   }
 
   return NextResponse.json(payload);
+}
+
+/** Persist arena:401 without calling Are.na; returns whether Discord should fire. */
+async function markAuthPausedIfNeeded(site: {
+  id: string;
+  subdomain: string;
+  channelSlug: string;
+  lastBuildError: string | null;
+}): Promise<boolean> {
+  const persisted = persistedAuthPauseMessage();
+  const previous = site.lastBuildError;
+  if (isCronSkippableBuildError(previous) && buildErrorCodeFromPersisted(previous) === BUILD_ERROR_ARENA_AUTH) {
+    return false;
+  }
+  await withDbRetry(
+    () =>
+      prisma.site.update({
+        where: { id: site.id },
+        data: { lastBuildError: persisted },
+      }),
+    { label: "cron/rebuild/mark_auth_paused" }
+  ).catch((e) => console.error(`[cron/rebuild] site=${site.subdomain} mark_auth_paused_failed`, e));
+  return shouldNotifyCronBuildFailure(previous, persisted);
 }

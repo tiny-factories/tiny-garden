@@ -21,6 +21,15 @@ export function buildErrorCodeForArenaStatus(status: number | undefined): string
   return null;
 }
 
+export function isArenaAuthBuildErrorCode(code: string | null | undefined): boolean {
+  return code === BUILD_ERROR_ARENA_AUTH;
+}
+
+/** Persisted auth pause line when cron skips without calling Are.na again. */
+export function persistedAuthPauseMessage(): string {
+  return `${BUILD_ERROR_ARENA_AUTH}|Are.na token invalid — owner must log in again`;
+}
+
 /** Human-readable line for Site.lastBuildError (code prefix + short detail). */
 export function formatPersistedBuildError(
   code: string | null,
