@@ -163,7 +163,7 @@ export async function generateAiSiteTheme(input: {
   }
 
   const model =
-    process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-4-20250514";
+    process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-4-6";
 
   const templateBlurb = await loadTemplateContext(input.templateSlug);
   const system = buildAiSiteThemeSystemPrompt(templateBlurb);
