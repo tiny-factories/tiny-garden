@@ -1,14 +1,36 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import crypto from "crypto";
 import { BUILD_ERROR_ARENA_AUTH } from "@/lib/build-errors";
 import { prisma } from "@/lib/db";
 import { setSession } from "@/lib/session";
 import { discordTeamNotify } from "@/lib/discord-team-notify";
+import { OAUTH_STATE_COOKIE } from "@/lib/oauth";
+
+/** Constant-time compare of two same-purpose hex strings. */
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=no_code", req.url));
+  }
+
+  // CSRF protection: the state echoed back by Are.na must match the value we set
+  // in the httpOnly cookie at /api/auth/login.
+  const state = req.nextUrl.searchParams.get("state");
+  const expectedState = req.cookies.get(OAUTH_STATE_COOKIE)?.value;
+  if (!state || !expectedState || !safeEqual(state, expectedState)) {
+    const res = NextResponse.redirect(
+      new URL("/login?error=invalid_state", req.url)
+    );
+    res.cookies.set(OAUTH_STATE_COOKIE, "", { path: "/", maxAge: 0 });
+    return res;
   }
 
   // Exchange code for token
@@ -104,5 +126,7 @@ export async function GET(req: NextRequest) {
     arenaUsername: arenaUser.slug,
   });
 
-  return NextResponse.redirect(new URL("/sites?signed_in=1", req.url));
+  const res = NextResponse.redirect(new URL("/sites?signed_in=1", req.url));
+  res.cookies.set(OAUTH_STATE_COOKIE, "", { path: "/", maxAge: 0 });
+  return res;
 }

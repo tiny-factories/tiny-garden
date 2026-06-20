@@ -1,12 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Strictly verify the URL points at our Vercel Blob store. A substring check is
+ * not enough: `http://169.254.169.254/?vercel-storage.com` or
+ * `http://vercel-storage.com.attacker.com/` would pass it, letting an attacker
+ * proxy server-side requests (SSRF) and exfiltrate the blob bearer token.
+ */
+function isAllowedBlobUrl(raw: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:") return false;
+  const host = parsed.hostname.toLowerCase();
+  return host === "vercel-storage.com" || host.endsWith(".vercel-storage.com");
+}
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return new NextResponse("Missing url", { status: 400 });
 
-  // Only allow fetching from our blob store
+  // Only allow fetching from our blob store (exact host match, not substring).
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!blobToken || !url.includes("vercel-storage.com") && !url.includes("blob.vercel-storage.com")) {
+  if (!blobToken || !isAllowedBlobUrl(url)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
