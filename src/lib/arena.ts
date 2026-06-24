@@ -187,6 +187,92 @@ export class ArenaClient {
     return this.fetch("/me");
   }
 
+  /** Fetch a single block by its Are.na id (used for refetch after edit). */
+  async getBlock(blockId: number): Promise<ArenaBlock> {
+    const res = await this.fetch<ArenaBlock | { data: ArenaBlock }>(
+      `/blocks/${blockId}`
+    );
+    return "data" in res && res.data
+      ? (res as { data: ArenaBlock }).data
+      : (res as ArenaBlock);
+  }
+
+  /**
+   * Update a block on Are.na.
+   *
+   * Are.na's `PUT /blocks/:id` accepts `title`, `description`, and (for Text
+   * blocks) `content`. Image / Media block bodies are not editable through
+   * this endpoint; only their title/description.
+   */
+  async updateBlock(
+    blockId: number,
+    patch: { title?: string; description?: string | null; content?: string | null }
+  ): Promise<ArenaBlock> {
+    const now = Date.now();
+    const elapsed = now - this.lastRequestAt;
+    if (elapsed < this.minInterval) {
+      await sleep(this.minInterval - elapsed);
+    }
+    this.lastRequestAt = Date.now();
+
+    const body: Record<string, unknown> = {};
+    if (typeof patch.title === "string") body.title = patch.title;
+    if (patch.description !== undefined) body.description = patch.description ?? "";
+    if (patch.content !== undefined) body.content = patch.content ?? "";
+
+    const res = await fetch(`${ARENA_API}/blocks/${blockId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (res.status === 429) {
+      const resetHeader = res.headers.get("X-RateLimit-Reset");
+      const resetAt = resetHeader
+        ? parseInt(resetHeader, 10) * 1000
+        : Date.now() + 60000;
+      const waitMs = Math.min(Math.max(resetAt - Date.now(), 1000), 60000);
+      await sleep(waitMs);
+      this.lastRequestAt = Date.now();
+      const retry = await fetch(`${ARENA_API}/blocks/${blockId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (!retry.ok) {
+        const text = await retry.text();
+        throw new Error(
+          `Are.na block update failed (${retry.status} ${retry.statusText}): ${text.slice(0, 240)}`
+        );
+      }
+      const data = (await retry.json()) as ArenaBlock | { data: ArenaBlock };
+      return "data" in data && data.data
+        ? (data as { data: ArenaBlock }).data
+        : (data as ArenaBlock);
+    }
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(
+        `Are.na block update failed (${res.status} ${res.statusText}): ${text.slice(0, 240)}`
+      );
+    }
+    // Are.na sometimes returns 204 No Content on PUT. Refetch in that case.
+    if (res.status === 204) {
+      return this.getBlock(blockId);
+    }
+    const data = (await res.json()) as ArenaBlock | { data: ArenaBlock };
+    return "data" in data && data.data
+      ? (data as { data: ArenaBlock }).data
+      : (data as ArenaBlock);
+  }
+
   async searchChannels(query: string): Promise<ArenaChannel[]> {
     try {
       const data = await this.fetch<{ data: ArenaChannel[] }>("/search", {

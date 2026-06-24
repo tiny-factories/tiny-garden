@@ -10,6 +10,7 @@ import { IdeTextEditor } from "@/components/ide-text-editor";
 import { ThemeTokensPillEditor } from "@/components/theme-tokens-pill-editor";
 import { SegmentedControl } from "@/components/toolbar";
 import { SiteChannelSettingsCard } from "@/components/site-channel-settings-card";
+import { SiteContentEditor } from "@/components/site-content-editor";
 import { SiteSettingsSkeleton } from "@/components/sites-dashboard-skeletons";
 import { PlantIconFrame, SitePreviewColumn } from "@/components/site-preview-column";
 import {
@@ -50,7 +51,7 @@ interface AccountInfo {
 const DEFAULT_COLORS = DEFAULT_THEME_COLORS;
 const DEFAULT_FONTS = DEFAULT_THEME_FONTS;
 
-type SettingsTab = "settings" | "theme";
+type SettingsTab = "settings" | "content" | "theme";
 
 type ThemeFileTab = "theme-css" | "styles-css";
 
@@ -569,12 +570,13 @@ export default function SiteSettingsPage() {
             <SegmentedControl<SettingsTab>
               segments={[
                 { value: "settings", label: "Settings" },
+                { value: "content", label: "Content" },
                 { value: "theme", label: "Theme" },
               ]}
               value={activeTab}
               onChange={setActiveTab}
               ariaLabel="Site settings sections"
-              className="w-full max-w-[13.5rem] shrink-0 sm:w-[13.5rem] sm:self-end"
+              className="w-full max-w-[18rem] shrink-0 sm:w-[18rem] sm:self-end"
               labelClassName="px-3 text-xs font-medium"
             />
         </div>
@@ -583,8 +585,17 @@ export default function SiteSettingsPage() {
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 md:flex-row md:items-stretch md:gap-6">
             <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-2 md:min-h-0">
               <h2 className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                {activeTab === "settings" ? "Settings" : "Theme"}
+                {activeTab === "settings"
+                  ? "Settings"
+                  : activeTab === "content"
+                  ? "Content"
+                  : "Theme"}
               </h2>
+              {activeTab === "content" && (
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-950">
+                  <SiteContentEditor siteId={id} />
+                </div>
+              )}
               {activeTab === "settings" && (
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-950">
                 <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
